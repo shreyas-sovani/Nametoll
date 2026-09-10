@@ -1,4 +1,4 @@
-# Working notes (B0–B13 live)
+# Working notes (B0–B14 live)
 
 ## Blocky402 probe (10 Sep 2026)
 
@@ -185,7 +185,7 @@ Form stays Hedera + ENS + Chainlink. World and Graph are not on the form.
 - Filled `docs/analysis.md` §9 rows: `docs/submission.md`.
 - Public repo: https://github.com/shreyas-sovani/Nametoll
 - AI attributed in the README. Human still records the video.
-- `join()` not claimed. Harness PR not claimed.
+- `join()` not claimed. Harness PR: https://github.com/hedera-dev/hedera-harness/pull/59 (open against `dev`, not merged). No harness demo video.
 
 ## Unused-remainder refund (B13)
 
@@ -198,3 +198,13 @@ Pinout shape, not a Pinout clone. One 402 still opens a credit pool. The snapsho
 - Blotter station 06 (`#station-remainder`) shows prepaid / burned / owed / refund / refundTx.
 - Proved in `test/refund.test.ts` against a fake facilitator + in-memory refund rail (payer `0.0.1`, fail-soft 2 prepaid → 1 delivered → `100000` refunded).
 - No live refund HashScan in this note. Do not invent one. A public-desk fail-soft pay (or an allow that covers 2 protocols when one indexer is down) is what would produce it. The live CRE cap `150000` still denies a 2-protocol settle, so a live remainder on camera is 1-protocol fail-soft (0 delivered → full refund) unless the cap is raised.
+
+## Harness init-adopt (B14)
+
+Nametoll never ran the harness during B0–B13. B14 required a DX bug **this** repo actually hit, so we ran `hedera-harness init` adopt against a Nametoll-shaped npm Express app (`package-lock.json`, scripts `start` / `test` / `typecheck`, no Next).
+
+What broke: in-place adopt copies the Scaffold-HBAR skeleton. Baseline becomes `yarn install` + `yarn next:build`. `.harness/validators/yarn.json` forbids `npm install` / `npm run`. Next steps say `yarn harness:run`. Doctor/run would fail baseline before any agent work.
+
+What we did not do: add `.harness/` to Nametoll. Invent a Yarn/Next bug we did not reproduce. Claim a harness demo video.
+
+Fix (upstream, not this tree): https://github.com/hedera-dev/hedera-harness/pull/59 against `dev`. Newly written recipes pick install/build from the detected package manager and `package.json` scripts. Existing `.harness/spec.yaml` is left untouched. Yarn / Scaffold-HBAR still get `yarn next:build` when that is the manager (or no better script exists). Test: `adopting an npm app does not plant a yarn next:build recipe`. Harness `npm test` was 196 passed on that commit.

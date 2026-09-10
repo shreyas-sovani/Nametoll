@@ -5,7 +5,7 @@
 **Repo:** https://github.com/shreyas-sovani/Nametoll (public)  
 **Video:** 2–4 min, human voice, 720p. Record the README timestamp script. Do not speed the take.
 
-Paste the checklists below into the partner forms. Each row names the README clock and the repo evidence. `join()` is not pursued.
+Paste the checklists below into the partner forms. Each row names the README clock and the repo evidence. `join()` is not pursued. Harness stretch is the open PR below, not a Nametoll `.harness/` recipe.
 
 ---
 
@@ -18,7 +18,7 @@ Paste the checklists below into the partner forms. Each row names the README clo
 - [x] **Metering or refund (not only flat fee)** — `100000` tinybars × protocol count. 1 vs 2 = `100000` vs `200000` on HashScan + HCS. Unused remainder (Pinout shape): credit = settled tinybars, burn = delivered protocols, seller `TransferTransaction` refunds `prepaid − owed`. HCS fields `prepaidTinybars` / `refundTinybars` / `refundTx`. Clock **2:00**. No live refund HashScan claimed yet.
 - [x] **Demo shows the paid request executing** — blotter Pay or `npm run buyer`. Clock **1:30**.
 
-Hedera Harness stretch: not claimed (no PR).
+Hedera Harness stretch: open PR (not merged) https://github.com/hedera-dev/hedera-harness/pull/59 — `init` adopt no longer plants `yarn next:build` into an npm Express app. Before/after table + test on the PR. No `.harness/` in Nametoll. No harness demo video.
 
 ---
 
