@@ -17,7 +17,7 @@ Official pages:
 - Secrets: `runtime.getSecret({ id })` / `runtime.getSecrets([{ id }])` inside the enclave. No upfront `vaultDonSecrets` declaration.
 - HTTP inside TEE: `new HTTPClient().sendRequest(runtime, req)` with the `TeeRuntime`.
 - Consensus / reports: `runtime.usingTheDons()` then use the returned `Runtime`. Values passed across that boundary are **not** confidential.
-- Scaffold new projects with `cre init`. Simulate with `cre workflow simulate` (include `--target` on every CLI command that accepts it).
+- Scaffold new projects with `cre init`. Simulate with `cre workflow simulate` (include `--target` on every CLI command that accepts it). Nametoll evidence: `docs/partners/chainlink/simulate-allow.log` and `simulate-deny.log`.
 
 ## What does not exist / do not invent
 

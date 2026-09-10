@@ -16,6 +16,8 @@
     "ens:probe": "tsx src/modules/directory/probe-sepolia.ts",
     "ens:sepolia": "tsx src/modules/directory/sepolia-live.ts",
     "ens:eac": "tsx src/modules/directory/operator-set.ts",
+    "brain": "tsx src/modules/brain/cli.ts",
+    "cre:simulate": "tsx src/modules/brain/run-simulate.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"

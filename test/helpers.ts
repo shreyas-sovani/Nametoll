@@ -2,6 +2,17 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import { decodePaymentRequiredHeader } from "@x402/core/http";
 import { createApp, type AppDeps } from "../src/http/createApp.ts";
 import type { AppConfig } from "../src/config.ts";
+import type { Brain } from "../src/modules/brain/index.ts";
+
+export const allowBrain: Brain = {
+  async decide({ requestedTinybars }) {
+    return {
+      allow: true,
+      maxTinybars: requestedTinybars,
+      reason: "under cap",
+    };
+  },
+};
 
 export const FIXTURE_SELLER = "0.0.999999";
 
@@ -16,6 +27,7 @@ export function testDeskConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     mirrorNodeUrl: "https://testnet.mirrornode.hedera.com",
     graphGatewayUrl: "https://gateway.thegraph.com/api",
     ensnodeUrl: "https://api.v2-sepolia.ensnode.io",
+    creTarget: "staging-settings",
     ...overrides,
   };
 }
@@ -30,6 +42,7 @@ export function publicDeskConfig(): AppConfig {
     mirrorNodeUrl: "https://testnet.mirrornode.hedera.com",
     graphGatewayUrl: "https://gateway.thegraph.com/api",
     ensnodeUrl: "https://api.v2-sepolia.ensnode.io",
+    creTarget: "staging-settings",
   };
 }
 
@@ -42,7 +55,10 @@ export async function startDesk(
   close: () => Promise<void>;
 }> {
   const resolved = config ?? testDeskConfig(overrides);
-  const app = await createApp({ ...resolved, ...overrides }, deps);
+  const app = await createApp({ ...resolved, ...overrides }, {
+    ...deps,
+    brain: deps.brain ?? allowBrain,
+  });
   const server = await new Promise<Server>((resolve, reject) => {
     const started = app.listen(0, "127.0.0.1", () => resolve(started));
     started.on("error", reject);

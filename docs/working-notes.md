@@ -1,4 +1,4 @@
-# Working notes (B0–B8 live)
+# Working notes (B0–B10 live)
 
 ## Blocky402 probe (10 Sep 2026)
 
@@ -131,3 +131,26 @@ Operator EAC (account 3, `ROLE_SET_TEXT` on those three keys only):
 Buyer-by-name (11 Sep 2026): `npm run buyer -- nametoll.eth` → resolved public desk → Blocky402 settle `0.0.7162784@1789071522.046063925` — https://hashscan.io/testnet/tx/0.0.7162784@1789071522.046063925 — live Graph body, `units: 2`.
 
 Happy path still has no baked-in name. Homepage form / `GET /desk/resolve?name=` / buyer argv take whatever name you paste.
+
+## Brain (B9) + Gate obeys Brain (B10)
+
+Official template name from `cre templates list --json`: `hello-confidential-workflows-ts`. `cre init` on CLI v1.33.0 requires login, so the tree in `cre/` is that official template (cloned from `smartcontractkit/cre-templates`) then customized.
+
+Nametoll workflow (`cre/nametoll-brain`):
+
+- HTTP trigger (`HTTPCapability`) into `cre.handlerInTee` / `TeeRuntime`
+- `runtime.getSecret({ id: "SPEND_CAP" })` — env `SPEND_CAP_TINYBARS_VAR` via `cre/secrets.yaml`
+- Verdict-only JSON `{ allow, maxTinybars, reason }`. No `ConfidentialHTTPClient`. No `usingTheDons()` (nothing confidential crosses out except the public verdict string)
+- Cap used for scripted runs: `150000` tinybars. `100000` → allow. `200000` → over cap / deny
+
+Desk:
+
+- `createBrain` calls CRE HTTP trigger if `CRE_BRAIN_URL` is set, else `cre workflow simulate` if `CRE_PROJECT_DIR` is set, else fail closed (paid snapshot 403). Do not skip the TEE.
+- `GET /desk/brain?tinybars=` and `npm run brain -- <tinybars>`
+- Gate asks Brain on paid `GET /desk/snapshot` **before** verify/settle (exact settle is after-handler; a late abort would leak merchandise). Deny or skipped TEE → 403, merchandise not called, no HCS bill
+
+`cre workflow simulate nametoll-brain --non-interactive --trigger-index 0 --http-payload … --target staging-settings` (11 Sep 2026, CLI v1.33.0):
+
+- Allow `100000`: `docs/partners/chainlink/simulate-allow.log` — TEE Execution / AWS Nitro us-west-2, `TEE handler: verdict=allow reason=under cap`
+- Deny `200000`: `docs/partners/chainlink/simulate-deny.log` — same TEE banner, `verdict=deny reason=over cap`
+- Secret cap from `getSecret("SPEND_CAP")` is `150000` (public as `maxTinybars` only). No secret env lines in the committed logs. Deploy access not enabled; simulation does not need it.

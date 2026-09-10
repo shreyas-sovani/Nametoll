@@ -139,6 +139,7 @@ export function renderHomePage(config: AppConfig): string {
         <dt>payTo</dt><dd>${escapeHtml(payTo)}</dd>
         <dt>HCS topic</dt><dd>${escapeHtml(config.hcsTopicId ?? "set HCS_TOPIC_ID")}</dd>
         <dt>ledger</dt><dd><code>/desk/ledger</code></dd>
+        <dt>brain</dt><dd><code>/desk/brain?tinybars=</code></dd>
         <dt>merchandise</dt><dd>Messari lending · live Aave v3 + Compound III · billed per requested protocol</dd>
         <dt>facilitator</dt><dd>${escapeHtml(config.facilitatorUrl)}</dd>
       </dl>

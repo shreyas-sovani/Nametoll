@@ -1,5 +1,10 @@
 import express, { type Express } from "express";
 import type { AppConfig } from "../config.ts";
+import {
+  createBrainFromConfig,
+  type Brain,
+} from "../modules/brain/index.ts";
+import { mountBrain } from "../modules/brain/http.ts";
 import { createDirectory, type Directory } from "../modules/directory/index.ts";
 import { mountDirectory } from "../modules/directory/http.ts";
 import { mountGate } from "../modules/gate/index.ts";
@@ -14,6 +19,7 @@ export type AppDeps = {
   ledger?: Ledger;
   merchandise?: Merchandise;
   directory?: Directory;
+  brain?: Brain;
 };
 
 function resolveLedger(config: AppConfig, deps: AppDeps): Ledger | undefined {
@@ -47,6 +53,7 @@ export async function createApp(
   const ledger = resolveLedger(config, deps);
   const merchandise = resolveMerchandise(config, deps);
   const directory = resolveDirectory(config, deps);
+  const brain = deps.brain ?? createBrainFromConfig(config);
 
   app.get("/health", (_req, res) => {
     res.json({ ok: true, service: "nametoll", modules: MODULE_NAMES });
@@ -57,7 +64,8 @@ export async function createApp(
   });
 
   mountDirectory(app, directory);
-  mountGate(app, config, ledger, merchandise);
+  mountBrain(app, brain);
+  mountGate(app, config, ledger, merchandise, brain);
   mountLedger(app, config, ledger);
 
   return app;

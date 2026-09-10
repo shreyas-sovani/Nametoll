@@ -6,12 +6,17 @@ dist/
 !.env.example
 .DS_Store
 *.log
+!docs/partners/chainlink/simulate-*.log
 npm-debug.log*
 *.tsbuildinfo
 coverage/
 .railway/
 .ngrok/
 .ens/
+*.wasm
+cre/**/node_modules
+cre/**/dist
+cre/**/.cre_build_tmp.js
 .cursor/mcp.json
 
 # Shallow partner clones keep their own .git (see vendor/SOURCES.md).

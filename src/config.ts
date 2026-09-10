@@ -27,6 +27,10 @@ export type AppConfig = {
   ensnodeUrl: string;
   secretsPaths: SecretsPaths;
   priceTinybars: string;
+  creBrainUrl?: string;
+  creProjectDir?: string;
+  creWorkflowName?: string;
+  creTarget: string;
 };
 
 function readEnv(env: NodeJS.ProcessEnv, name: string): string | undefined {
@@ -62,6 +66,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   const publicDeskUrl = readEnv(env, "PUBLIC_DESK_URL");
   const buyerKeyPath = readEnv(env, "HEDERA_BUYER_KEY_PATH");
   const creSecretsPath = readEnv(env, "CRE_SECRETS_PATH");
+  const creBrainUrl = readEnv(env, "CRE_BRAIN_URL");
+  const creProjectDir = readEnv(env, "CRE_PROJECT_DIR");
+  const creWorkflowName = readEnv(env, "CRE_WORKFLOW_NAME");
 
   return {
     port: Number.parseInt(readEnv(env, "PORT") ?? "8787", 10),
@@ -80,5 +87,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     graphGatewayUrl: readEnv(env, "GRAPH_GATEWAY_URL") ?? DEFAULT_GRAPH_GATEWAY_URL,
     ensnodeUrl: readEnv(env, "ENSNODE_URL") ?? DEFAULT_ENSNODE_URL,
     ...(graphGatewayKey ? { graphGatewayKey } : {}),
+    ...(creBrainUrl ? { creBrainUrl } : {}),
+    ...(creProjectDir ? { creProjectDir } : {}),
+    ...(creWorkflowName ? { creWorkflowName } : {}),
+    creTarget: readEnv(env, "CRE_TARGET") ?? "staging-settings",
   };
 }

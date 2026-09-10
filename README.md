@@ -63,6 +63,14 @@ Create the bill topic once (seller key signs; prints `HCS_TOPIC_ID`, not a secre
 npm run topic:create
 ```
 
+CRE Brain (needs `cre` on PATH and `cre login` for simulate):
+
+```bash
+npm run brain -- 100000
+npm run cre:simulate
+curl -sS "http://127.0.0.1:8787/desk/brain?tinybars=100000"
+```
+
 Put that id in `.env` as `HCS_TOPIC_ID`. After a paid request:
 
 ```bash
@@ -134,6 +142,8 @@ This tunnel dies when the local process stops. For a stable judge URL, host the 
 | `ACC_1_PRIV_KEY` / `ACC3_PRIV_KEY` | Testnet-only Sepolia keys for `npm run ens:sepolia`. Never commit. |
 | `ETH_RPC_URL` | Optional Sepolia RPC for those writes |
 | `CRE_SECRETS_PATH` / `HEDERA_BUYER_KEY_PATH` | Files on disk; values stay out of git |
+| `CRE_BRAIN_URL` | Live CRE HTTP trigger. If unset, paid snapshots 403 unless `CRE_PROJECT_DIR` is set |
+| `CRE_PROJECT_DIR` / `CRE_WORKFLOW_NAME` / `CRE_TARGET` | Simulate backend. Target defaults to `staging-settings`. Workflow name defaults to `nametoll-brain` |
 
 Fee-payer is **not** configured here. The Gate reads it from live `GET /supported` (`0.0.7162784` on testnet as of the day-one probe).
 
@@ -150,16 +160,17 @@ Fee-payer is **not** configured here. The Gate reads it from live `GET /supporte
 - **B6** 1 protocol = `100000` tinybars, 2 = `200000`. Live pays on HashScan + HCS (stub bills first, then live `lending-risk` bills).
 - **B7** live ENSv2 parent `nametoll.eth` and child `desk.nametoll.eth` on Sepolia. Paste either into the homepage form or `GET /desk/resolve?name=`. Permissioned Resolver + EAC (operator can edit the three desk text keys, cannot transfer the name).
 - **B8** `npm run buyer -- nametoll.eth` resolves then 402s the **resolved** endpoint. Changing `agent-endpoint[web]` via the operator changes the next resolve without a buyer code change.
+- **B9** CRE `handlerInTee` + `getSecret("SPEND_CAP")`. Official `hello-confidential-workflows-ts`. Redacted simulate logs: `docs/partners/chainlink/simulate-allow.log` (100000 under cap) and `simulate-deny.log` (200000 over cap). No `ConfidentialHTTPClient`.
+- **B10** Gate asks Brain before Blocky402 settle. Deny / skipped TEE → HTTP 403, no merchandise, no HCS bill. Allow → existing pay path. `GET /desk/brain?tinybars=` and `npm run brain -- 100000`.
 
 **Next**
 
-- **B9** CRE `handlerInTee`.
+- **B11** thin operator / judge UI.
 
 **Blockers (human, not code)**
 
-- B9: CRE login and the `cre` CLI so `cre workflow simulate` can produce a redacted log.
 - Public judge URL: current ngrok origin dies when the local desk stops. Host `npm start` and set `PUBLIC_DESK_URL` for a stable link.
-- Never commit `.env` (Graph key, Hedera keys, Sepolia keys).
+- Never commit `.env` (Graph key, Hedera keys, Sepolia keys, CRE secrets).
 
 **Not blockers**
 

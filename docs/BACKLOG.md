@@ -2,7 +2,7 @@
 
 **For the build agent.** This is the direction of work. It is not a syntax guide and not a license to invent APIs.
 
-**Status 11 Sep 2026:** B0–B8 done. Live parent is `nametoll.eth` (child `desk.nametoll.eth`) on ENSv2 Sepolia. Next code ticket: **B9**.
+**Status 11 Sep 2026:** B0–B10 done. Live parent is `nametoll.eth` (child `desk.nametoll.eth`) on ENSv2 Sepolia. CRE simulate logs in `docs/partners/chainlink/`. Next code ticket: **B11**.
 
 Read in this order, then execute tickets **in ID order**. Do not skip ahead to a later ticket because it looks more interesting.
 
@@ -32,9 +32,9 @@ Do not implement World, ATS, SwapVM, Uniswap, Privy, Arc, Ledger, Bazantic, ERC-
 
 | | |
 |---|---|
-| **Done** | B0 scaffold · B1 Gate 402 · B2 buyer pay · B3 public URL · B4 HCS bill · B5 live Messari Aave+Compound · B6 meter 1 vs 2 units · **B7** live `nametoll.eth` / `desk.nametoll.eth` · **B8** buyer paid the resolved endpoint |
-| **Next** | **B9** CRE TEE (`handlerInTee` + `cre workflow simulate`). |
-| **Human blockers** | CRE login + `cre` CLI (B9). Public desk is ngrok session-scoped. Never commit `.env`. |
+| **Done** | B0 scaffold · B1 Gate 402 · B2 buyer pay · B3 public URL · B4 HCS bill · B5 live Messari Aave+Compound · B6 meter 1 vs 2 units · **B7** live `nametoll.eth` / `desk.nametoll.eth` · **B8** buyer paid the resolved endpoint · **B9** `handlerInTee` + redacted simulate logs · **B10** Gate refuses settle/bytes when Brain denies or is skipped |
+| **Next** | **B11** thin operator / judge UI. |
+| **Human blockers** | Public desk is ngrok session-scoped. Never commit `.env`. |
 | **Not blockers** | Graph Studio query key works. Sepolia owner/operator are funded testnet accounts. |
 
 ---
@@ -228,7 +228,7 @@ Work top to bottom. A later ticket may assume the earlier **Done when**.
 
 ### B9 — Brain: confidential verdict
 
-- [ ] **B9** CRE confidential workflow: `handlerInTee` + `getSecret` inside the enclave. Verdict is allow / deny / max tinybars.
+- [x] **B9** CRE confidential workflow: `handlerInTee` + `getSecret` inside the enclave. Verdict is allow / deny / max tinybars. *Official `hello-confidential-workflows-ts`. `cre workflow simulate --target staging-settings`: `docs/partners/chainlink/simulate-allow.log` / `simulate-deny.log`. Cap `150000` tinybars flips 100000 allow vs 200000 deny. 11 Sep 2026.*
 
 **Done when:** `cre workflow simulate` (with `--target` on every CLI command that accepts it) produces a log committed to the repo with secrets redacted. The log shows a TEE handler, not a normal `handler`. A secret spend cap changes the verdict. Template comes from `cre init` + official confidential template — verify the template name with the CRE skill and `cre templates list`; do not hand-write the CRE project tree.
 
@@ -244,7 +244,7 @@ Work top to bottom. A later ticket may assume the earlier **Done when**.
 
 ### B10 — Gate obeys the Brain
 
-- [ ] **B10** Deny or over-cap → no Blocky402 settle and no merchandise bytes. Allow → B1–B6 path as before, and settle tinybars ≤ maxTinybars.
+- [x] **B10** Deny or over-cap → no Blocky402 settle and no merchandise bytes. Allow → B1–B6 path as before, and settle tinybars ≤ maxTinybars. *Paid `GET /desk/snapshot` asks Brain first. Deny/skip → 403, merchandise not called, no HCS bill. Allow → settle as before. 11 Sep 2026.*
 
 **Done when:** Two scripted runs: under cap (data + bill) and over cap (no settle, no bill, or a deny bill that is not a payment). Feature does not work if the TEE verdict is skipped.
 

@@ -1,0 +1,37 @@
+Initializing...
+Loading settings...
+Checking RPC connectivity...
+Compiling workflow...
+✓ Workflow compiled
+✓ Simulation limits enabled
+  HTTP: req=120kb resp=250kb timeout=10s | ConfHTTP: req=125kb resp=500kb timeout=1m30s | Consensus obs=25kb | ChainWrite evm_report=50kb evm_gas=10000000 solana_report=265b solana_cu=300000 | WASM binary=100mb compressed=20mb
+  Binary hash: 8b0445076bdad407d22670048a43851837c37a1745d694d8b7aee892358a6c59
+  Config hash: 93437bb0a308088e392e6352f73e1a48b524f5ca083a71442d4b2b28901e4182
+✓ Parsed JSON input successfully
+✓ Created HTTP trigger payload with 1 fields
+2026-09-11T02:27:47Z [SIMULATION] Simulator Initialized
+
+2026-09-11T02:27:47Z [SIMULATION] Running trigger trigger=http-trigger@1.0.0-alpha
+╭────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Trigger requested TEE Execution your trigger will run in one of the following Tees:                │
+│     - AWS Nitro in us-west-2                                                                       │
+│ The simulator is not a real TEE, and is meant to debug.                                            │
+│ Do not use it for sensitive information.                                                           │
+│ During real execution, user logs for this trigger will not be visible, and will not leave the TEE. │
+│ They are presented in the simulator for debugging only.                                            │
+│                                                                                                    │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+2026-09-11T02:27:47Z [USER LOG] TEE handler: verdict=deny reason=over cap
+
+✓ Workflow Simulation Result:
+"{\"allow\":false,\"maxTinybars\":\"150000\",\"reason\":\"over cap\"}"
+
+2026-09-11T02:27:47Z [SIMULATION] Execution finished signal received
+2026-09-11T02:27:47Z [SIMULATION] Skipping WorkflowEngineV2
+
+╭──────────────────────────────────────────────────────╮
+│ Simulation complete! Ready to deploy your workflow?  │
+│                                                      │
+│ Run cre account access to request deployment access. │
+╰──────────────────────────────────────────────────────╯

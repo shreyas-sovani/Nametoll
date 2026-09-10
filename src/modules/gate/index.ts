@@ -1,9 +1,12 @@
+import { AsyncLocalStorage } from "node:async_hooks";
 import type { Express } from "express";
 import { HTTPFacilitatorClient, x402ResourceServer } from "@x402/core/server";
 import { paymentMiddleware } from "@x402/express";
 import { ExactHederaScheme } from "@x402/hedera/exact/server";
 import { HBAR_ASSET_ID } from "@x402/hedera";
 import type { AppConfig } from "../../config.ts";
+import type { BrainVerdict } from "../../types.ts";
+import { createBrain, type Brain } from "../brain/index.ts";
 import { newRequestId, type Ledger } from "../ledger/index.ts";
 import {
   createMerchandise,
@@ -29,6 +32,7 @@ export function mountGate(
   config: AppConfig,
   ledger?: Ledger,
   merchandise: Merchandise = createMerchandise(),
+  brain: Brain = createBrain(),
 ): void {
   if (!config.sellerAccountId) {
     return;
@@ -39,6 +43,73 @@ export function mountGate(
     config.network,
     new ExactHederaScheme(),
   );
+
+  const verdictStore = new AsyncLocalStorage<{
+    requestedTinybars: string;
+    verdict: BrainVerdict;
+  }>();
+
+  const refuseIfDenied = async (requestedTinybars: string): Promise<BrainVerdict> => {
+    const cached = verdictStore.getStore();
+    if (cached && cached.requestedTinybars === requestedTinybars) {
+      return cached.verdict;
+    }
+    try {
+      const verdict = await brain.decide({ requestedTinybars });
+      if (!verdict.allow || BigInt(requestedTinybars) > BigInt(verdict.maxTinybars)) {
+        return verdict.allow
+          ? {
+              allow: false,
+              maxTinybars: verdict.maxTinybars,
+              reason: "requested amount exceeds maxTinybars",
+            }
+          : verdict;
+      }
+      return verdict;
+    } catch {
+      return { allow: false, maxTinybars: "0", reason: "TEE unavailable" };
+    }
+  };
+
+  // Exact settle is after-handler. Ask the TEE before verify/settle so deny
+  // never returns merchandise bytes or a Blocky402 transfer.
+  app.use(SNAPSHOT_PATH, async (req, res, next) => {
+    if (req.method !== "GET") {
+      next();
+      return;
+    }
+    const signature = req.header("payment-signature");
+    if (!signature) {
+      next();
+      return;
+    }
+    const units = requestedUnits(protocolIdsFromQuery(req.query.protocols));
+    const requested = meterTinybars(config.priceTinybars, units);
+    const verdict = await refuseIfDenied(requested);
+    if (!verdict.allow) {
+      res.status(403).json({ ok: false, ...verdict });
+      return;
+    }
+    verdictStore.run({ requestedTinybars: requested, verdict }, () => next());
+  });
+
+  resourceServer.onBeforeVerify(async (context) => {
+    const requested = String(context.requirements.amount);
+    const verdict = await refuseIfDenied(requested);
+    if (!verdict.allow) {
+      return { abort: true, reason: verdict.reason };
+    }
+    return undefined;
+  });
+
+  resourceServer.onBeforeSettle(async (context) => {
+    const requested = String(context.requirements.amount);
+    const verdict = await refuseIfDenied(requested);
+    if (!verdict.allow) {
+      return { abort: true, reason: verdict.reason };
+    }
+    return undefined;
+  });
 
   if (ledger) {
     resourceServer.onAfterSettle(async (context) => {

@@ -49,6 +49,19 @@ describe("desk config", () => {
     expect(config.graphGatewayUrl).toBe("https://gateway.thegraph.com/api");
   });
 
+  it("defaults the CRE simulate target and accepts a brain URL", () => {
+    expect(loadConfig({}).creTarget).toBe("staging-settings");
+    const config = loadConfig({
+      CRE_BRAIN_URL: "http://127.0.0.1:8080/trigger",
+      CRE_PROJECT_DIR: "cre",
+      CRE_WORKFLOW_NAME: "nametoll-brain",
+      CRE_TARGET: "staging-settings",
+    });
+    expect(config.creBrainUrl).toBe("http://127.0.0.1:8080/trigger");
+    expect(config.creProjectDir).toBe("cre");
+    expect(config.creWorkflowName).toBe("nametoll-brain");
+  });
+
   it("defaults the ENSv2 Omnigraph URL and accepts an override", () => {
     expect(loadConfig({}).ensnodeUrl).toBe("https://api.v2-sepolia.ensnode.io");
     expect(
