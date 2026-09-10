@@ -15,7 +15,7 @@ Paste the checklists below into the partner forms. Each row names the README clo
 - [x] **x402 v2 + Blocky402 facilitator** — unpaid `GET /desk/snapshot` is HTTP 402, `x402Version: 2`, asset `0.0.0`, tinybars, fee-payer `0.0.7162784` from live `GET https://api.testnet.blocky402.com/supported`. Clock **1:10**.
 - [x] **Agent/platform paid at least once** — `npm run buyer -- <paste-a-name>`. First settle https://hashscan.io/testnet/tx/0.0.7162784@1789065380.080315812 — buyer `0.0.10463842`, seller `0.0.10463755`, `100000` tinybars. Clock **1:30**.
 - [x] **HashScan tx + HCS topic id in README** — topic `0.0.10464309` · https://hashscan.io/testnet/topic/0.0.10464309 · Mirror https://testnet.mirrornode.hedera.com/api/v1/topics/0.0.10464309/messages. Clock **2:25**.
-- [x] **Metering or refund (not only flat fee)** — `100000` tinybars × requested protocol count. 1 protocol vs 2 = `100000` vs `200000` on HashScan + HCS. Unused-remainder refund is stretch B13 (not this form). Clock **2:00**.
+- [x] **Metering or refund (not only flat fee)** — `100000` tinybars × protocol count. 1 vs 2 = `100000` vs `200000` on HashScan + HCS. Unused remainder (Pinout shape): credit = settled tinybars, burn = delivered protocols, seller `TransferTransaction` refunds `prepaid − owed`. HCS fields `prepaidTinybars` / `refundTinybars` / `refundTx`. Clock **2:00**. No live refund HashScan claimed yet.
 - [x] **Demo shows the paid request executing** — blotter Pay or `npm run buyer`. Clock **1:30**.
 
 Hedera Harness stretch: not claimed (no PR).
@@ -45,4 +45,4 @@ Hedera Harness stretch: not claimed (no PR).
 
 ## Recompute recipe (Hedera bill)
 
-`GET` the Mirror Node topic URL, base64-decode each `message`, check `units * priceTinybarsPerUnit = tinybars`. `PRICE_TINYBARS` is `100000`.
+`GET` the Mirror Node topic URL, base64-decode each `message`, check `units * priceTinybarsPerUnit = tinybars`. If `prepaidTinybars` is present, `prepaidTinybars - tinybars = refundTinybars`. `PRICE_TINYBARS` is `100000`.

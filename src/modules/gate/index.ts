@@ -8,12 +8,14 @@ import type { AppConfig } from "../../config.ts";
 import type { BrainVerdict } from "../../types.ts";
 import { createBrain, type Brain } from "../brain/index.ts";
 import { newRequestId, type Ledger } from "../ledger/index.ts";
+import type { RefundRail } from "../ledger/refund.ts";
 import {
   createMerchandise,
   type Merchandise,
   type MerchandiseSnapshot,
 } from "../merchandise/index.ts";
 import { meterTinybars, protocolIdsFromQuery, requestedUnits } from "./meter.ts";
+import { burnedUnits, settlementFromUsage } from "./remainder.ts";
 
 export const SNAPSHOT_PATH = "/desk/snapshot";
 export const STUB_DESK_NAME = "stub";
@@ -33,6 +35,7 @@ export function mountGate(
   ledger?: Ledger,
   merchandise: Merchandise = createMerchandise(),
   brain: Brain = createBrain(),
+  refund?: RefundRail,
 ): void {
   if (!config.sellerAccountId) {
     return;
@@ -117,14 +120,41 @@ export function mountGate(
       if (!context.result.success || !context.result.transaction) return;
       try {
         const snap = readSnapshot(context.transportContext);
+        const prepaidTinybars = String(
+          context.result.amount ?? context.requirements.amount,
+        );
+        const burned = snap
+          ? burnedUnits(snap)
+          : unitsFromAmount(prepaidTinybars, config.priceTinybars);
+        const settlement = settlementFromUsage({
+          prepaidTinybars,
+          burnedUnits: burned,
+          priceTinybars: config.priceTinybars,
+        });
+        let refundTx: string | undefined;
+        if (BigInt(settlement.refundTinybars) > 0n) {
+          const payer = context.result.payer;
+          if (refund && payer) {
+            try {
+              const sent = await refund.refund({
+                payer,
+                tinybars: settlement.refundTinybars,
+              });
+              refundTx = sent.refundTx;
+            } catch (error) {
+              console.error("Unused-remainder refund failed after settle", error);
+            }
+          }
+        }
         await ledger.append({
           requestId: newRequestId(),
           name: snap && !snap.stub ? "lending-risk" : STUB_DESK_NAME,
-          units:
-            snap?.units ??
-            unitsFromAmount(context.requirements.amount, config.priceTinybars),
-          tinybars: context.requirements.amount,
+          units: settlement.burnedUnits,
+          tinybars: settlement.owedTinybars,
           settleTx: context.result.transaction,
+          prepaidTinybars: settlement.prepaidTinybars,
+          refundTinybars: settlement.refundTinybars,
+          ...(refundTx ? { refundTx } : {}),
         });
       } catch (error) {
         console.error("HCS bill append failed after settle", error);

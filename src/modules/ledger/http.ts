@@ -6,7 +6,7 @@ import type { Ledger } from "./index.ts";
 export const LEDGER_PATH = "/desk/ledger";
 
 export const RECOMPUTE_RECIPE =
-  "GET Mirror Node /api/v1/topics/{topicId}/messages, base64-decode each message, then check units * priceTinybarsPerUnit = tinybars.";
+  "GET Mirror Node /api/v1/topics/{topicId}/messages, base64-decode each message, then check units * priceTinybarsPerUnit = tinybars. If prepaidTinybars is present, prepaidTinybars - tinybars = refundTinybars.";
 
 export function mountLedger(
   app: Express,

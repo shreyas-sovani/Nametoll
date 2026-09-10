@@ -182,7 +182,7 @@ export function renderHomePage(
       <div class="stamp">HTTP 402</div>
     </header>
     <div class="blotter">
-      <h1>Named pay desk. Paste a name. Watch TEE → 402 → settle → HCS. No baked-in name on this path.</h1>
+      <h1>Named pay desk. Paste a name. Watch TEE → 402 → settle → remainder → HCS. No baked-in name on this path.</h1>
       <dl class="meta">
         <dt>snapshot</dt><dd><code>${SNAPSHOT_PATH}</code></dd>
         <dt>asset</dt><dd>0.0.0 HBAR</dd>
@@ -194,7 +194,7 @@ export function renderHomePage(
         <dt>brain</dt><dd><code>/desk/brain?tinybars=</code></dd>
         <dt>inspect</dt><dd><code>/desk/inspect?name=</code></dd>
         <dt>pay</dt><dd><code>POST /desk/pay</code></dd>
-        <dt>merchandise</dt><dd>Messari lending · live Aave v3 + Compound III · billed per requested protocol</dd>
+        <dt>merchandise</dt><dd>Messari lending · live Aave v3 + Compound III · billed per delivered protocol · unused remainder refunded</dd>
         <dt>facilitator</dt><dd>${escapeHtml(config.facilitatorUrl)}</dd>
       </dl>
       <form id="drive-form" class="drive" action="/desk/inspect" method="get">
@@ -234,6 +234,10 @@ export function renderHomePage(
         <section class="station" id="station-bill">
           <h2>05 HashScan + HCS</h2>
           <dl id="bill-out"></dl>
+        </section>
+        <section class="station" id="station-remainder">
+          <h2>06 Remainder</h2>
+          <dl id="remainder-out"></dl>
         </section>
       </div>
     </div>
@@ -293,6 +297,7 @@ export function renderHomePage(
           fillDl("challenge-out", []);
           fillDl("snapshot-out", []);
           fillDl("bill-out", []);
+          fillDl("remainder-out", []);
         }
         function hideBanners() {
           empty.hidden = true;
@@ -372,8 +377,20 @@ export function renderHomePage(
             ["tinybars", bill.tinybars],
             ["consensus", bill.consensusTime]
           ]);
+          var refundUrl = bill.refundTx
+            ? "https://hashscan.io/testnet/tx/" + bill.refundTx
+            : "";
+          fillDl("remainder-out", [
+            ["prepaid", bill.prepaidTinybars],
+            ["burned units", bill.units != null ? String(bill.units) : ""],
+            ["owed", bill.tinybars],
+            ["refund", bill.refundTinybars],
+            ["refundTx", bill.refundTx, refundUrl]
+          ]);
           hideBanners();
-          ok.textContent = "Settled. Open HashScan and recompute the HCS topic.";
+          ok.textContent = bill.refundTinybars && bill.refundTinybars !== "0"
+            ? "Settled. Unused remainder refunded. Recompute prepaid − owed on the HCS topic."
+            : "Settled. Open HashScan and recompute the HCS topic.";
           ok.hidden = false;
           payBtn.disabled = false;
         }

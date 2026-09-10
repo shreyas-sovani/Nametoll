@@ -2,7 +2,7 @@
 
 **For the build agent.** This is the direction of work. It is not a syntax guide and not a license to invent APIs.
 
-**Status 11 Sep 2026:** B0–B12 done. Live parent is `nametoll.eth` (child `desk.nametoll.eth`) on ENSv2 Sepolia. CRE simulate logs in `docs/partners/chainlink/`. Judge blotter is `/`. Submission timestamps + §9 checklists: `docs/submission.md`. Stretch is unlocked (B13+).
+**Status 11 Sep 2026:** B0–B13 done. Live parent is `nametoll.eth` (child `desk.nametoll.eth`) on ENSv2 Sepolia. CRE simulate logs in `docs/partners/chainlink/`. Judge blotter is `/`. Submission timestamps + §9 checklists: `docs/submission.md`. Unused remainder refunds when delivered units < prepaid (Pinout shape, no dual HCS). Next stretch is B14+ only if you still want it.
 
 Read in this order, then execute tickets **in ID order**. Do not skip ahead to a later ticket because it looks more interesting.
 
@@ -32,8 +32,8 @@ Do not implement World, ATS, SwapVM, Uniswap, Privy, Arc, Ledger, Bazantic, ERC-
 
 | | |
 |---|---|
-| **Done** | B0 scaffold · B1 Gate 402 · B2 buyer pay · B3 public URL · B4 HCS bill · B5 live Messari Aave+Compound · B6 meter 1 vs 2 units · **B7** live `nametoll.eth` / `desk.nametoll.eth` · **B8** buyer paid the resolved endpoint · **B9** `handlerInTee` + redacted simulate logs · **B10** Gate refuses settle/bytes when Brain denies or is skipped · **B11** judge blotter · **B12** README timestamps + `docs/submission.md` |
-| **Next** | Stretch **B13** unused-remainder refund (Pinout shape), only if you still want it. |
+| **Done** | B0 scaffold · B1 Gate 402 · B2 buyer pay · B3 public URL · B4 HCS bill · B5 live Messari Aave+Compound · B6 meter 1 vs 2 units · **B7** live `nametoll.eth` / `desk.nametoll.eth` · **B8** buyer paid the resolved endpoint · **B9** `handlerInTee` + redacted simulate logs · **B10** Gate refuses settle/bytes when Brain denies or is skipped · **B11** judge blotter · **B12** README timestamps + `docs/submission.md` · **B13** unused-remainder refund |
+| **Next** | Stretch **B14** harness PR (only for a DX bug this repo hit) · **B15** `join()` · **B16** Sunday form swap. None of these are required for the spine. |
 | **Human blockers** | Public desk is ngrok session-scoped. Never commit `.env`. |
 | **Not blockers** | Graph Studio query key works. Sepolia owner/operator are funded testnet accounts. |
 
@@ -280,7 +280,7 @@ Work top to bottom. A later ticket may assume the earlier **Done when**.
 
 ## Stretch (do not start if a spine ticket is open)
 
-- [ ] **B13** Unused-remainder refund (Pinout shape). Only after B6 is honest.
+- [x] **B13** Unused-remainder refund (Pinout shape). Only after B6 is honest. *Credit = settled tinybars. Burn = delivered protocols (stub burns all). Seller `TransferTransaction` refunds unused. HCS: `units`/`tinybars` = burned/owed; `prepaidTinybars − tinybars = refundTinybars`. Blotter station 06. No HIP-991 dual topic. 11 Sep 2026.*
 - [ ] **B14** Hedera harness PR for a DX bug **this** repo actually hit. Read harness skills first.
 - [ ] **B15** Liquidation challenge `join()` on the **same** CRE engine. Official challenge address and repo are in `docs/prizes.txt` / analysis — do not invent a different contract.
 - [ ] **B16** Sunday form swap: Graph if B5 became real composition + reusable SKILL; World only if Selfie flag is already on. Write the swap in README before changing the form.

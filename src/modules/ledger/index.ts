@@ -58,6 +58,13 @@ export function encodeBillPayload(draft: BillDraft): string {
     units: draft.units,
     tinybars: draft.tinybars,
     settleTx: draft.settleTx,
+    ...(draft.prepaidTinybars !== undefined
+      ? { prepaidTinybars: draft.prepaidTinybars }
+      : {}),
+    ...(draft.refundTinybars !== undefined
+      ? { refundTinybars: draft.refundTinybars }
+      : {}),
+    ...(draft.refundTx !== undefined ? { refundTx: draft.refundTx } : {}),
   });
 }
 
@@ -90,5 +97,12 @@ export function billFromMirrorMessage(
     tinybars: record.tinybars,
     settleTx: record.settleTx,
     consensusTime: message.consensus_timestamp,
+    ...(typeof record.prepaidTinybars === "string"
+      ? { prepaidTinybars: record.prepaidTinybars }
+      : {}),
+    ...(typeof record.refundTinybars === "string"
+      ? { refundTinybars: record.refundTinybars }
+      : {}),
+    ...(typeof record.refundTx === "string" ? { refundTx: record.refundTx } : {}),
   };
 }

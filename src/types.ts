@@ -22,6 +22,9 @@ export type Bill = {
   tinybars: string;
   settleTx: string;
   consensusTime: string;
+  prepaidTinybars?: string;
+  refundTinybars?: string;
+  refundTx?: string;
 };
 
 export const MODULE_NAMES = [

@@ -25,7 +25,7 @@ Record the blotter at `/` (public origin below). Paste a name. Do not bake one i
 | 0:50 | Meter = 2 protocols. Open desk. TEE deny / over cap. Pay locked | Chainlink verdict changes the path |
 | 1:10 | Meter = 1 protocol. Open desk. TEE allow. Unpaid GET is HTTP 402 (Blocky402 / tinybars / `0.0.0`) | Hedera x402 v2 + Chainlink allow |
 | 1:30 | Pay. Open HashScan settle (example: https://hashscan.io/testnet/tx/0.0.7162784@1789065380.080315812) | Hedera paid request |
-| 2:00 | Snapshot + say 1 vs 2 protocols is `100000` vs `200000` tinybars | Hedera metering |
+| 2:00 | Snapshot + say 1 vs 2 protocols is `100000` vs `200000` tinybars. Station 06: prepaid − owed = refund if one protocol fail-softs | Hedera metering / remainder |
 | 2:25 | Open HCS topic `0.0.10464309` (https://hashscan.io/testnet/topic/0.0.10464309). Recompute `units * 100000 = tinybars` | Hedera HCS |
 | 2:50 | Open `docs/partners/chainlink/simulate-allow.log` — `handlerInTee`, Nitro `us-west-2`, secret cap flips allow vs deny | Chainlink simulate |
 | 3:10 | End. Keep the file under 4:00 | — |
@@ -114,7 +114,7 @@ curl -sS http://127.0.0.1:8787/desk/ledger
 **HashScan:** https://hashscan.io/testnet/topic/0.0.10464309  
 **Mirror Node:** https://testnet.mirrornode.hedera.com/api/v1/topics/0.0.10464309/messages
 
-Recompute: `GET` the Mirror Node URL, base64-decode each `message`, then check `units * priceTinybarsPerUnit = tinybars`. `PRICE_TINYBARS` is `100000` per requested protocol. Default snapshot (Aave + Compound) is `2` units / `200000` tinybars. `?protocols=aave-v3-ethereum` is `1` / `100000`.
+Recompute: `GET` the Mirror Node URL, base64-decode each `message`, then check `units * priceTinybarsPerUnit = tinybars`. If `prepaidTinybars` is present, `prepaidTinybars - tinybars = refundTinybars`. `PRICE_TINYBARS` is `100000` per **delivered** protocol. Default snapshot (Aave + Compound) is `2` units / `200000` tinybars when both indexers respond. `?protocols=aave-v3-ethereum` is `1` / `100000`. Fail-soft (one indexer down) burns the delivered count and refunds the unused prepaid tinybars to the payer.
 
 HashScan of the HBAR transfer is the pay. The topic is the audit.
 
@@ -195,10 +195,11 @@ Fee-payer is **not** configured here. The Gate reads it from live `GET /supporte
 - **B10** Gate asks Brain before Blocky402 settle. Deny / skipped TEE → HTTP 403, no merchandise, no HCS bill. Allow → existing pay path. `GET /desk/brain?tinybars=` and `npm run brain -- 100000`.
 - **B11** judge / operator blotter on `/`. Paste a name (none shipped). Open desk → descriptor + TEE reason + unpaid 402. Pay (server-side buyer keys) → snapshot + HashScan + HCS topic. Deny / empty / error banners. `GET /desk/inspect?name=` and `POST /desk/pay`.
 - **B12** submission pack: README timestamps → Hedera / ENS / Chainlink §9 lists in [`docs/submission.md`](docs/submission.md). Public repo. AI attributed. Form trio unchanged.
+- **B13** unused-remainder refund (Pinout shape, one topic). Credit is the settled tinybars. Burn is delivered protocols. Seller HBAR `TransferTransaction` returns unused tinybars. HCS stores prepaid / owed / refund. Blotter station 06. Not dual-topic HIP-991.
 
 **Next**
 
-- Stretch only (B13+) if no spine ticket is open. B12 is the last spine ticket.
+- Stretch **B14+** only if you still want a harness PR, `join()`, or a Sunday form swap. The spine is closed.
 
 **Blockers (human, not code)**
 

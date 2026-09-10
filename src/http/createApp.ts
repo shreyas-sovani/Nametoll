@@ -11,6 +11,10 @@ import { mountGate } from "../modules/gate/index.ts";
 import { createHcsLedger } from "../modules/ledger/hcs.ts";
 import { mountLedger } from "../modules/ledger/http.ts";
 import type { Ledger } from "../modules/ledger/index.ts";
+import {
+  createHbarRefundRail,
+  type RefundRail,
+} from "../modules/ledger/refund.ts";
 import { createMerchandise, type Merchandise } from "../modules/merchandise/index.ts";
 import type { Buyer } from "../modules/buyer/index.ts";
 import { mountBuyer } from "../modules/buyer/http.ts";
@@ -23,6 +27,7 @@ export type AppDeps = {
   directory?: Directory;
   brain?: Brain;
   buyer?: Buyer;
+  refund?: RefundRail;
 };
 
 function resolveLedger(config: AppConfig, deps: AppDeps): Ledger | undefined {
@@ -58,6 +63,11 @@ export async function createApp(
   const directory = resolveDirectory(config, deps);
   const brain = deps.brain ?? createBrainFromConfig(config);
   const buyer = deps.buyer;
+  const refund =
+    deps.refund ??
+    (config.sellerAccountId && config.sellerPrivateKey
+      ? createHbarRefundRail(config)
+      : undefined);
 
   app.use(express.json());
 
@@ -72,7 +82,7 @@ export async function createApp(
   mountDirectory(app, directory);
   mountBrain(app, brain);
   mountBuyer(app, { directory, brain, config, ...(buyer ? { buyer } : {}), ...(ledger ? { ledger } : {}) });
-  mountGate(app, config, ledger, merchandise, brain);
+  mountGate(app, config, ledger, merchandise, brain, refund);
   mountLedger(app, config, ledger);
 
   return app;

@@ -1,4 +1,4 @@
-# Working notes (B0–B12 live)
+# Working notes (B0–B13 live)
 
 ## Blocky402 probe (10 Sep 2026)
 
@@ -185,4 +185,16 @@ Form stays Hedera + ENS + Chainlink. World and Graph are not on the form.
 - Filled `docs/analysis.md` §9 rows: `docs/submission.md`.
 - Public repo: https://github.com/shreyas-sovani/Nametoll
 - AI attributed in the README. Human still records the video.
-- `join()` not claimed. Harness PR not claimed. Unused-remainder refund is still stretch B13.
+- `join()` not claimed. Harness PR not claimed.
+
+## Unused-remainder refund (B13)
+
+Pinout shape, not a Pinout clone. One 402 still opens a credit pool. The snapshot burns delivered protocols. After settle, unused tinybars go back to the payer. One HCS topic — no HIP-991 dual ledger.
+
+- Credit is the **settled** tinybars (`result.amount` if the facilitator sends it, else the 402 amount). Not a second price table.
+- Burn is delivered `ok` protocols. A stub body burns every prepaid unit (no fake remainder).
+- Owed = `burned * PRICE_TINYBARS`. Refund = `prepaid - owed`. HCS `units` / `tinybars` stay the owed line so `units * price = tinybars` still holds.
+- Refund rail is a seller-signed HBAR `TransferTransaction` (`@hiero-ledger/sdk`). Not a Blocky402 refund route. Seller must hold enough HBAR to cover unused remainder.
+- Blotter station 06 (`#station-remainder`) shows prepaid / burned / owed / refund / refundTx.
+- Proved in `test/refund.test.ts` against a fake facilitator + in-memory refund rail (payer `0.0.1`, fail-soft 2 prepaid → 1 delivered → `100000` refunded).
+- No live refund HashScan in this note. Do not invent one. A public-desk fail-soft pay (or an allow that covers 2 protocols when one indexer is down) is what would produce it. The live CRE cap `150000` still denies a 2-protocol settle, so a live remainder on camera is 1-protocol fail-soft (0 delivered → full refund) unless the cap is raised.
