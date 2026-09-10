@@ -1,0 +1,36 @@
+/** Stable desk descriptor from a live ENSv2 resolve (Directory). */
+export type DeskDescriptor = {
+  endpoint: string;
+  payTo: string;
+  priceRule: string;
+  hcsTopic: string;
+  asset: "0.0.0";
+};
+
+/** Public CRE verdict. Secrets never appear here. */
+export type BrainVerdict = {
+  allow: boolean;
+  maxTinybars: string;
+  reason: string;
+};
+
+/** HCS bill a judge can recompute. */
+export type Bill = {
+  requestId: string;
+  name: string;
+  units: number;
+  tinybars: string;
+  settleTx: string;
+  consensusTime: string;
+};
+
+export const MODULE_NAMES = [
+  "directory",
+  "gate",
+  "brain",
+  "merchandise",
+  "ledger",
+  "buyer",
+] as const;
+
+export type ModuleName = (typeof MODULE_NAMES)[number];
