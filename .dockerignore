@@ -1,0 +1,11 @@
+node_modules
+.git
+.env
+.env.*
+!.env.example
+docs
+vendor
+.agents
+.cursor
+test
+*.md
