@@ -6,7 +6,29 @@ Named pay desk for ETHOnline 2026. An agent pays a live desk it found by name:
 name (ENSv2) → TEE allow (CRE) → pay (Blocky402) → metered bytes → HCS bill
 ```
 
+**Form picks:** **Hedera** · **ENS** · **Chainlink**. Not on the form: World, The Graph.  
+**Repo:** https://github.com/shreyas-sovani/Nametoll  
+**Filled §9 checklists:** [`docs/submission.md`](docs/submission.md)  
+AI agents wrote code in this repo. A human directed the product and will narrate the video.
+
 One app, six modules: **Directory**, **Gate**, **Brain**, **Merchandise**, **Ledger**, **Buyer**.
+
+## Demo timestamps (2–4 min, ≥720p, human voice)
+
+Record the blotter at `/` (public origin below). Paste a name. Do not bake one into the take.
+
+| Clock | On camera | Qual |
+| --- | --- | --- |
+| 0:00 | Loop on screen: name → TEE → pay → meter → HCS | — |
+| 0:15 | Paste a name. Resolve shows endpoint, payTo, price, HCS topic | ENS live resolve, no hardcoded name |
+| 0:35 | Say: Permissioned Resolver + EAC operator can edit those three text keys only | ENS hierarchy / EAC |
+| 0:50 | Meter = 2 protocols. Open desk. TEE deny / over cap. Pay locked | Chainlink verdict changes the path |
+| 1:10 | Meter = 1 protocol. Open desk. TEE allow. Unpaid GET is HTTP 402 (Blocky402 / tinybars / `0.0.0`) | Hedera x402 v2 + Chainlink allow |
+| 1:30 | Pay. Open HashScan settle (example: https://hashscan.io/testnet/tx/0.0.7162784@1789065380.080315812) | Hedera paid request |
+| 2:00 | Snapshot + say 1 vs 2 protocols is `100000` vs `200000` tinybars | Hedera metering |
+| 2:25 | Open HCS topic `0.0.10464309` (https://hashscan.io/testnet/topic/0.0.10464309). Recompute `units * 100000 = tinybars` | Hedera HCS |
+| 2:50 | Open `docs/partners/chainlink/simulate-allow.log` — `handlerInTee`, Nitro `us-west-2`, secret cap flips allow vs deny | Chainlink simulate |
+| 3:10 | End. Keep the file under 4:00 | — |
 
 ## Do not commit secrets
 
@@ -172,10 +194,11 @@ Fee-payer is **not** configured here. The Gate reads it from live `GET /supporte
 - **B9** CRE `handlerInTee` + `getSecret("SPEND_CAP")`. Official `hello-confidential-workflows-ts`. Redacted simulate logs: `docs/partners/chainlink/simulate-allow.log` (100000 under cap) and `simulate-deny.log` (200000 over cap). No `ConfidentialHTTPClient`.
 - **B10** Gate asks Brain before Blocky402 settle. Deny / skipped TEE → HTTP 403, no merchandise, no HCS bill. Allow → existing pay path. `GET /desk/brain?tinybars=` and `npm run brain -- 100000`.
 - **B11** judge / operator blotter on `/`. Paste a name (none shipped). Open desk → descriptor + TEE reason + unpaid 402. Pay (server-side buyer keys) → snapshot + HashScan + HCS topic. Deny / empty / error banners. `GET /desk/inspect?name=` and `POST /desk/pay`.
+- **B12** submission pack: README timestamps → Hedera / ENS / Chainlink §9 lists in [`docs/submission.md`](docs/submission.md). Public repo. AI attributed. Form trio unchanged.
 
 **Next**
 
-- **B12** submission pack: README timestamps → each locked partner’s qual list.
+- Stretch only (B13+) if no spine ticket is open. B12 is the last spine ticket.
 
 **Blockers (human, not code)**
 

@@ -1,4 +1,4 @@
-# Working notes (B0–B11 live)
+# Working notes (B0–B12 live)
 
 ## Blocky402 probe (10 Sep 2026)
 
@@ -176,3 +176,13 @@ curl -sS -X POST http://127.0.0.1:8787/desk/pay \
 ```
 
 Live inspect (11 Sep 2026, pasted `nametoll.eth`, 1 protocol): descriptor endpoint `https://nonwaxing-xeromorphic-dagmar.ngrok-free.dev`, HCS `0.0.10464309`, unpaid 402 amount `100000` / asset `0.0.0` / payTo `0.0.10463755`. Brain on a process without `CRE_BRAIN_URL` / `CRE_PROJECT_DIR` fail-closed (`TEE unavailable`) — Pay stays locked, which is B10. Public origin was restarted and now serves this blotter.
+
+## Submission pack (B12)
+
+Form stays Hedera + ENS + Chainlink. World and Graph are not on the form.
+
+- Timestamp table lives at the top of `README.md` (2–4 min, 720p, human voice).
+- Filled `docs/analysis.md` §9 rows: `docs/submission.md`.
+- Public repo: https://github.com/shreyas-sovani/Nametoll
+- AI attributed in the README. Human still records the video.
+- `join()` not claimed. Harness PR not claimed. Unused-remainder refund is still stretch B13.

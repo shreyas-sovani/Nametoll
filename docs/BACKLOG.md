@@ -2,7 +2,7 @@
 
 **For the build agent.** This is the direction of work. It is not a syntax guide and not a license to invent APIs.
 
-**Status 11 Sep 2026:** B0–B11 done. Live parent is `nametoll.eth` (child `desk.nametoll.eth`) on ENSv2 Sepolia. CRE simulate logs in `docs/partners/chainlink/`. Judge blotter is `/` (`GET /desk/inspect`, `POST /desk/pay`). Next: **B12**.
+**Status 11 Sep 2026:** B0–B12 done. Live parent is `nametoll.eth` (child `desk.nametoll.eth`) on ENSv2 Sepolia. CRE simulate logs in `docs/partners/chainlink/`. Judge blotter is `/`. Submission timestamps + §9 checklists: `docs/submission.md`. Stretch is unlocked (B13+).
 
 Read in this order, then execute tickets **in ID order**. Do not skip ahead to a later ticket because it looks more interesting.
 
@@ -32,8 +32,8 @@ Do not implement World, ATS, SwapVM, Uniswap, Privy, Arc, Ledger, Bazantic, ERC-
 
 | | |
 |---|---|
-| **Done** | B0 scaffold · B1 Gate 402 · B2 buyer pay · B3 public URL · B4 HCS bill · B5 live Messari Aave+Compound · B6 meter 1 vs 2 units · **B7** live `nametoll.eth` / `desk.nametoll.eth` · **B8** buyer paid the resolved endpoint · **B9** `handlerInTee` + redacted simulate logs · **B10** Gate refuses settle/bytes when Brain denies or is skipped · **B11** judge blotter on `/` (paste name → descriptor → TEE → 402 → pay → HashScan + HCS) |
-| **Next** | **B12** submission pack (README timestamps → qual lists). |
+| **Done** | B0 scaffold · B1 Gate 402 · B2 buyer pay · B3 public URL · B4 HCS bill · B5 live Messari Aave+Compound · B6 meter 1 vs 2 units · **B7** live `nametoll.eth` / `desk.nametoll.eth` · **B8** buyer paid the resolved endpoint · **B9** `handlerInTee` + redacted simulate logs · **B10** Gate refuses settle/bytes when Brain denies or is skipped · **B11** judge blotter · **B12** README timestamps + `docs/submission.md` |
+| **Next** | Stretch **B13** unused-remainder refund (Pinout shape), only if you still want it. |
 | **Human blockers** | Public desk is ngrok session-scoped. Never commit `.env`. |
 | **Not blockers** | Graph Studio query key works. Sepolia owner/operator are funded testnet accounts. |
 
@@ -268,7 +268,7 @@ Work top to bottom. A later ticket may assume the earlier **Done when**.
 
 ### B12 — Submission pack
 
-- [ ] **B12** README maps **timestamps → each locked partner’s qual list**. Public repo, daily commits, AI attributed.
+- [x] **B12** README maps **timestamps → each locked partner’s qual list**. Public repo, daily commits, AI attributed. *Form Hedera + ENS + Chainlink. `docs/submission.md` ticks §9 from live URL, HashScan, topic, simulate logs, live resolve. 11 Sep 2026.*
 
 **Done when:** Checklists in `docs/analysis.md` §9 for Hedera AI, ENS, and Chainlink can be ticked from README + video + repo evidence (live URL, HashScan, topic id, simulate log, live resolve). Form still says Hedera + ENS + Chainlink unless a Sunday swap is written down.
 
