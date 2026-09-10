@@ -2,7 +2,7 @@
 
 **For the build agent.** This is the direction of work. It is not a syntax guide and not a license to invent APIs.
 
-**Status 11 Sep 2026:** B0–B10 done. Live parent is `nametoll.eth` (child `desk.nametoll.eth`) on ENSv2 Sepolia. CRE simulate logs in `docs/partners/chainlink/`. Next code ticket: **B11**.
+**Status 11 Sep 2026:** B0–B11 done. Live parent is `nametoll.eth` (child `desk.nametoll.eth`) on ENSv2 Sepolia. CRE simulate logs in `docs/partners/chainlink/`. Judge blotter is `/` (`GET /desk/inspect`, `POST /desk/pay`). Next: **B12**.
 
 Read in this order, then execute tickets **in ID order**. Do not skip ahead to a later ticket because it looks more interesting.
 
@@ -32,8 +32,8 @@ Do not implement World, ATS, SwapVM, Uniswap, Privy, Arc, Ledger, Bazantic, ERC-
 
 | | |
 |---|---|
-| **Done** | B0 scaffold · B1 Gate 402 · B2 buyer pay · B3 public URL · B4 HCS bill · B5 live Messari Aave+Compound · B6 meter 1 vs 2 units · **B7** live `nametoll.eth` / `desk.nametoll.eth` · **B8** buyer paid the resolved endpoint · **B9** `handlerInTee` + redacted simulate logs · **B10** Gate refuses settle/bytes when Brain denies or is skipped |
-| **Next** | **B11** thin operator / judge UI. |
+| **Done** | B0 scaffold · B1 Gate 402 · B2 buyer pay · B3 public URL · B4 HCS bill · B5 live Messari Aave+Compound · B6 meter 1 vs 2 units · **B7** live `nametoll.eth` / `desk.nametoll.eth` · **B8** buyer paid the resolved endpoint · **B9** `handlerInTee` + redacted simulate logs · **B10** Gate refuses settle/bytes when Brain denies or is skipped · **B11** judge blotter on `/` (paste name → descriptor → TEE → 402 → pay → HashScan + HCS) |
+| **Next** | **B12** submission pack (README timestamps → qual lists). |
 | **Human blockers** | Public desk is ngrok session-scoped. Never commit `.env`. |
 | **Not blockers** | Graph Studio query key works. Sepolia owner/operator are funded testnet accounts. |
 
@@ -256,7 +256,7 @@ Work top to bottom. A later ticket may assume the earlier **Done when**.
 
 ### B11 — Thin operator / judge UI
 
-- [ ] **B11** A page a human can drive for the 2–4 min video: paste name, show descriptor, show TEE reason, show 402 → settle, show snapshot, show HashScan + HCS topic.
+- [x] **B11** A page a human can drive for the 2–4 min video: paste name, show descriptor, show TEE reason, show 402 → settle, show snapshot, show HashScan + HCS topic. *`/` blotter. `GET /desk/inspect` + `POST /desk/pay`. Empty / error / deny stations. No baked-in name. 11 Sep 2026.*
 
 **Done when:** Happy path has no hardcoded name. Empty / error / deny states exist. Desktop-usable. Not a design prize.
 
@@ -295,7 +295,7 @@ Work top to bottom. A later ticket may assume the earlier **Done when**.
 | Fri | B7–B8 (Directory can overlap B4–B6 if two people) |
 | Fri–Sat | B9–B10 |
 | Sat | B4–B6 if not done; then B11 |
-| Sat–Sun | B12 |
+| Sat–Sun | **B12** |
 
 If CRE dies, keep B0–B8 + B11–B12 and use the PRD third-slot swap. Do not fake a TEE.
 

@@ -127,3 +127,13 @@ export function createBuyer(credentials: BuyerCredentials): Buyer {
     },
   };
 }
+
+export function tryCreateBuyer(
+  env: NodeJS.ProcessEnv = process.env,
+): Buyer | undefined {
+  try {
+    return createBuyer(loadBuyerCredentials(env));
+  } catch {
+    return undefined;
+  }
+}

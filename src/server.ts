@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { loadConfig } from "./config.ts";
 import { createApp } from "./http/createApp.ts";
+import { tryCreateBuyer } from "./modules/buyer/index.ts";
 import { checkGatewayKey } from "./modules/merchandise/index.ts";
 
 if (existsSync(".env")) {
@@ -22,7 +23,8 @@ if (loaded.graphGatewayKey) {
     config = rest;
   }
 }
-const app = await createApp(config);
+const buyer = tryCreateBuyer();
+const app = await createApp(config, buyer ? { buyer } : {});
 const port = Number.isFinite(config.port) ? config.port : 8787;
 
 app.listen(port, "0.0.0.0", () => {

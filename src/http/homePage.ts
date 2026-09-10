@@ -1,5 +1,10 @@
 import type { AppConfig } from "../config.ts";
 import { SNAPSHOT_PATH } from "../modules/gate/index.ts";
+import { hashscanTopicUrl, explorerNetwork } from "../modules/ledger/hashscan.ts";
+
+export type HomePageOptions = {
+  canPay?: boolean;
+};
 
 function escapeHtml(value: string): string {
   return value
@@ -9,8 +14,16 @@ function escapeHtml(value: string): string {
     .replaceAll('"', "&quot;");
 }
 
-export function renderHomePage(config: AppConfig): string {
+export function renderHomePage(
+  config: AppConfig,
+  options: HomePageOptions = {},
+): string {
   const payTo = config.sellerAccountId ?? "set HEDERA_SELLER_ACCOUNT_ID";
+  const topic = config.hcsTopicId;
+  const topicUrl = topic
+    ? hashscanTopicUrl(topic, explorerNetwork(config.network))
+    : "";
+  const canPay = options.canPay === true;
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -25,6 +38,8 @@ export function renderHomePage(config: AppConfig): string {
       --brass: #8a6230;
       --stamp: #c24520;
       --rule: #c9b48a;
+      --paper: #fff8e8;
+      --ok: #2f5d3a;
     }
     * { box-sizing: border-box; }
     body {
@@ -39,7 +54,7 @@ export function renderHomePage(config: AppConfig): string {
       font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif;
     }
     .ticket {
-      width: min(36rem, 100%);
+      width: min(68rem, 100%);
       background: var(--ticket);
       border: 2px solid var(--ink);
       box-shadow: 8px 8px 0 #0a1218;
@@ -56,7 +71,7 @@ export function renderHomePage(config: AppConfig): string {
     }
     .ticket::before { top: -12px; }
     .ticket::after { bottom: -12px; transform: rotate(180deg); }
-    header, main, footer { padding: 1.1rem 1.4rem; }
+    header, footer { padding: 1.1rem 1.4rem; }
     header {
       display: flex;
       justify-content: space-between;
@@ -72,6 +87,13 @@ export function renderHomePage(config: AppConfig): string {
       transform: rotate(-8deg);
     }
     h1 { font-size: 1.05rem; margin: 0 0 0.75rem; }
+    h2 {
+      margin: 0 0 0.55rem;
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--brass);
+    }
     dl {
       display: grid;
       grid-template-columns: 8.5rem 1fr;
@@ -82,45 +104,75 @@ export function renderHomePage(config: AppConfig): string {
     }
     dt { color: var(--brass); }
     dd { margin: 0; word-break: break-all; }
-    ol { margin: 0.8rem 0 0; padding-left: 1.2rem; }
-    li { margin: 0.3rem 0; }
     footer {
       border-top: 2px dashed var(--rule);
       font-size: 0.85rem;
     }
     a { color: var(--ink); }
     code { font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; }
-    form {
-      margin: 1rem 0 0;
+    .blotter { padding: 1.1rem 1.4rem 1.3rem; }
+    form.drive {
       display: grid;
-      gap: 0.45rem;
+      grid-template-columns: 1fr auto auto;
+      gap: 0.55rem 0.7rem;
+      align-items: end;
+      margin: 0 0 1rem;
     }
-    label { font-size: 0.85rem; color: var(--brass); }
-    input[name="name"] {
+    form.drive label { font-size: 0.85rem; color: var(--brass); display: grid; gap: 0.3rem; }
+    form.drive .name-field { grid-column: 1 / -1; }
+    input[name="name"], select {
       width: 100%;
       border: 1px solid var(--ink);
-      background: #fff8e8;
+      background: var(--paper);
       padding: 0.45rem 0.55rem;
       font: inherit;
     }
     button {
-      justify-self: start;
       border: 1px solid var(--ink);
       background: var(--navy);
       color: var(--ticket);
-      padding: 0.35rem 0.8rem;
+      padding: 0.45rem 0.9rem;
       font: inherit;
       letter-spacing: 0.06em;
       text-transform: uppercase;
       cursor: pointer;
     }
-    .resolve-out {
-      margin: 0.7rem 0 0;
-      font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
-      font-size: 0.78rem;
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
     }
-    .resolve-out[hidden] { display: none; }
-    .resolve-err { color: var(--stamp); }
+    button.pay { background: var(--stamp); color: var(--paper); }
+    .stations {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+    }
+    .station {
+      border: 1px solid var(--rule);
+      background: var(--paper);
+      padding: 0.75rem 0.8rem;
+      min-height: 7.5rem;
+    }
+    .station[hidden], .banner[hidden] { display: none; }
+    .banner {
+      margin: 0 0 0.8rem;
+      padding: 0.55rem 0.7rem;
+      border: 1px dashed var(--brass);
+      font-size: 0.92rem;
+    }
+    .banner.err, .banner.deny { border-color: var(--stamp); color: var(--stamp); }
+    .banner.ok { border-color: var(--ok); color: var(--ok); }
+    .meta {
+      margin: 0 0 0.9rem;
+      font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+      font-size: 0.75rem;
+    }
+    @media (max-width: 720px) {
+      form.drive, .stations { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
   </style>
 </head>
 <body>
@@ -129,81 +181,265 @@ export function renderHomePage(config: AppConfig): string {
       <div class="brand">Nametoll</div>
       <div class="stamp">HTTP 402</div>
     </header>
-    <main>
-      <h1>Named pay desk. Agents pay in tinybars. No baked-in name on this path.</h1>
-      <dl>
+    <div class="blotter">
+      <h1>Named pay desk. Paste a name. Watch TEE → 402 → settle → HCS. No baked-in name on this path.</h1>
+      <dl class="meta">
         <dt>snapshot</dt><dd><code>${SNAPSHOT_PATH}</code></dd>
         <dt>asset</dt><dd>0.0.0 HBAR</dd>
         <dt>network</dt><dd>${escapeHtml(config.network)}</dd>
         <dt>price</dt><dd>${escapeHtml(config.priceTinybars)} tinybars per requested protocol</dd>
         <dt>payTo</dt><dd>${escapeHtml(payTo)}</dd>
-        <dt>HCS topic</dt><dd>${escapeHtml(config.hcsTopicId ?? "set HCS_TOPIC_ID")}</dd>
+        <dt>HCS topic</dt><dd>${topic && topicUrl ? `<a href="${escapeHtml(topicUrl)}">${escapeHtml(topic)}</a>` : escapeHtml("set HCS_TOPIC_ID")}</dd>
         <dt>ledger</dt><dd><code>/desk/ledger</code></dd>
         <dt>brain</dt><dd><code>/desk/brain?tinybars=</code></dd>
+        <dt>inspect</dt><dd><code>/desk/inspect?name=</code></dd>
+        <dt>pay</dt><dd><code>POST /desk/pay</code></dd>
         <dt>merchandise</dt><dd>Messari lending · live Aave v3 + Compound III · billed per requested protocol</dd>
         <dt>facilitator</dt><dd>${escapeHtml(config.facilitatorUrl)}</dd>
       </dl>
-      <ol>
-        <li><code>GET ${SNAPSHOT_PATH}</code> or <code>${SNAPSHOT_PATH}?protocols=aave-v3-ethereum</code> — unpaid returns 402. Price is unit × requested protocols.</li>
-        <li>Sign x402 v2 <code>exact</code> HBAR. Retry with <code>PAYMENT-SIGNATURE</code>.</li>
-        <li>Blocky402 verify + settle. Resource + <code>PAYMENT-RESPONSE</code> only after settle.</li>
-        <li>Paste a name below. The desk resolves it live — this page does not ship a name.</li>
-      </ol>
-      <form id="resolve-form" action="/desk/resolve" method="get">
-        <label for="desk-name">Name</label>
-        <input id="desk-name" name="name" required autocomplete="off" spellcheck="false" placeholder="paste a name" />
-        <button type="submit">Resolve</button>
+      <form id="drive-form" class="drive" action="/desk/inspect" method="get">
+        <label class="name-field" for="desk-name">Name
+          <input id="desk-name" name="name" required autocomplete="off" spellcheck="false" placeholder="paste a name" />
+        </label>
+        <label for="desk-units">Meter
+          <select id="desk-units" name="units">
+            <option value="1">1 protocol · 1 × price</option>
+            <option value="2">2 protocols · 2 × price</option>
+          </select>
+        </label>
+        <button type="submit" id="open-desk">Open desk</button>
+        <button type="button" class="pay" id="pay-desk" disabled data-can-pay="${canPay ? "1" : "0"}">Pay</button>
       </form>
-      <p id="resolve-error" class="resolve-out resolve-err" hidden></p>
-      <dl id="resolve-out" class="resolve-out" hidden></dl>
-    </main>
+      <p id="desk-empty" class="banner">Paste a name to open the desk. Empty on purpose — the happy path does not ship a name.</p>
+      <p id="desk-error" class="banner err" hidden></p>
+      <p id="desk-deny" class="banner deny" hidden></p>
+      <p id="desk-ok" class="banner ok" hidden></p>
+      <div class="stations">
+        <section class="station" id="station-descriptor">
+          <h2>01 Descriptor</h2>
+          <dl id="descriptor-out"></dl>
+        </section>
+        <section class="station" id="station-tee">
+          <h2>02 TEE</h2>
+          <dl id="tee-out"></dl>
+        </section>
+        <section class="station" id="station-challenge">
+          <h2>03 402</h2>
+          <dl id="challenge-out"></dl>
+        </section>
+        <section class="station" id="station-snapshot">
+          <h2>04 Snapshot</h2>
+          <dl id="snapshot-out"></dl>
+        </section>
+        <section class="station" id="station-bill">
+          <h2>05 HashScan + HCS</h2>
+          <dl id="bill-out"></dl>
+        </section>
+      </div>
+    </div>
     <footer>
       Health: <a href="/health"><code>/health</code></a>.
+      Resolve: <a href="/desk/resolve"><code>/desk/resolve?name=</code></a>.
       Bills: <a href="/desk/ledger"><code>/desk/ledger</code></a>.
-      Directory: <a href="/desk/resolve"><code>/desk/resolve?name=</code></a>.
-      Buyer: <code>npm run buyer -- &lt;name-or-url&gt; [protocol-ids]</code>.
+      Buyer CLI: <code>npm run buyer -- &lt;name-or-url&gt; [protocol-ids]</code>.
       Do not commit secrets. Resource server holds no facilitator key.
     </footer>
     <script>
       (function () {
-        var form = document.getElementById("resolve-form");
-        var err = document.getElementById("resolve-error");
-        var out = document.getElementById("resolve-out");
-        if (!form || !err || !out) return;
+        var form = document.getElementById("drive-form");
+        var openBtn = document.getElementById("open-desk");
+        var payBtn = document.getElementById("pay-desk");
+        var empty = document.getElementById("desk-empty");
+        var err = document.getElementById("desk-error");
+        var deny = document.getElementById("desk-deny");
+        var ok = document.getElementById("desk-ok");
+        var lastInspect = null;
+        if (!form || !openBtn || !payBtn) return;
+
+        function protocols() {
+          var units = document.getElementById("desk-units");
+          return units && units.value === "1" ? ["aave-v3-ethereum"] : [];
+        }
+        function typedName() {
+          var value = new FormData(form).get("name");
+          return value ? String(value).trim() : "";
+        }
+        function fillDl(id, rows) {
+          var node = document.getElementById(id);
+          if (!node) return;
+          node.replaceChildren();
+          rows.forEach(function (pair) {
+            if (pair[1] == null || pair[1] === "") return;
+            var dt = document.createElement("dt");
+            dt.textContent = pair[0];
+            var dd = document.createElement("dd");
+            if (pair[2]) {
+              var a = document.createElement("a");
+              a.href = pair[2];
+              a.textContent = pair[1];
+              a.rel = "noreferrer";
+              a.target = "_blank";
+              dd.appendChild(a);
+            } else {
+              dd.textContent = pair[1];
+            }
+            node.appendChild(dt);
+            node.appendChild(dd);
+          });
+        }
+        function resetStations() {
+          fillDl("descriptor-out", []);
+          fillDl("tee-out", []);
+          fillDl("challenge-out", []);
+          fillDl("snapshot-out", []);
+          fillDl("bill-out", []);
+        }
+        function hideBanners() {
+          empty.hidden = true;
+          err.hidden = true;
+          deny.hidden = true;
+          ok.hidden = true;
+        }
+        function showError(message) {
+          hideBanners();
+          err.textContent = message;
+          err.hidden = false;
+        }
+        function hbar(tinybars) {
+          try {
+            return (Number(BigInt(tinybars)) / 100000000).toString() + " HBAR";
+          } catch (e) {
+            return "";
+          }
+        }
+        function showInspect(body) {
+          lastInspect = body;
+          var d = body.descriptor || {};
+          fillDl("descriptor-out", [
+            ["name", body.name],
+            ["endpoint", d.endpoint],
+            ["payTo", d.payTo],
+            ["priceRule", d.priceRule],
+            ["hcsTopic", d.hcsTopic],
+            ["asset", d.asset]
+          ]);
+          var v = body.verdict || {};
+          fillDl("tee-out", [
+            ["allow", String(v.allow)],
+            ["reason", v.reason],
+            ["maxTinybars", v.maxTinybars],
+            ["requested", body.tinybars]
+          ]);
+          var c = body.challenge || {};
+          fillDl("challenge-out", [
+            ["status", c.status != null ? String(c.status) : ""],
+            ["amount", c.amount],
+            ["HBAR", c.amount ? hbar(c.amount) : ""],
+            ["asset", c.asset],
+            ["payTo", c.payTo],
+            ["scheme", c.scheme]
+          ]);
+          if (v.allow) {
+            hideBanners();
+            ok.textContent = "TEE allowed. Unpaid GET is HTTP 402. Pay to settle.";
+            ok.hidden = false;
+            payBtn.disabled = payBtn.getAttribute("data-can-pay") !== "1";
+            if (payBtn.disabled) {
+              showError("Desk has no buyer signer. Set buyer keys and restart, or use the buyer CLI.");
+            }
+          } else {
+            hideBanners();
+            deny.textContent = "TEE denied: " + (v.reason || "over cap") + ". No settle, no snapshot.";
+            deny.hidden = false;
+            payBtn.disabled = true;
+          }
+        }
+        function showPaid(body) {
+          showInspect(body);
+          var paid = body.paid || {};
+          var snap = paid.body || {};
+          fillDl("snapshot-out", [
+            ["status", paid.status != null ? String(paid.status) : ""],
+            ["units", snap.units != null ? String(snap.units) : ""],
+            ["stub", snap.stub != null ? String(snap.stub) : ""],
+            ["ok", snap.ok != null ? String(snap.ok) : ""]
+          ]);
+          var bill = body.bill || {};
+          fillDl("bill-out", [
+            ["settleTx", paid.settleTx, paid.hashscanUrl],
+            ["HashScan", paid.hashscanUrl, paid.hashscanUrl],
+            ["HCS topic", body.topicId, body.topicHashscanUrl],
+            ["tinybars", bill.tinybars],
+            ["consensus", bill.consensusTime]
+          ]);
+          hideBanners();
+          ok.textContent = "Settled. Open HashScan and recompute the HCS topic.";
+          ok.hidden = false;
+          payBtn.disabled = false;
+        }
         form.addEventListener("submit", function (event) {
           event.preventDefault();
-          var name = new FormData(form).get("name");
-          err.hidden = true;
-          out.hidden = true;
-          out.replaceChildren();
-          if (!name || !String(name).trim()) {
-            err.textContent = "Paste a name.";
-            err.hidden = false;
+          var name = typedName();
+          hideBanners();
+          resetStations();
+          lastInspect = null;
+          payBtn.disabled = true;
+          if (!name) {
+            empty.hidden = false;
+            empty.textContent = "Paste a name.";
             return;
           }
-          fetch("/desk/resolve?name=" + encodeURIComponent(String(name)))
+          openBtn.disabled = true;
+          openBtn.textContent = "Opening…";
+          var query = "/desk/inspect?name=" + encodeURIComponent(name);
+          var ids = protocols();
+          if (ids.length) query += "&protocols=" + encodeURIComponent(ids.join(","));
+          fetch(query)
             .then(function (res) { return res.json().then(function (body) { return { res: res, body: body }; }); })
             .then(function (pack) {
               if (!pack.res.ok || !pack.body.descriptor) {
-                err.textContent = pack.body.error || "Name did not resolve.";
-                err.hidden = false;
+                showError(pack.body.error || "Name did not resolve.");
                 return;
               }
-              var d = pack.body.descriptor;
-              [["endpoint", d.endpoint], ["payTo", d.payTo], ["priceRule", d.priceRule], ["hcsTopic", d.hcsTopic], ["asset", d.asset]]
-                .forEach(function (pair) {
-                  var dt = document.createElement("dt");
-                  dt.textContent = pair[0];
-                  var dd = document.createElement("dd");
-                  dd.textContent = pair[1] || "";
-                  out.appendChild(dt);
-                  out.appendChild(dd);
-                });
-              out.hidden = false;
+              showInspect(pack.body);
             })
-            .catch(function () {
-              err.textContent = "Resolve failed.";
-              err.hidden = false;
+            .catch(function () { showError("Inspect failed."); })
+            .finally(function () {
+              openBtn.disabled = false;
+              openBtn.textContent = "Open desk";
+            });
+        });
+        payBtn.addEventListener("click", function () {
+          var name = typedName();
+          if (!name) {
+            showError("Paste a name.");
+            return;
+          }
+          payBtn.disabled = true;
+          payBtn.textContent = "Paying…";
+          fetch("/desk/pay", {
+            method: "POST",
+            headers: { "content-type": "application/json", accept: "application/json" },
+            body: JSON.stringify({ name: name, protocols: protocols() })
+          })
+            .then(function (res) { return res.json().then(function (body) { return { res: res, body: body }; }); })
+            .then(function (pack) {
+              if (pack.body.verdict && pack.body.verdict.allow === false) {
+                showInspect(pack.body);
+                return;
+              }
+              if (!pack.res.ok || !pack.body.paid) {
+                showError(pack.body.error || "Pay refused.");
+                return;
+              }
+              showPaid(pack.body);
+            })
+            .catch(function () { showError("Pay failed."); })
+            .finally(function () {
+              payBtn.textContent = "Pay";
+              if (lastInspect && lastInspect.verdict && lastInspect.verdict.allow && payBtn.getAttribute("data-can-pay") === "1") {
+                payBtn.disabled = false;
+              }
             });
         });
       })();

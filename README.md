@@ -48,6 +48,15 @@ Resolve without paying:
 curl -sS "http://127.0.0.1:8787/desk/resolve?name=<paste-a-name>"
 ```
 
+Judge blotter (B11) is `/` in a desktop browser. Same loop over HTTP:
+
+```bash
+curl -sS "http://127.0.0.1:8787/desk/inspect?name=<paste-a-name>&protocols=aave-v3-ethereum"
+curl -sS -X POST http://127.0.0.1:8787/desk/pay \
+  -H 'content-type: application/json' \
+  -d '{"name":"<paste-a-name>","protocols":["aave-v3-ethereum"]}'
+```
+
 A successful settle prints a HashScan URL (`https://hashscan.io/testnet/tx/<id>`). Live testnet settles and HCS bills are in `docs/working-notes.md`.
 
 Live Graph check (needs `GRAPH_GATEWAY_KEY` in `.env`, never commit it):
@@ -162,10 +171,11 @@ Fee-payer is **not** configured here. The Gate reads it from live `GET /supporte
 - **B8** `npm run buyer -- nametoll.eth` resolves then 402s the **resolved** endpoint. Changing `agent-endpoint[web]` via the operator changes the next resolve without a buyer code change.
 - **B9** CRE `handlerInTee` + `getSecret("SPEND_CAP")`. Official `hello-confidential-workflows-ts`. Redacted simulate logs: `docs/partners/chainlink/simulate-allow.log` (100000 under cap) and `simulate-deny.log` (200000 over cap). No `ConfidentialHTTPClient`.
 - **B10** Gate asks Brain before Blocky402 settle. Deny / skipped TEE → HTTP 403, no merchandise, no HCS bill. Allow → existing pay path. `GET /desk/brain?tinybars=` and `npm run brain -- 100000`.
+- **B11** judge / operator blotter on `/`. Paste a name (none shipped). Open desk → descriptor + TEE reason + unpaid 402. Pay (server-side buyer keys) → snapshot + HashScan + HCS topic. Deny / empty / error banners. `GET /desk/inspect?name=` and `POST /desk/pay`.
 
 **Next**
 
-- **B11** thin operator / judge UI.
+- **B12** submission pack: README timestamps → each locked partner’s qual list.
 
 **Blockers (human, not code)**
 

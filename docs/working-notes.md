@@ -1,4 +1,4 @@
-# Working notes (B0–B10 live)
+# Working notes (B0–B11 live)
 
 ## Blocky402 probe (10 Sep 2026)
 
@@ -154,3 +154,25 @@ Desk:
 - Allow `100000`: `docs/partners/chainlink/simulate-allow.log` — TEE Execution / AWS Nitro us-west-2, `TEE handler: verdict=allow reason=under cap`
 - Deny `200000`: `docs/partners/chainlink/simulate-deny.log` — same TEE banner, `verdict=deny reason=over cap`
 - Secret cap from `getSecret("SPEND_CAP")` is `150000` (public as `maxTinybars` only). No secret env lines in the committed logs. Deploy access not enabled; simulation does not need it.
+
+## Judge blotter (B11)
+
+The homepage is the 2–4 min video desk. It does not ship a name.
+
+Stations, in order: paste name → descriptor → TEE reason → unpaid 402 → snapshot → HashScan settle + HCS topic.
+
+- Empty: “Paste a name to open the desk.”
+- Error: unknown / missing name (`GET /desk/inspect` 400/404).
+- Deny: TEE `allow: false` → Pay stays locked, `POST /desk/pay` 403, no merchandise, no HCS bill.
+- Pay uses the server-side buyer signer (`HEDERA_BUYER_*`). If those keys are unset, Pay is disabled and the desk says so (CLI `npm run buyer -- <name>` still works).
+- Meter control: 1 protocol (`100000` tinybars) vs 2 (`200000`). With the B9 cap `150000`, that is the on-camera allow vs deny flip.
+- Inspect/pay hit the **resolved** endpoint (B8), not a baked-in URL.
+
+```bash
+curl -sS "http://127.0.0.1:8787/desk/inspect?name=<paste-a-name>&protocols=aave-v3-ethereum"
+curl -sS -X POST http://127.0.0.1:8787/desk/pay \
+  -H 'content-type: application/json' \
+  -d '{"name":"<paste-a-name>","protocols":["aave-v3-ethereum"]}'
+```
+
+Live inspect (11 Sep 2026, pasted `nametoll.eth`, 1 protocol): descriptor endpoint `https://nonwaxing-xeromorphic-dagmar.ngrok-free.dev`, HCS `0.0.10464309`, unpaid 402 amount `100000` / asset `0.0.0` / payTo `0.0.10463755`. Brain on a process without `CRE_BRAIN_URL` / `CRE_PROJECT_DIR` fail-closed (`TEE unavailable`) — Pay stays locked, which is B10. Public origin was restarted and now serves this blotter.
