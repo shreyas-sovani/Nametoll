@@ -11,6 +11,8 @@ npm-debug.log*
 coverage/
 .railway/
 .ngrok/
+.ens/
+.cursor/mcp.json
 
 # Shallow partner clones keep their own .git (see vendor/SOURCES.md).
 /vendor/*

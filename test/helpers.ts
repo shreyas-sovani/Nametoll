@@ -14,6 +14,8 @@ export function testDeskConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     secretsPaths: {},
     priceTinybars: "100000",
     mirrorNodeUrl: "https://testnet.mirrornode.hedera.com",
+    graphGatewayUrl: "https://gateway.thegraph.com/api",
+    ensnodeUrl: "https://api.v2-sepolia.ensnode.io",
     ...overrides,
   };
 }
@@ -26,6 +28,8 @@ export function publicDeskConfig(): AppConfig {
     secretsPaths: {},
     priceTinybars: "100000",
     mirrorNodeUrl: "https://testnet.mirrornode.hedera.com",
+    graphGatewayUrl: "https://gateway.thegraph.com/api",
+    ensnodeUrl: "https://api.v2-sepolia.ensnode.io",
   };
 }
 

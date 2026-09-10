@@ -5,6 +5,8 @@ export const HBAR_ASSET = "0.0.0";
 export const DEFAULT_FACILITATOR_URL = "https://api.testnet.blocky402.com";
 export const DEFAULT_PRICE_TINYBARS = "100000";
 export const DEFAULT_MIRROR_NODE_URL = "https://testnet.mirrornode.hedera.com";
+export const DEFAULT_GRAPH_GATEWAY_URL = "https://gateway.thegraph.com/api";
+export const DEFAULT_ENSNODE_URL = "https://api.v2-sepolia.ensnode.io";
 
 export type SecretsPaths = {
   buyerKeyPath?: string;
@@ -20,42 +22,63 @@ export type AppConfig = {
   publicDeskUrl?: string;
   hcsTopicId?: string;
   mirrorNodeUrl: string;
+  graphGatewayUrl: string;
+  graphGatewayKey?: string;
+  ensnodeUrl: string;
   secretsPaths: SecretsPaths;
   priceTinybars: string;
 };
 
+function readEnv(env: NodeJS.ProcessEnv, name: string): string | undefined {
+  const raw = env[name];
+  if (raw == null || raw === "") return undefined;
+  let value = raw.trim();
+  if (
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  ) {
+    value = value.slice(1, -1).trim();
+  }
+  return value || undefined;
+}
+
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
-  if (env.FACILITATOR_PRIVATE_KEY) {
+  if (readEnv(env, "FACILITATOR_PRIVATE_KEY")) {
     throw new Error(
       "Resource server must not hold a facilitator private key. Unset FACILITATOR_PRIVATE_KEY.",
     );
   }
 
-  if (env.HCS_TOPIC_ID && !env.HEDERA_SELLER_PRIVATE_KEY) {
+  const topicId = readEnv(env, "HCS_TOPIC_ID");
+  const sellerPrivateKey = readEnv(env, "HEDERA_SELLER_PRIVATE_KEY");
+  if (topicId && !sellerPrivateKey) {
     throw new Error(
       "HCS_TOPIC_ID requires a seller private key so the desk can submit bills. Set HEDERA_SELLER_PRIVATE_KEY. This is the seller key, not a facilitator key.",
     );
   }
 
+  const graphGatewayKey = readEnv(env, "GRAPH_GATEWAY_KEY");
+  const sellerAccountId = readEnv(env, "HEDERA_SELLER_ACCOUNT_ID");
+  const publicDeskUrl = readEnv(env, "PUBLIC_DESK_URL");
+  const buyerKeyPath = readEnv(env, "HEDERA_BUYER_KEY_PATH");
+  const creSecretsPath = readEnv(env, "CRE_SECRETS_PATH");
+
   return {
-    port: Number.parseInt(env.PORT ?? "8787", 10),
-    network: (env.X402_NETWORK as Network | undefined) ?? HEDERA_TESTNET,
-    facilitatorUrl: env.FACILITATOR_URL ?? DEFAULT_FACILITATOR_URL,
-    ...(env.HEDERA_SELLER_ACCOUNT_ID
-      ? { sellerAccountId: env.HEDERA_SELLER_ACCOUNT_ID }
-      : {}),
-    ...(env.HEDERA_SELLER_PRIVATE_KEY
-      ? { sellerPrivateKey: env.HEDERA_SELLER_PRIVATE_KEY }
-      : {}),
-    ...(env.PUBLIC_DESK_URL ? { publicDeskUrl: env.PUBLIC_DESK_URL } : {}),
-    ...(env.HCS_TOPIC_ID ? { hcsTopicId: env.HCS_TOPIC_ID } : {}),
+    port: Number.parseInt(readEnv(env, "PORT") ?? "8787", 10),
+    network: (readEnv(env, "X402_NETWORK") as Network | undefined) ?? HEDERA_TESTNET,
+    facilitatorUrl: readEnv(env, "FACILITATOR_URL") ?? DEFAULT_FACILITATOR_URL,
+    ...(sellerAccountId ? { sellerAccountId } : {}),
+    ...(sellerPrivateKey ? { sellerPrivateKey } : {}),
+    ...(publicDeskUrl ? { publicDeskUrl } : {}),
+    ...(topicId ? { hcsTopicId: topicId } : {}),
     secretsPaths: {
-      ...(env.HEDERA_BUYER_KEY_PATH
-        ? { buyerKeyPath: env.HEDERA_BUYER_KEY_PATH }
-        : {}),
-      ...(env.CRE_SECRETS_PATH ? { creSecretsPath: env.CRE_SECRETS_PATH } : {}),
+      ...(buyerKeyPath ? { buyerKeyPath } : {}),
+      ...(creSecretsPath ? { creSecretsPath } : {}),
     },
-    priceTinybars: env.PRICE_TINYBARS ?? DEFAULT_PRICE_TINYBARS,
-    mirrorNodeUrl: env.MIRROR_NODE_URL ?? DEFAULT_MIRROR_NODE_URL,
+    priceTinybars: readEnv(env, "PRICE_TINYBARS") ?? DEFAULT_PRICE_TINYBARS,
+    mirrorNodeUrl: readEnv(env, "MIRROR_NODE_URL") ?? DEFAULT_MIRROR_NODE_URL,
+    graphGatewayUrl: readEnv(env, "GRAPH_GATEWAY_URL") ?? DEFAULT_GRAPH_GATEWAY_URL,
+    ensnodeUrl: readEnv(env, "ENSNODE_URL") ?? DEFAULT_ENSNODE_URL,
+    ...(graphGatewayKey ? { graphGatewayKey } : {}),
   };
 }

@@ -40,6 +40,29 @@ describe("desk config", () => {
     expect(config.mirrorNodeUrl).toBe("https://testnet.mirrornode.hedera.com");
   });
 
+  it("loads a Graph gateway key when present", () => {
+    const config = loadConfig({
+      GRAPH_GATEWAY_KEY: "test-key",
+      GRAPH_GATEWAY_URL: "https://gateway.thegraph.com/api",
+    });
+    expect(config.graphGatewayKey).toBe("test-key");
+    expect(config.graphGatewayUrl).toBe("https://gateway.thegraph.com/api");
+  });
+
+  it("defaults the ENSv2 Omnigraph URL and accepts an override", () => {
+    expect(loadConfig({}).ensnodeUrl).toBe("https://api.v2-sepolia.ensnode.io");
+    expect(
+      loadConfig({ ENSNODE_URL: "https://ensnode.example/api" }).ensnodeUrl,
+    ).toBe("https://ensnode.example/api");
+  });
+
+  it("strips wrapping quotes from the Graph gateway key", () => {
+    const config = loadConfig({
+      GRAPH_GATEWAY_KEY: '"quoted-studio-key"',
+    });
+    expect(config.graphGatewayKey).toBe("quoted-studio-key");
+  });
+
   it("refuses a topic without a seller key to submit bills", () => {
     expect(() =>
       loadConfig({

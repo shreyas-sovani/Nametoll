@@ -7,6 +7,8 @@ import { createClientHederaSigner, HBAR_ASSET_ID } from "@x402/hedera";
 import { ExactHederaScheme } from "@x402/hedera/exact/client";
 import { PrivateKey } from "@hiero-ledger/sdk";
 import { HEDERA_TESTNET } from "../../config.ts";
+import type { DeskDescriptor } from "../../types.ts";
+import type { Directory } from "../directory/index.ts";
 import { SNAPSHOT_PATH } from "../gate/index.ts";
 import { hashscanTransactionUrl } from "./hashscan.ts";
 
@@ -23,8 +25,22 @@ export type PaidResult = {
   hashscanUrl?: string;
 };
 
+export type NamedPaidResult = PaidResult & {
+  name: string;
+  descriptor: DeskDescriptor;
+};
+
+export type PayOnceOptions = {
+  protocols?: string[];
+};
+
 export type Buyer = {
-  payOnce(deskUrl: string): Promise<PaidResult>;
+  payOnce(deskUrl: string, options?: PayOnceOptions): Promise<PaidResult>;
+  payFromName(
+    name: string,
+    directory: Directory,
+    options?: PayOnceOptions,
+  ): Promise<NamedPaidResult>;
 };
 
 export function loadBuyerCredentials(
@@ -70,8 +86,11 @@ export function createBuyer(credentials: BuyerCredentials): Buyer {
   const paidFetch = wrapFetchWithPayment(globalThis.fetch, client);
 
   return {
-    async payOnce(deskUrl: string): Promise<PaidResult> {
+    async payOnce(deskUrl: string, options: PayOnceOptions = {}): Promise<PaidResult> {
       const url = new URL(SNAPSHOT_PATH, `${deskUrl.replace(/\/+$/, "")}/`);
+      if (options.protocols?.length) {
+        url.searchParams.set("protocols", options.protocols.join(","));
+      }
       const response = await paidFetch(url, {
         headers: {
           accept: "application/json",
@@ -91,6 +110,19 @@ export function createBuyer(credentials: BuyerCredentials): Buyer {
               hashscanUrl: hashscanTransactionUrl(settled.transaction),
             }
           : {}),
+      };
+    },
+    async payFromName(
+      name: string,
+      directory: Directory,
+      options: PayOnceOptions = {},
+    ): Promise<NamedPaidResult> {
+      const resolved = await directory.resolve(name);
+      const paid = await this.payOnce(resolved.descriptor.endpoint, options);
+      return {
+        ...paid,
+        name: resolved.name,
+        descriptor: resolved.descriptor,
       };
     },
   };

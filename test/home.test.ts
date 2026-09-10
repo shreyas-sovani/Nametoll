@@ -11,6 +11,8 @@ describe("public desk page", () => {
       const html = await res.text();
       expect(html).toMatch(/Nametoll/i);
       expect(html).toMatch(/\/desk\/snapshot/);
+      expect(html).toMatch(/\/desk\/resolve/);
+      expect(html).toMatch(/paste a name/i);
       expect(html).toMatch(/402/);
       expect(html.toLowerCase()).not.toMatch(/\.eth/);
     } finally {

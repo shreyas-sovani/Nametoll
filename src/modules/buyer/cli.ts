@@ -1,15 +1,34 @@
 import { existsSync } from "node:fs";
+import { loadConfig } from "../../config.ts";
+import { createDirectory } from "../directory/index.ts";
 import { createBuyer, loadBuyerCredentials } from "./index.ts";
+import { buyerTargetFromArgv } from "./target.ts";
 
 if (existsSync(".env")) {
   process.loadEnvFile(".env");
 }
 
-const deskUrl =
-  process.argv[2] ?? process.env.PUBLIC_DESK_URL ?? "http://127.0.0.1:8787";
+const target = buyerTargetFromArgv(process.argv);
+const protocols = process.argv[3]
+  ?.split(",")
+  .map((id) => id.trim())
+  .filter(Boolean);
 
+if (!target) {
+  console.error("Pass a name or a desk URL as the first argument.");
+  process.exit(1);
+}
+
+const options = protocols?.length ? { protocols } : {};
 const buyer = createBuyer(loadBuyerCredentials());
-const result = await buyer.payOnce(deskUrl);
+const result =
+  target.kind === "url"
+    ? await buyer.payOnce(target.value, options)
+    : await buyer.payFromName(
+        target.value,
+        createDirectory({ ensnodeUrl: loadConfig().ensnodeUrl }),
+        options,
+      );
 
 console.log(JSON.stringify(result, null, 2));
 if (result.status !== 200) {

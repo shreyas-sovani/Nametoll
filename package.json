@@ -9,6 +9,12 @@
     "start": "tsx src/server.ts",
     "buyer": "tsx src/modules/buyer/cli.ts",
     "topic:create": "tsx src/modules/ledger/createTopic.ts",
+    "graph:probe": "tsx src/modules/merchandise/probe.ts",
+    "graph:mcp": "tsx src/modules/merchandise/probe-mcp.ts",
+    "directory": "tsx src/modules/directory/cli.ts",
+    "ens:writes": "tsx src/modules/directory/writes.ts",
+    "ens:probe": "tsx src/modules/directory/probe-sepolia.ts",
+    "ens:sepolia": "tsx src/modules/directory/sepolia-live.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
@@ -23,12 +29,13 @@
     "vitest": "^5.0.0"
   },
   "dependencies": {
-    "tsx": "^4.23.13",
     "@hiero-ledger/sdk": "^2.85.0",
     "@x402/core": "^2.25.0",
     "@x402/express": "^2.25.0",
     "@x402/fetch": "^2.25.0",
     "@x402/hedera": "^2.25.0",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "tsx": "^4.23.13",
+    "viem": "^2.56.3"
   }
 }

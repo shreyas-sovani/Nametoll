@@ -2,6 +2,8 @@
 
 **For the build agent.** This is the direction of work. It is not a syntax guide and not a license to invent APIs.
 
+**Status 11 Sep 2026:** B0–B6 done. **B7/B8 code is in** (resolve + buyer-by-name + unsigned write plan). Tickets stay open until a human broadcasts the Sepolia `ens-cli` txs and a live name resolves. Next code ticket after that broadcast: **B9**.
+
 Read in this order, then execute tickets **in ID order**. Do not skip ahead to a later ticket because it looks more interesting.
 
 1. `AGENTS.md`
@@ -23,6 +25,18 @@ If a symbol, flag, contract, record key, facilitator route, or entity name is no
 5. Mark the checkbox. Commit. Next ticket.
 
 Do not implement World, ATS, SwapVM, Uniswap, Privy, Arc, Ledger, Bazantic, ERC-8004, or a Graph prize SKILL unless a later ticket or a Sunday form-swap says so.
+
+---
+
+## Done / next / blockers
+
+| | |
+|---|---|
+| **Done** | B0 scaffold · B1 Gate 402 · B2 buyer pay · B3 public URL · B4 HCS bill · B5 live Messari Aave+Compound · B6 meter 1 vs 2 units |
+| **Code in, not live** | **B7** Directory resolve (`GET /desk/resolve?name=`, homepage paste form, Omnigraph reader). **B8** buyer takes a name, pays the resolved endpoint. No baked-in name. |
+| **Next** | Human: broadcast unsigned ENSv2 writes on Sepolia (then tick B7/B8). After live resolve: **B9** CRE TEE. |
+| **Human blockers** | Funded Sepolia account + owner/operator addresses to broadcast `ens-cli` unsigned `{to,data,value}` (B7 Done when). CRE login + `cre` CLI (B9). Public desk is ngrok session-scoped. Never commit `.env`. |
+| **Not blockers** | Graph Studio query key works. Directory/buyer-by-name unit + HTTP tests are green. |
 
 ---
 
@@ -159,7 +173,7 @@ Work top to bottom. A later ticket may assume the earlier **Done when**.
 
 ### B5 — Merchandise: live multi-protocol snapshot
 
-- [ ] **B5** Desk can fetch a **live** lending-risk snapshot across **≥2** protocols and report **billable units**.
+- [x] **B5** Desk can fetch a **live** lending-risk snapshot across **≥2** protocols and report **billable units**.
 
 **Done when:** Schemas were fetched via Subgraph MCP (or documented Studio endpoints after a schema fetch). Deployment IDs are pinned in config. One protocol’s indexer down → fail-soft (partial result or explicit error), **not** invented rows. Units are a number the Gate can price (default: protocol count in the request).
 
@@ -173,7 +187,7 @@ Work top to bottom. A later ticket may assume the earlier **Done when**.
 
 ### B6 — Meter: second request can cost more
 
-- [ ] **B6** Gate prices from merchandise units, not a constant.
+- [x] **B6** Gate prices from merchandise units, not a constant.
 
 **Done when:** Request for 1 protocol vs 2+ protocols (or small vs large byte count) produces two different tinybar amounts on camera and on the HCS bills. Both still settle through Blocky402.
 
@@ -187,7 +201,7 @@ Work top to bottom. A later ticket may assume the earlier **Done when**.
 
 ### B7 — Directory: ENSv2 name is the desk
 
-- [ ] **B7** A live ENSv2 name on **Sepolia** resolves to the desk descriptor. Happy path does not hardcode the name or the endpoint.
+- [ ] **B7** A live ENSv2 name on **Sepolia** resolves to the desk descriptor. Happy path does not hardcode the name or the endpoint. *(Resolve module, paste form, and unsigned write plan landed 11 Sep 2026. Checkbox waits on Sepolia broadcast + live resolve.)*
 
 **Done when:** Video/UI can type or paste a name. Resolve returns endpoint, price rule, HCS topic, pay-to. Parent/child or wildcard is real. Permissioned Resolver holds the records. One EAC grant: an operator account can edit those records and cannot transfer the name. `ens-cli` writes are unsigned — a human or wallet still broadcasts. Resolver is deployed **before** a zero-resolver register.
 
@@ -203,7 +217,7 @@ Work top to bottom. A later ticket may assume the earlier **Done when**.
 
 ### B8 — Buyer uses the Directory
 
-- [ ] **B8** Buyer takes a name, resolves, then 402s the **resolved** endpoint.
+- [ ] **B8** Buyer takes a name, resolves, then 402s the **resolved** endpoint. *(`payFromName` + CLI name-or-URL landed. Checkbox waits on B7 live name so a record change can be shown on camera.)*
 
 **Done when:** Changing the resolver’s endpoint record (via the EAC operator) makes the next paid request hit the new URL without a buyer code change. Name is an input, not a constant in buyer source.
 
