@@ -1,6 +1,6 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { decodePaymentRequiredHeader } from "@x402/core/http";
-import { createApp } from "../src/http/createApp.ts";
+import { createApp, type AppDeps } from "../src/http/createApp.ts";
 import type { AppConfig } from "../src/config.ts";
 
 export const FIXTURE_SELLER = "0.0.999999";
@@ -13,6 +13,7 @@ export function testDeskConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     sellerAccountId: FIXTURE_SELLER,
     secretsPaths: {},
     priceTinybars: "100000",
+    mirrorNodeUrl: "https://testnet.mirrornode.hedera.com",
     ...overrides,
   };
 }
@@ -24,17 +25,20 @@ export function publicDeskConfig(): AppConfig {
     facilitatorUrl: "https://api.testnet.blocky402.com",
     secretsPaths: {},
     priceTinybars: "100000",
+    mirrorNodeUrl: "https://testnet.mirrornode.hedera.com",
   };
 }
 
 export async function startDesk(
   overrides: Partial<AppConfig> = {},
-  config: AppConfig = testDeskConfig(overrides),
+  config?: AppConfig,
+  deps: AppDeps = {},
 ): Promise<{
   url: string;
   close: () => Promise<void>;
 }> {
-  const app = await createApp({ ...config, ...overrides });
+  const resolved = config ?? testDeskConfig(overrides);
+  const app = await createApp({ ...resolved, ...overrides }, deps);
   const server = await new Promise<Server>((resolve, reject) => {
     const started = app.listen(0, "127.0.0.1", () => resolve(started));
     started.on("error", reject);

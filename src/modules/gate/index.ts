@@ -4,8 +4,11 @@ import { paymentMiddleware } from "@x402/express";
 import { ExactHederaScheme } from "@x402/hedera/exact/server";
 import { HBAR_ASSET_ID } from "@x402/hedera";
 import type { AppConfig } from "../../config.ts";
+import { newRequestId, type Ledger } from "../ledger/index.ts";
 
 export const SNAPSHOT_PATH = "/desk/snapshot";
+export const STUB_DESK_NAME = "stub";
+export const STUB_UNITS = 1;
 
 export type Gate = {
   resourcePath: string;
@@ -15,7 +18,11 @@ export function createGate(_config: AppConfig): Gate {
   return { resourcePath: SNAPSHOT_PATH };
 }
 
-export function mountGate(app: Express, config: AppConfig): void {
+export function mountGate(
+  app: Express,
+  config: AppConfig,
+  ledger?: Ledger,
+): void {
   if (!config.sellerAccountId) {
     return;
   }
@@ -25,6 +32,24 @@ export function mountGate(app: Express, config: AppConfig): void {
     config.network,
     new ExactHederaScheme(),
   );
+
+  if (ledger) {
+    resourceServer.onAfterSettle(async (context) => {
+      if (context.phase !== "after-handler") return;
+      if (!context.result.success || !context.result.transaction) return;
+      try {
+        await ledger.append({
+          requestId: newRequestId(),
+          name: STUB_DESK_NAME,
+          units: STUB_UNITS,
+          tinybars: context.requirements.amount,
+          settleTx: context.result.transaction,
+        });
+      } catch (error) {
+        console.error("HCS bill append failed after settle", error);
+      }
+    });
+  }
 
   app.use(
     paymentMiddleware(

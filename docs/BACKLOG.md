@@ -145,7 +145,7 @@ Work top to bottom. A later ticket may assume the earlier **Done when**.
 
 ### B4 — Ledger: HCS bill after settle
 
-- [ ] **B4** After a successful settle, append a bill the judge can recompute from Mirror Node.
+- [x] **B4** After a successful settle, append a bill the judge can recompute from Mirror Node.
 
 **Done when:** Topic id is in README. A paid request produces a message whose fields match `{ requestId, name-or-stub, units, tinybars, settleTx, consensusTime }`. A short “recompute” note: read topic → multiply units × price rule → compare tinybars.
 

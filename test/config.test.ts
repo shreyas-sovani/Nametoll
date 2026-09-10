@@ -28,4 +28,24 @@ describe("desk config", () => {
     const config = loadConfig({});
     expect(config.sellerAccountId).toBeUndefined();
   });
+
+  it("loads an HCS topic id when present", () => {
+    const config = loadConfig({
+      HCS_TOPIC_ID: "0.0.4603900",
+      HEDERA_SELLER_ACCOUNT_ID: "0.0.9",
+      HEDERA_SELLER_PRIVATE_KEY: "0xabc",
+    });
+    expect(config.hcsTopicId).toBe("0.0.4603900");
+    expect(config.sellerPrivateKey).toBe("0xabc");
+    expect(config.mirrorNodeUrl).toBe("https://testnet.mirrornode.hedera.com");
+  });
+
+  it("refuses a topic without a seller key to submit bills", () => {
+    expect(() =>
+      loadConfig({
+        HCS_TOPIC_ID: "0.0.4603900",
+        HEDERA_SELLER_ACCOUNT_ID: "0.0.9",
+      }),
+    ).toThrow(/seller private key/i);
+  });
 });

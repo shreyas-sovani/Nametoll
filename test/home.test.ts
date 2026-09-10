@@ -17,4 +17,15 @@ describe("public desk page", () => {
       await desk.close();
     }
   });
+
+  it("prints the HCS topic when configured", async () => {
+    const desk = await startDesk({ hcsTopicId: "0.0.4603900" }, publicDeskConfig());
+    try {
+      const html = await (await fetch(`${desk.url}/`)).text();
+      expect(html).toMatch(/0\.0\.4603900/);
+      expect(html).toMatch(/\/desk\/ledger/);
+    } finally {
+      await desk.close();
+    }
+  });
 });

@@ -106,6 +106,8 @@ export function renderHomePage(config: AppConfig): string {
         <dt>network</dt><dd>${escapeHtml(config.network)}</dd>
         <dt>price</dt><dd>${escapeHtml(config.priceTinybars)} tinybars (flat until meter lands)</dd>
         <dt>payTo</dt><dd>${escapeHtml(payTo)}</dd>
+        <dt>HCS topic</dt><dd>${escapeHtml(config.hcsTopicId ?? "set HCS_TOPIC_ID")}</dd>
+        <dt>ledger</dt><dd><code>/desk/ledger</code></dd>
         <dt>facilitator</dt><dd>${escapeHtml(config.facilitatorUrl)}</dd>
       </dl>
       <ol>
@@ -115,7 +117,9 @@ export function renderHomePage(config: AppConfig): string {
       </ol>
     </main>
     <footer>
-      Health: <a href="/health"><code>/health</code></a>. Buyer: <code>npm run buyer -- &lt;desk-url&gt;</code>.
+      Health: <a href="/health"><code>/health</code></a>.
+      Bills: <a href="/desk/ledger"><code>/desk/ledger</code></a>.
+      Buyer: <code>npm run buyer -- &lt;desk-url&gt;</code>.
       Do not commit secrets. Resource server holds no facilitator key.
     </footer>
   </article>
