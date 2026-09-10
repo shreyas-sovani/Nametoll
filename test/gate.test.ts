@@ -48,7 +48,7 @@ describe("gate", () => {
       expect(offer?.scheme).toBe("exact");
       expect(offer?.network).toBe("hedera:testnet");
       expect(offer?.asset).toBe("0.0.0");
-      expect(offer?.amount).toBe("100000");
+      expect(offer?.amount).toBe("200000");
       expect(offer?.payTo).toBe(FIXTURE_SELLER);
       expect(String(offer?.payTo)).toMatch(/^0\.0\.\d+$/);
     } finally {
@@ -124,7 +124,12 @@ describe("gate", () => {
 
       expect(paid.status).toBe(200);
       expect(paid.headers.get("payment-response")).toBeTruthy();
-      expect(await paid.json()).toEqual({ ok: true, stub: true });
+      expect(await paid.json()).toEqual({
+        ok: true,
+        stub: true,
+        units: 2,
+        protocols: [],
+      });
     } finally {
       await desk.close();
       await facilitator.close();

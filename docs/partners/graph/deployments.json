@@ -1,0 +1,24 @@
+{
+  "source": "https://github.com/messari/subgraphs/blob/master/deployment/deployment.json",
+  "schemaSource": "https://github.com/messari/subgraphs/blob/master/schema-lending.graphql",
+  "schemaVersion": "3.1.0",
+  "docs": "https://thegraph.com/docs/en/subgraphs/existing-subgraphs/standard-subgraphs/",
+  "protocols": [
+    {
+      "id": "aave-v3-ethereum",
+      "label": "Aave v3 Ethereum",
+      "network": "ethereum",
+      "status": "prod",
+      "schema": "3.1.0",
+      "subgraphId": "JCNWRypm7FYwV8fx5HhzZPSFaMxgkPuw4TnR3Gpi81zk"
+    },
+    {
+      "id": "compound-v3-ethereum",
+      "label": "Compound v3 Ethereum",
+      "network": "ethereum",
+      "status": "prod",
+      "schema": "3.1.0",
+      "subgraphId": "AwoxEZbiWLvv6e3QdvdMZw4WDURdGbvPfHmZRc8Dpfz9"
+    }
+  ]
+}

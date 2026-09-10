@@ -1,0 +1,108 @@
+{
+  "fetchedAt": "2026-09-10T19:37:26.090Z",
+  "source": "Subgraph MCP https://subgraphs.mcp.thegraph.com/sse",
+  "initHttp": 202,
+  "tools": [
+    "get_deployment_30day_query_counts",
+    "search_subgraphs_by_keyword",
+    "get_schema_by_subgraph_id",
+    "get_schema_by_ipfs_hash",
+    "execute_query_by_deployment_id",
+    "execute_query_by_ipfs_hash",
+    "get_schema_by_deployment_id",
+    "execute_query_by_subgraph_id",
+    "get_top_subgraph_deployments"
+  ],
+  "schemas": [
+    {
+      "id": "aave-v3-ethereum",
+      "subgraphId": "JCNWRypm7FYwV8fx5HhzZPSFaMxgkPuw4TnR3Gpi81zk",
+      "isError": false,
+      "protocolFieldsPresent": [
+        "id",
+        "name",
+        "slug",
+        "network",
+        "schemaVersion",
+        "totalValueLockedUSD",
+        "totalDepositBalanceUSD",
+        "totalBorrowBalanceUSD"
+      ],
+      "protocolFieldsMissing": [],
+      "marketFieldsPresent": [
+        "id",
+        "name",
+        "isActive",
+        "maximumLTV",
+        "liquidationThreshold",
+        "totalValueLockedUSD",
+        "totalDepositBalanceUSD",
+        "totalBorrowBalanceUSD",
+        "inputToken"
+      ],
+      "marketFieldsMissing": [],
+      "lendingProtocolNames": []
+    },
+    {
+      "id": "compound-v3-ethereum",
+      "subgraphId": "AwoxEZbiWLvv6e3QdvdMZw4WDURdGbvPfHmZRc8Dpfz9",
+      "isError": false,
+      "protocolFieldsPresent": [
+        "id",
+        "name",
+        "slug",
+        "network",
+        "schemaVersion",
+        "totalValueLockedUSD",
+        "totalDepositBalanceUSD",
+        "totalBorrowBalanceUSD"
+      ],
+      "protocolFieldsMissing": [],
+      "marketFieldsPresent": [
+        "id",
+        "name",
+        "isActive",
+        "maximumLTV",
+        "liquidationThreshold",
+        "totalValueLockedUSD",
+        "totalDepositBalanceUSD",
+        "totalBorrowBalanceUSD",
+        "inputToken"
+      ],
+      "marketFieldsMissing": [],
+      "lendingProtocolNames": []
+    }
+  ],
+  "queries": [
+    {
+      "id": "aave-v3-ethereum",
+      "subgraphId": "JCNWRypm7FYwV8fx5HhzZPSFaMxgkPuw4TnR3Gpi81zk",
+      "isError": false,
+      "protocolFieldsPresent": [],
+      "protocolFieldsMissing": [],
+      "marketFieldsPresent": [],
+      "marketFieldsMissing": [],
+      "lendingProtocolNames": [
+        "Aave v3",
+        "Aave Ethereum WETH",
+        "Aave Ethereum weETH",
+        "Aave Ethereum USDT"
+      ]
+    },
+    {
+      "id": "compound-v3-ethereum",
+      "subgraphId": "AwoxEZbiWLvv6e3QdvdMZw4WDURdGbvPfHmZRc8Dpfz9",
+      "isError": false,
+      "protocolFieldsPresent": [],
+      "protocolFieldsMissing": [],
+      "marketFieldsPresent": [],
+      "marketFieldsMissing": [],
+      "lendingProtocolNames": [
+        "Compound III",
+        "Compound V3 USDC - Wrapped BTC",
+        "Compound V3 USDC - USD Coin",
+        "Compound V3 USDT - Tether USD"
+      ]
+    }
+  ]
+}

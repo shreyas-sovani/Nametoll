@@ -49,7 +49,12 @@ describe("ledger", () => {
         },
       });
       expect(paid.status).toBe(200);
-      expect(await paid.json()).toEqual({ ok: true, stub: true });
+      expect(await paid.json()).toEqual({
+        ok: true,
+        stub: true,
+        units: 2,
+        protocols: [],
+      });
 
       expect(ledger.bills).toHaveLength(1);
       const bill = ledger.bills[0]!;
@@ -57,8 +62,8 @@ describe("ledger", () => {
         /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
       );
       expect(bill.name).toBe("stub");
-      expect(bill.units).toBe(1);
-      expect(bill.tinybars).toBe("100000");
+      expect(bill.units).toBe(2);
+      expect(bill.tinybars).toBe("200000");
       expect(bill.settleTx).toBe("0.0.1@1234567890.000000001");
       expect(bill.consensusTime).toMatch(/^\d+\.\d+$/);
       expect(BigInt(bill.units) * 100000n).toBe(BigInt(bill.tinybars));
@@ -80,8 +85,8 @@ describe("ledger", () => {
       expect(body.bills?.[0]).toMatchObject({
         requestId: bill.requestId,
         name: "stub",
-        units: 1,
-        tinybars: "100000",
+        units: 2,
+        tinybars: "200000",
         settleTx: bill.settleTx,
       });
     } finally {
