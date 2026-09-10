@@ -1,4 +1,4 @@
-# Working notes (B0–B8 code)
+# Working notes (B0–B8 live)
 
 ## Blocky402 probe (10 Sep 2026)
 
@@ -91,24 +91,43 @@ First live Blocky402 + HCS (11 Sep 2026) used a labeled stub body while the Grap
 
 Recompute: `1 * 100000 = 100000`, `2 * 100000 = 200000`. Mirror messages seq 2 and 3 on topic `0.0.10464309`.
 
-## Directory (B7) + buyer-by-name (B8) — code, waiting on Sepolia
+## Directory (B7) + buyer-by-name (B8) — live on Sepolia
 
-Record keys from live ENSIP-5 / ENSIP-26 only (not an invented ENSIP):
+Parent = the 2LD we register. Child = a label under that parent's UserRegistry. Picked **`nametoll.eth`** (product name) because it was available; child is **`desk.nametoll.eth`**.
+
+Record keys from live ENSIP-5 / ENSIP-26 only:
 
 - `url`
 - `agent-context` (JSON desk descriptor: `payTo`, `priceRule`, `hcsTopic`, `asset: "0.0.0"`)
 - `agent-endpoint[web]`
 
-Omnigraph query is the ensskills `domain-records` shape; fields confirmed offline with `enscli ensnode omnigraph schema` (`ResolvedRecords.texts`, `ResolvedRawTextRecord.key|value`, `Domain.resolver.effective`). Default reader: `POST https://api.v2-sepolia.ensnode.io/api/omnigraph`.
+| | |
+| --- | --- |
+| Owner (acc 1) | `0xD2aA21AF4faa840Dea890DB2C6649AACF2C80Ff3` |
+| Operator (acc 3) | `0xFeAf5C921996FC53f4DEf35e181E766e6D74690A` |
+| Permissioned Resolver | `0x558283D5F8E36316B60be7e24F4e58C7133752D2` |
+| Parent UserRegistry | `0x0531cdfAa619d1Ce33B37e87AAcD685bEcd976B9` |
+| Resolver deploy | https://sepolia.etherscan.io/tx/0x4d04f08a4cff2271c1a8e485cf397210db97c32530fbd0ace9ca11146ed06c49 |
+| Commit | https://sepolia.etherscan.io/tx/0x0646c91dd5488452309246817cc85e903903fdb118b4c2fee1970d8a94e0e268 |
+| Register | https://sepolia.etherscan.io/tx/0x28ab9c164cca6f967413f944a3ef1f81ca3ef86f7e1620fdc5b7a57d8d7a8a96 |
+| Subregistry deploy | https://sepolia.etherscan.io/tx/0x8a4c0bad2e2bd68d2331c21f2bca2a33d2d4265a047ddfcad5db772529a94c13 |
+| Subregistry set | https://sepolia.etherscan.io/tx/0xf46812dfcaef67de3a6bcea3eb44a07d35f16c20f0417a7707f633e9772041f8 |
+| Child `desk` | https://sepolia.etherscan.io/tx/0x52534da2069e2ac9aae5cf48a22a485f9b23dacab210360e62527a6f25fa54f3 |
+| Texts (parent) | https://sepolia.etherscan.io/tx/0x435eefab224179f0655616235a0866fccaaa3defe0a167555ef20e847c2fc5bb |
+| EAC `url` | https://sepolia.etherscan.io/tx/0x05549a859deb42517f633230d8872f2437a2500d6185ce1c1643ace5cebc0d26 |
+| EAC `agent-context` | https://sepolia.etherscan.io/tx/0x2720e3b5837fef7eb722f20b47ffc307b1f40df784cbb83f8626d21b14a17a87 |
+| EAC `agent-endpoint[web]` | https://sepolia.etherscan.io/tx/0xc95c9d7dbcb64eac7b58a94cfe12bcf340ec0e4613497c5f14cd2d8b4d5a7ae2 |
 
-11 Sep 2026 probe: that hostname presents a `*.up.railway.app` cert (`ERR_TLS_CERT_ALTNAME_INVALID`). Directory then falls back to official `ens get text --chain sepolia --json` for the three keys. Set `ENSNODE_URL` to a reachable instance to prefer Omnigraph. Do not disable TLS.
+The owner EOA had an EIP-7702 delegation (`0xef0100…`). ENSv2 mints an ERC-1155 to the owner, so that delegation was revoked first (`0x0b903c239ac28505de7b548804d0bebfdd5477597d1b19006ce923a5f044885a`) or register reverts `ERC1155InvalidReceiver`.
 
-Observable locally (no baked-in name):
+Hosted Omnigraph still presents a `*.up.railway.app` cert. Resolve falls through official Universal Resolver `findResolver` + Permissioned Resolver `text()`. `pkg.pr.new` ens-cli is 404; do not disable TLS.
 
-- Homepage form → `GET /desk/resolve?name=`
-- `npm run directory -- <name>`
-- `npm run buyer -- <name>` pays `descriptor.endpoint`
+Operator EAC (account 3, `ROLE_SET_TEXT` on those three keys only):
 
-Unsigned writes: `npm run ens:writes -- --owner 0x… --operator 0x… --parent <name-you-chose> --child desk`. Order matches `vendor/ens-cli/README.md`: Permissioned Resolver deploy **before** register, then UserRegistry + child, then `set batch`. EAC uses official `authorizeTextRoles` on those three keys only (ens-cli has no grant command). `--reverse-record` is not used.
+- Set `agent-endpoint[web]` to `http://127.0.0.1:8787` — https://sepolia.etherscan.io/tx/0xe50628e553c6590766a8345623b812b65348f58718ac9e51bc65591c598625c5
+- Next `npm run directory -- nametoll.eth` returned that localhost origin
+- Restored public origin — https://sepolia.etherscan.io/tx/0xda64ff1de7d17d5720aab300699e0c104cdbb2f215259ab1472be3451ed98502
 
-**Still needed from a human:** funded Sepolia owner + operator addresses, pick a parent name, broadcast the unsigned txs, then a live `npm run directory -- <that-name>` that returns the public desk URL / `0.0.10463755` / `0.0.10464309`. Until then B7/B8 stay unchecked.
+Buyer-by-name (11 Sep 2026): `npm run buyer -- nametoll.eth` → resolved public desk → Blocky402 settle `0.0.7162784@1789071522.046063925` — https://hashscan.io/testnet/tx/0.0.7162784@1789071522.046063925 — live Graph body, `units: 2`.
+
+Happy path still has no baked-in name. Homepage form / `GET /desk/resolve?name=` / buyer argv take whatever name you paste.

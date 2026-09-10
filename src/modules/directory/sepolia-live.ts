@@ -92,19 +92,39 @@ async function send(
     args: readonly unknown[];
   },
 ): Promise<Hex> {
-  const { request } = await publicClient.simulateContract({
-    address: params.address,
-    abi: params.abi,
-    functionName: params.functionName,
-    args: params.args,
-    account,
-  });
-  const hash = await wallet.writeContract(request);
-  const receipt = await publicClient.waitForTransactionReceipt({ hash });
-  if (receipt.status !== "success") {
-    throw new Error(`${params.functionName} failed: ${hash}`);
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      const nonce = await publicClient.getTransactionCount({
+        address: account.address,
+        blockTag: "pending",
+      });
+      const { request } = await publicClient.simulateContract({
+        address: params.address,
+        abi: params.abi,
+        functionName: params.functionName,
+        args: params.args,
+        account,
+        nonce,
+      });
+      const hash = await wallet.writeContract({ ...request, nonce });
+      const receipt = await publicClient.waitForTransactionReceipt({ hash });
+      if (receipt.status !== "success") {
+        throw new Error(`${params.functionName} failed: ${hash}`);
+      }
+      return hash;
+    } catch (error) {
+      lastError = error;
+      const message = error instanceof Error ? error.message : String(error);
+      if (!/nonce|already known|replacement/i.test(message) || attempt === 4) {
+        throw new Error(
+          `${params.functionName} failed: ${message.replace(/0x[0-9a-fA-F]{64}/g, "0x<hex>").split("\n")[0]}`,
+        );
+      }
+      await new Promise((resolveWait) => setTimeout(resolveWait, 1500 * (attempt + 1)));
+    }
   }
-  return hash;
+  throw lastError;
 }
 
 async function parentStatus(
@@ -170,6 +190,41 @@ async function readDeskTexts(
     }),
   );
   return Object.fromEntries(pairs);
+}
+
+async function ensureEoaReceiver(
+  publicClient: PublicClient,
+  wallet: WalletClient,
+  account: Account & { address: `0x${string}` },
+): Promise<void> {
+  const code = await publicClient.getCode({ address: account.address });
+  if (!code || code === "0x") return;
+  if (!code.toLowerCase().startsWith("0xef0100")) {
+    throw new Error(
+      `${account.address} has contract code and cannot receive the ENSv2 ERC-1155 name token.`,
+    );
+  }
+  logStep("eip7702-revoke", { address: account.address, delegated: true });
+  const authorization = await wallet.signAuthorization({
+    account,
+    contractAddress: zeroAddress,
+    executor: "self",
+  });
+  const hash = await wallet.sendTransaction({
+    account,
+    chain: sepolia,
+    authorizationList: [authorization],
+    to: account.address,
+  });
+  const receipt = await publicClient.waitForTransactionReceipt({ hash });
+  if (receipt.status !== "success") {
+    throw new Error(`EIP-7702 revoke failed: ${hash}`);
+  }
+  const after = await publicClient.getCode({ address: account.address });
+  if (after && after !== "0x") {
+    throw new Error(`EIP-7702 revoke mined (${hash}) but the account still has code.`);
+  }
+  logStep("eip7702-revoke", { address: account.address, hash, cleared: true });
 }
 
 async function ensureResolver(
@@ -536,6 +591,7 @@ export async function runSepoliaLive(opts: {
   const { resolver } = await ensureResolver(publicClient, wallet, owner);
   state = { ...state, parent, resolver };
   saveState(state);
+  await ensureEoaReceiver(publicClient, wallet, owner);
   state = await ensureRegistered(publicClient, wallet, owner, parent, resolver, state);
   const sub = await ensureSubregistry(publicClient, wallet, owner, parent, state);
   state = { ...sub.state, child: await ensureChild(publicClient, wallet, owner, parent, resolver, sub.subregistry) };

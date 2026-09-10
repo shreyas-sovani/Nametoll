@@ -9,7 +9,7 @@ export type EnsTextResult = {
 
 export function looksLikeTransportFailure(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error);
-  return /fetch failed|ENOTFOUND|ECONN|TLS|certificate|altnames|ENSNode [45]/i.test(
+  return /fetch failed|ENOTFOUND|ECONN|TLS|certificate|altnames|ENSNode [45]|E404|pkg\.pr\.new/i.test(
     message,
   );
 }

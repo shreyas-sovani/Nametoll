@@ -6,7 +6,8 @@ import {
   createDirectory,
   textsFromOmnigraph,
 } from "../src/modules/directory/index.ts";
-import { fetchTextsFromEnsCli } from "../src/modules/directory/enscli-texts.ts";
+import { fetchTextsFromEnsCli, looksLikeTransportFailure } from "../src/modules/directory/enscli-texts.ts";
+import { fetchTextsFromResolver } from "../src/modules/directory/resolver-texts.ts";
 import type { DeskDescriptor } from "../src/types.ts";
 
 const FIXTURE_NAME = "desk-fixture.test";
@@ -150,6 +151,24 @@ describe("directory resolve", () => {
     } finally {
       globalThis.fetch = originalFetch;
     }
+  });
+
+  it("treats the missing pkg.pr.new ens-cli install as a transport failure", () => {
+    expect(looksLikeTransportFailure(new Error("npm error code E404 pkg.pr.new"))).toBe(true);
+  });
+
+  it("reads desk texts from a Universal Resolver findResolver result", async () => {
+    const texts = await fetchTextsFromResolver(FIXTURE_NAME, {
+      findResolver: async (name) => {
+        expect(name).toBe(FIXTURE_NAME);
+        return "0x558283D5F8E36316B60be7e24F4e58C7133752D2";
+      },
+      readText: async (_resolver, name, key) => {
+        expect(name).toBe(FIXTURE_NAME);
+        return fixtureTexts()[key] ?? "";
+      },
+    });
+    expect(texts[DESK_TEXT_KEYS.agentEndpointWeb]).toBe("https://desk.example/pay");
   });
 
   it("rejects an empty name before any fetch", async () => {

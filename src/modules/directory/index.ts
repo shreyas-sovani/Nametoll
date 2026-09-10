@@ -5,6 +5,7 @@ import {
   looksLikeTransportFailure,
 } from "./enscli-texts.ts";
 import { fetchTextsFromOmnigraph } from "./omnigraph.ts";
+import { fetchTextsFromResolver } from "./resolver-texts.ts";
 
 export { DESK_TEXT_KEYS, DESK_TEXT_KEY_LIST } from "./keys.ts";
 export { descriptorFromTexts, DeskResolveError } from "./descriptor.ts";
@@ -37,7 +38,15 @@ export function createDirectory(options: DirectoryOptions = {}): Directory {
   const primary =
     options.fetchTexts ??
     ((name: string) => fetchTextsFromOmnigraph(name, options.ensnodeUrl));
-  const fallback = options.fallbackFetchTexts ?? fetchTextsFromEnsCli;
+  const fallback =
+    options.fallbackFetchTexts ??
+    (async (name: string) => {
+      try {
+        return await fetchTextsFromResolver(name);
+      } catch {
+        return await fetchTextsFromEnsCli(name);
+      }
+    });
   const useFallbackOnTransport = !options.fetchTexts;
 
   return {

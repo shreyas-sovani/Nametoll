@@ -15,6 +15,7 @@
     "ens:writes": "tsx src/modules/directory/writes.ts",
     "ens:probe": "tsx src/modules/directory/probe-sepolia.ts",
     "ens:sepolia": "tsx src/modules/directory/sepolia-live.ts",
+    "ens:eac": "tsx src/modules/directory/operator-set.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"

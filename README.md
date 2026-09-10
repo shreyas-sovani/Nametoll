@@ -79,6 +79,28 @@ Recompute: `GET` the Mirror Node URL, base64-decode each `message`, then check `
 
 HashScan of the HBAR transfer is the pay. The topic is the audit.
 
+## Live ENSv2 directory (B7)
+
+**Parent** is the 2LD you register. **Child** is a label under that parent's UserRegistry.
+
+| | |
+| --- | --- |
+| Parent | `nametoll.eth` |
+| Child | `desk.nametoll.eth` |
+| Owner | `0xD2aA21AF4faa840Dea890DB2C6649AACF2C80Ff3` |
+| Operator (text keys only) | `0xFeAf5C921996FC53f4DEf35e181E766e6D74690A` |
+| Permissioned Resolver | `0x558283D5F8E36316B60be7e24F4e58C7133752D2` |
+| Parent UserRegistry | `0x0531cdfAa619d1Ce33B37e87AAcD685bEcd976B9` |
+| Register tx | https://sepolia.etherscan.io/tx/0x28ab9c164cca6f967413f944a3ef1f81ca3ef86f7e1620fdc5b7a57d8d7a8a96 |
+
+Buyer/homepage still take a pasted name. They do not default to `nametoll.eth`.
+
+```bash
+npm run directory -- nametoll.eth
+curl -sS "http://127.0.0.1:8787/desk/resolve?name=nametoll.eth"
+npm run buyer -- nametoll.eth
+```
+
 ## Public desk
 
 Localhost is not the demo target.
@@ -108,7 +130,9 @@ This tunnel dies when the local process stops. For a stable judge URL, host the 
 | `GRAPH_GATEWAY_URL` | Default `https://gateway.thegraph.com/api` |
 | `HEDERA_BUYER_*` | Buyer signer only — never the seller key |
 | `ENSNODE_URL` | ENSv2 Omnigraph, default `https://api.v2-sepolia.ensnode.io` |
-| `ENS_OWNER_ADDRESS` / `ENS_OPERATOR_ADDRESS` | Public Sepolia addresses for unsigned `ens-cli` writes. Not keys. Not a name. |
+| `ENS_OWNER_ADDRESS` / `ENS_OPERATOR_ADDRESS` | Public Sepolia addresses for ENSv2 writes. Not keys. Not a name. |
+| `ACC_1_PRIV_KEY` / `ACC3_PRIV_KEY` | Testnet-only Sepolia keys for `npm run ens:sepolia`. Never commit. |
+| `ETH_RPC_URL` | Optional Sepolia RPC for those writes |
 | `CRE_SECRETS_PATH` / `HEDERA_BUYER_KEY_PATH` | Files on disk; values stay out of git |
 
 Fee-payer is **not** configured here. The Gate reads it from live `GET /supported` (`0.0.7162784` on testnet as of the day-one probe).
@@ -124,18 +148,18 @@ Fee-payer is **not** configured here. The Gate reads it from live `GET /supporte
 - **B4** HCS topic `0.0.10464309`; paid request appends a recomputable bill
 - **B5** live Messari lending snapshot (Aave v3 + Compound III). One query shape, two pinned subgraphs. Schemas fetched via Subgraph MCP + Studio gateway introspection. Fail-soft if one indexer is down. Units = requested protocol count.
 - **B6** 1 protocol = `100000` tinybars, 2 = `200000`. Live pays on HashScan + HCS (stub bills first, then live `lending-risk` bills).
-- **B7/B8 (code)** Directory resolves a pasted name to `{ endpoint, payTo, priceRule, hcsTopic, asset: "0.0.0" }` from ENSIP-5/26 text records. Homepage form + `GET /desk/resolve`. Buyer `payFromName` 402s the resolved endpoint. Unsigned write plan: `npm run ens:writes`. See `docs/partners/ens/README.md`.
+- **B7** live ENSv2 parent `nametoll.eth` and child `desk.nametoll.eth` on Sepolia. Paste either into the homepage form or `GET /desk/resolve?name=`. Permissioned Resolver + EAC (operator can edit the three desk text keys, cannot transfer the name).
+- **B8** `npm run buyer -- nametoll.eth` resolves then 402s the **resolved** endpoint. Changing `agent-endpoint[web]` via the operator changes the next resolve without a buyer code change.
 
 **Next**
 
-- Human broadcasts the ENSv2 Sepolia txs from `npm run ens:writes` (then B7/B8 are live). Then **B9** CRE `handlerInTee`.
+- **B9** CRE `handlerInTee`.
 
 **Blockers (human, not code)**
 
-- B7/B8 live name: funded Sepolia account + public `ENS_OWNER_ADDRESS` / `ENS_OPERATOR_ADDRESS`. Run `npm run ens:writes -- --parent <name-you-chose> --child desk`, then broadcast each unsigned `{to,data,value}`. Writes stay unsigned in this repo.
 - B9: CRE login and the `cre` CLI so `cre workflow simulate` can produce a redacted log.
 - Public judge URL: current ngrok origin dies when the local desk stops. Host `npm start` and set `PUBLIC_DESK_URL` for a stable link.
-- Never commit `.env` (Graph key, Hedera keys).
+- Never commit `.env` (Graph key, Hedera keys, Sepolia keys).
 
 **Not blockers**
 

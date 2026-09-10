@@ -1,6 +1,6 @@
 # ENSv2 directory sources (B7–B8)
 
-Reads go through the ENS Omnigraph (`sepolia-v2` hosted default). Writes go through official `ens-cli` and stay **unsigned** `{to,data,value}`. Do not invent record keys or CLI flags.
+Reads go through the ENS Omnigraph (`sepolia-v2` hosted default), then official Universal Resolver `findResolver` + Permissioned Resolver `text()`. Writes follow official `ens-cli` calldata (or the equivalent viem calls in `npm run ens:sepolia`). Do not invent record keys or CLI flags.
 
 | What | Where |
 | --- | --- |
@@ -10,9 +10,12 @@ Reads go through the ENS Omnigraph (`sepolia-v2` hosted default). Writes go thro
 | ENSIP-5 text keys | https://docs.ens.domains/ensip/5 (`url`) |
 | ENSIP-26 agent keys | https://docs.ens.domains/ensip/26 (`agent-context`, `agent-endpoint[web]`) |
 | Permissioned Resolver + EAC | https://docs.ens.domains/ensv2/permissioned-resolver |
+| ETH Registrar | https://docs.ens.domains/ensv2/eth-registrar |
 | Registry hierarchy | https://docs.ens.domains/ensv2/registry-hierarchy |
 | `ens-cli` writes | `vendor/ens-cli/README.md` |
-| Omnigraph query model | `.agents/skills/omnigraph/SKILL.md` (schema confirmed offline with `enscli ensnode omnigraph schema`) |
+| Omnigraph query model | `.agents/skills/omnigraph/SKILL.md` |
+
+**Parent** = the 2LD you register (`nametoll.eth`). **Child** = a label under that parent's UserRegistry (`desk.nametoll.eth`).
 
 Desk records (documented keys only):
 
@@ -24,19 +27,24 @@ Desk records (documented keys only):
 
 Happy path does not ship a name. Type or paste one into `GET /desk/resolve?name=` or `npm run directory -- <name>`.
 
-## Unsigned write sequence
+## Live Sepolia (11 Sep 2026)
 
-`npm run ens:writes -- --owner 0x… --operator 0x… --parent <name-you-chose> --child desk --endpoint <public-desk-url>`
+| | |
+| --- | --- |
+| Parent | `nametoll.eth` |
+| Child | `desk.nametoll.eth` |
+| Owner | `0xD2aA21AF4faa840Dea890DB2C6649AACF2C80Ff3` |
+| Operator | `0xFeAf5C921996FC53f4DEf35e181E766e6D74690A` |
+| Permissioned Resolver | `0x558283D5F8E36316B60be7e24F4e58C7133752D2` |
+| UserRegistry | `0x0531cdfAa619d1Ce33B37e87AAcD685bEcd976B9` |
+| Register tx | https://sepolia.etherscan.io/tx/0x28ab9c164cca6f967413f944a3ef1f81ca3ef86f7e1620fdc5b7a57d8d7a8a96 |
 
-Prints the official `ens-cli` commands in order: **resolver deploy → register commit/reveal → subregistry → subname → set batch**. Then the official Permissioned Resolver `authorizeTextRoles` calls for those three keys only. The operator is not granted registry transfer roles.
+Operator has `authorizeTextRoles` on those three keys only (`ROLE_SET_TEXT`). No registry transfer role. `--reverse-record` was not used. Resolver was deployed before register.
 
-Someone with a funded Sepolia account still signs and broadcasts. `--reverse-record` is ENSv1-only and is not in the plan.
-
-## Live check (after broadcast)
+Hosted ENSNode `https://api.v2-sepolia.ensnode.io` currently serves a `*.up.railway.app` cert. Resolve then uses Sepolia Universal Resolver `0xeEeEEEeE14D718C2B47D9923Deab1335E144EeEe`. Official `pkg.pr.new` ens-cli is 404; `npm run ens:sepolia` broadcasts with the same ABIs/addresses as `vendor/ens-cli`.
 
 ```bash
-npm run directory -- <the-name-you-registered>
-npm run buyer -- <the-name-you-registered>
+npm run directory -- nametoll.eth
+npm run buyer -- nametoll.eth
+npm run ens:eac -- nametoll.eth <new-public-origin>
 ```
-
-Until that broadcast exists, resolve is implemented and tested against an injected reader. Hosted ENSNode `https://api.v2-sepolia.ensnode.io` is the default `ENSNODE_URL`. If that host fails TLS (it currently serves a `*.up.railway.app` cert), the desk falls back to `ens get text --chain sepolia`.
