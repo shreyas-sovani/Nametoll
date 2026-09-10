@@ -1,0 +1,46 @@
+{
+  "skill_name": "hedera-consensus-service",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "Create a topic with a submit key, subscribe to it via mirror node, and then publish 5 JSON event messages. Write the full Node.js script using @hiero-ledger/sdk.",
+      "expected_output": "A complete Node.js script that creates a topic, subscribes via TopicMessageQuery, and publishes structured JSON messages.",
+      "files": [],
+      "assertions": [
+        "The output imports from @hiero-ledger/sdk",
+        "The output uses TopicCreateTransaction",
+        "The output sets a submit key on the topic",
+        "The output uses TopicMessageQuery for subscription",
+        "The output calls .subscribe() on the query (not .execute()) for live message subscription",
+        "The output uses TopicMessageSubmitTransaction to publish",
+        "The output freezes and/or signs submit transactions when the topic has a submit key",
+        "The output sends structured JSON messages"
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "I need to submit a large message (~5KB) to an HCS topic and make sure all chunks go through. Show me how to use executeAll and verify each chunk's receipt.",
+      "expected_output": "A script demonstrating chunked message submission with executeAll and receipt verification per chunk.",
+      "files": [],
+      "assertions": [
+        "The output uses executeAll() to get all chunk responses",
+        "The output creates a large message around 5KB (for example using repeat, Buffer.alloc, or similar)",
+        "The output verifies each chunk succeeded (for example getReceipt, checking response status from executeAll, or logging receipt/sequence number per chunk)",
+        "The output checks or logs the sequence number from receipts"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Write a script that creates a topic with a 1 Hbar custom fee per message, then submits a message as a different account (not the operator) with a custom fee limit set.",
+      "expected_output": "A script showing topic creation with custom fees and message submission with fee limits from a non-operator account.",
+      "files": [],
+      "assertions": [
+        "The output uses CustomFixedFee for the per-message fee",
+        "The output sets fee schedule key on the topic",
+        "The output uses CustomFeeLimit when submitting",
+        "The output uses a separate submitting account (created with AccountCreateTransaction or clearly configured as a non-operator account)",
+        "The output submits from the new account (for example calling setOperator on the existing client, or creating a new Client configured with the second account's credentials)"
+      ]
+    }
+  ]
+}

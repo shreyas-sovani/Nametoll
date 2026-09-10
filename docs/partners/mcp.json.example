@@ -1,0 +1,45 @@
+{
+  "mcpServers": {
+    "hedera-docs": {
+      "url": "https://docs.hedera.com/mcp"
+    },
+    "hedera-network": {
+      "url": "https://agentic-testnet-mcp.hedera.com/mcp",
+      "headers": {
+        "x-hedera-account-id": "0.0.YOUR_TESTNET_ACCOUNT_ID"
+      }
+    },
+    "world-docs": {
+      "url": "https://docs.world.org/mcp"
+    },
+    "world-developer-portal": {
+      "url": "https://developer.world.org/api/mcp",
+      "headers": {
+        "Authorization": "Bearer api_YOUR_PORTAL_KEY"
+      }
+    },
+    "subgraph": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "--header",
+        "Authorization:${AUTH_HEADER}",
+        "https://subgraphs.mcp.thegraph.com/sse"
+      ],
+      "env": {
+        "AUTH_HEADER": "Bearer YOUR_GRAPH_GATEWAY_KEY"
+      }
+    },
+    "1inch-business": {
+      "url": "https://api.1inch.com/mcp/protocol",
+      "headers": {
+        "Authorization": "Bearer YOUR_1INCH_API_KEY"
+      }
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"]
+    }
+  }
+}

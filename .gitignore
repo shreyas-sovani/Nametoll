@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.env
+.env.local
+.env.*.local
+!.env.example
+.DS_Store
+*.log
+npm-debug.log*
+*.tsbuildinfo
+coverage/
+.railway/
+.ngrok/
+
+# Shallow partner clones keep their own .git (see vendor/SOURCES.md).
+/vendor/*
+!/vendor/SOURCES.md

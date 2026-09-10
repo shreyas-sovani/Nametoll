@@ -1,0 +1,271 @@
+{
+  "version": 1,
+  "skills": {
+    "1inch-aqua": {
+      "source": "1inch/1inch-ai",
+      "sourceType": "github",
+      "skillPath": "skills/1inch-aqua/SKILL.md",
+      "computedHash": "e0c9e683990cf9560390a0d6c1d973f8a0098ebbf572b5d6ae08419a1003bf42"
+    },
+    "1inch-debug": {
+      "source": "1inch/1inch-ai",
+      "sourceType": "github",
+      "skillPath": "skills/1inch-debug/SKILL.md",
+      "computedHash": "fcce1460f21cde04c90f33ed21ae5f8acd1a4d9f30807a28c9dbdc5301755da5"
+    },
+    "1inch-infrastructure": {
+      "source": "1inch/1inch-ai",
+      "sourceType": "github",
+      "skillPath": "skills/1inch-infrastructure/SKILL.md",
+      "computedHash": "5a9121acbc51edfa50c803ade3373dcaf9371ec7a4cfb34c434b9bb58d5ada62"
+    },
+    "1inch-market-data": {
+      "source": "1inch/1inch-ai",
+      "sourceType": "github",
+      "skillPath": "skills/1inch-market-data/SKILL.md",
+      "computedHash": "adc654acd9f674afc88cd60cece1419b1c4444d93d2740e2ca6a0fbfcd32ce7f"
+    },
+    "1inch-mcp-server": {
+      "source": "1inch/1inch-ai",
+      "sourceType": "github",
+      "skillPath": "skills/1inch-mcp-server/SKILL.md",
+      "computedHash": "2d67725d6ca797eb30db8167444735fb18951a538ec91dcfb9fb93c7df5a951b"
+    },
+    "1inch-orderbook": {
+      "source": "1inch/1inch-ai",
+      "sourceType": "github",
+      "skillPath": "skills/1inch-orderbook/SKILL.md",
+      "computedHash": "c3ea2e76c8d41c8bf49cbf68b4668f59d6e7c0b3d4dd391d8006b29f08ee6ca2"
+    },
+    "1inch-swap": {
+      "source": "1inch/1inch-ai",
+      "sourceType": "github",
+      "skillPath": "skills/1inch-swap/SKILL.md",
+      "computedHash": "68eb5eddca24f4d870a7f073e36fbf36272cca24cfe4a0528a193fa148d2cc2e"
+    },
+    "1inch-wallet-data": {
+      "source": "1inch/1inch-ai",
+      "sourceType": "github",
+      "skillPath": "skills/1inch-wallet-data/SKILL.md",
+      "computedHash": "930e91e587470727b41642f25d0eb10ae67565e67d73d593578a372a64850798"
+    },
+    "1inch-walletconnect": {
+      "source": "1inch/1inch-ai",
+      "sourceType": "github",
+      "skillPath": "skills/1inch-walletconnect/SKILL.md",
+      "computedHash": "b6a0f26e5d55bedbcf5ccaddc3482e25b9d504af74fbc4bd770ae0e747243dd8"
+    },
+    "Hedera Agent Kit v4 Migration": {
+      "source": "hedera-dev/hedera-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/agent-kit-plugin/skills/agent-kit-v4-migration/SKILL.md",
+      "computedHash": "4c02eb1c2a21740b9bff65004eff7de548958a60c4440d5c665feb569bfe2cef"
+    },
+    "Hedera Hackathon PRD": {
+      "source": "hedera-dev/hedera-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/hackathon-helper/skills/hackathon-prd/SKILL.md",
+      "computedHash": "04a27c0bc1abfc5f280d4a4924b78ee3a7ed1479b0748a320454a8a6f8ecdb28"
+    },
+    "Hedera Hackathon Submission Validator": {
+      "source": "hedera-dev/hedera-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/hackathon-helper/skills/validate-submission/SKILL.md",
+      "computedHash": "1031b8d9e3936fad93269855d35932c2d61e28a6c54bcbeb1aa126225da366ea"
+    },
+    "Hedera Hook Creation": {
+      "source": "hedera-dev/hedera-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/agent-kit-plugin/skills/agent-kit-hook/SKILL.md",
+      "computedHash": "b46bcd66fec8c409141b58510a7ab12a3cc0e5216829d503ba8dcb8520b457cb"
+    },
+    "Hedera Policy Creation": {
+      "source": "hedera-dev/hedera-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/agent-kit-plugin/skills/agent-kit-policy/SKILL.md",
+      "computedHash": "77bb89bfd8d08918a06bdef4998cff94506fb3289a8199051cd4f43693751870"
+    },
+    "Project Scaffolding": {
+      "source": "hedera-dev/hedera-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/dev-intelligence/skills/project-scaffolding/SKILL.md",
+      "computedHash": "491c73598b1028d2edf4503732bc95f4f80ba32c4a4be7abdf6f24abdf8cf887"
+    },
+    "Quality Gates": {
+      "source": "hedera-dev/hedera-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/dev-intelligence/skills/quality-gates/SKILL.md",
+      "computedHash": "37fe0b2761e43643f114780fa33488420dfd6925929fbd9f1e6172b568d8e85e"
+    },
+    "Session Management": {
+      "source": "hedera-dev/hedera-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/dev-intelligence/skills/session-management/SKILL.md",
+      "computedHash": "e13bfd10289a165c6992e0ddca6f3e662944cba680eb60534af57c0a9dd9bdb4"
+    },
+    "agent-kit-plugin": {
+      "source": "hedera-dev/hedera-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/agent-kit-plugin/skills/agent-kit-plugin/SKILL.md",
+      "computedHash": "b368e88e8c14b592ee55a3bb5d1667708bfb71c0638c401516510f0c227589c5"
+    },
+    "agentkit-x402": {
+      "source": "worldcoin/agentkit",
+      "sourceType": "github",
+      "skillPath": "skills/agentkit-x402/SKILL.md",
+      "computedHash": "58a09214017b42e1c25ee592101aa5f509a75d8ec0883258c9c81e464a6f3252"
+    },
+    "axelar-gmp": {
+      "source": "hedera-dev/hedera-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/cross-chain/skills/axelar-gmp/SKILL.md",
+      "computedHash": "43ca29faa098f37326bcd76a484adea1283cb8784730318e579a673a907d88f1"
+    },
+    "base": {
+      "source": "namehash/ensnode",
+      "ref": "v1.15.2",
+      "sourceType": "github",
+      "skillPath": "packages/ensskills/skills/base/SKILL.md",
+      "computedHash": "a87e2bbf83f6767ea14081d4ae8a53972f0d60aeb0453f00f97665bbf78a282a"
+    },
+    "ccip": {
+      "source": "hedera-dev/hedera-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/cross-chain/skills/ccip/SKILL.md",
+      "computedHash": "2611622c53e757a4d49b0a741372c7077c51a390008dcce17ecf80cb4bec9ee6"
+    },
+    "chainlink-cre-skill": {
+      "source": "smartcontractkit/chainlink-agent-skills",
+      "sourceType": "github",
+      "skillPath": "chainlink-cre-skill/SKILL.md",
+      "computedHash": "1415af4c96e0ba18af13ec91a1765b09e50e6b3a957c92e3cbeaf385c0d2b2ff"
+    },
+    "chainlink-data-feeds": {
+      "source": "hedera-dev/hedera-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/oracles/skills/chainlink-data-feeds/SKILL.md",
+      "computedHash": "e3839e4541974c08b5ec3584dd0e226569cf4fe7b3de134767b7c5874bd437e9"
+    },
+    "create-harness-spec": {
+      "source": "hedera-dev/hedera-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/hedera-harness/skills/create-harness-spec/SKILL.md",
+      "computedHash": "4b08e79c59c4dcad42f26c7f2ec462b06ec00d3cca2accf0d5973d580e1df3c9"
+    },
+    "ens-protocol": {
+      "source": "namehash/ensnode",
+      "ref": "v1.15.2",
+      "sourceType": "github",
+      "skillPath": "packages/ensskills/skills/ens-protocol/SKILL.md",
+      "computedHash": "71e4c8ad4cba18e6060018496dcd8aefd222bad6a48c1ae1802c2b57f6bd5486"
+    },
+    "enscli": {
+      "source": "namehash/ensnode",
+      "ref": "v1.15.2",
+      "sourceType": "github",
+      "skillPath": "packages/ensskills/skills/enscli/SKILL.md",
+      "computedHash": "fbc0dbef106fbd0aed302cf85a486d56cfb89c6c49acec24028cdab482c51585"
+    },
+    "enskit": {
+      "source": "namehash/ensnode",
+      "ref": "v1.15.2",
+      "sourceType": "github",
+      "skillPath": "packages/ensskills/skills/enskit/SKILL.md",
+      "computedHash": "14d002b94197a2770e6d2bfc794a5343d5aa6dd28526f8655b42a74bc9d8c26a"
+    },
+    "enssdk": {
+      "source": "namehash/ensnode",
+      "ref": "v1.15.2",
+      "sourceType": "github",
+      "skillPath": "packages/ensskills/skills/enssdk/SKILL.md",
+      "computedHash": "db69e4e77be69f1fc9173a15d317b078ba7a00c9fae95170ccc96bb1d932d3e1"
+    },
+    "harness-spec-anatomy": {
+      "source": "hedera-dev/hedera-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/hedera-harness/skills/harness-spec-anatomy/SKILL.md",
+      "computedHash": "0fe0e70730c3c8c1fe42be9ce1cf21e7e8a95a7ce1316fb91b48c2c6a99ff7a4"
+    },
+    "hedera-consensus-service": {
+      "source": "hedera-dev/hedera-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/native-services-js/skills/hedera-consensus-service/SKILL.md",
+      "computedHash": "ed493ea1e2873d637d5b265138b971ff4a883c5672d5f74f9bdc6f7722c46ed8"
+    },
+    "hedera-token-service": {
+      "source": "hedera-dev/hedera-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/native-services-js/skills/hedera-token-service/SKILL.md",
+      "computedHash": "6d1e573893c754fdeb4efb5f790631298049d0a8088dd2374e9d7d08b7e7d1ce"
+    },
+    "hiero-cli": {
+      "source": "hedera-dev/hedera-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/hiero-cli/skills/hiero-cli/SKILL.md",
+      "computedHash": "7351062593fb09b6e2db9106e6fd7b324bf028e3bf1c64d54696cf752b0287a2"
+    },
+    "hss-system-contract": {
+      "source": "hedera-dev/hedera-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/system-contracts/skills/hss-system-contract/SKILL.md",
+      "computedHash": "a553cbfe4221fe7b8afbc799c61069caa6a7b6ea1b01585599a479dd6b9589c2"
+    },
+    "hts-system-contract": {
+      "source": "hedera-dev/hedera-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/system-contracts/skills/hts-system-contract/SKILL.md",
+      "computedHash": "b955e168bdee09f911305a838a58642c2b7af3727e01920f0d9890abc9f2fc96"
+    },
+    "layerzero-messaging": {
+      "source": "hedera-dev/hedera-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/cross-chain/skills/layerzero-messaging/SKILL.md",
+      "computedHash": "346e2e3e23e68696a88923538ad5f6cf8695a27b04288bf5b83ca1bb7ef423b1"
+    },
+    "migrate-to-omnigraph": {
+      "source": "namehash/ensnode",
+      "ref": "v1.15.2",
+      "sourceType": "github",
+      "skillPath": "packages/ensskills/skills/migrate-to-omnigraph/SKILL.md",
+      "computedHash": "3e9fef27d8ceff4e544fa52d662038cb2128b07de7c16541e129bf0463f50ba0"
+    },
+    "omnigraph": {
+      "source": "namehash/ensnode",
+      "ref": "v1.15.2",
+      "sourceType": "github",
+      "skillPath": "packages/ensskills/skills/omnigraph/SKILL.md",
+      "computedHash": "9fda8a449f2d8632a3674ee5f2ddc619fa999dc77ec6816e4cd67c99a889bfc6"
+    },
+    "pyth-price-feeds": {
+      "source": "hedera-dev/hedera-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/oracles/skills/pyth-price-feeds/SKILL.md",
+      "computedHash": "21de0bae9b6728cd1955408c60b75e36754c5c8124c4d08ac000805a7500b9e0"
+    },
+    "review-harness-spec": {
+      "source": "hedera-dev/hedera-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/hedera-harness/skills/review-harness-spec/SKILL.md",
+      "computedHash": "a5059674ff90dec22175d9193766cfa05bb8d23f9f43032d95877fdb350abcf1"
+    },
+    "supra-push-oracle": {
+      "source": "hedera-dev/hedera-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/oracles/skills/supra-push-oracle/SKILL.md",
+      "computedHash": "8cb5613d6c4e14ed99bbd8e74c6b86e3853d1e74275f1a304939130bd4c443d9"
+    },
+    "unigraph-sql": {
+      "source": "namehash/ensnode",
+      "ref": "v1.15.2",
+      "sourceType": "github",
+      "skillPath": "packages/ensskills/skills/unigraph-sql/SKILL.md",
+      "computedHash": "5c0ee254506c7301a99e5a78d0a9fdcbd8b27049e5fec0f2aead311e992cebc0"
+    },
+    "x402-payments": {
+      "source": "hedera-dev/hedera-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/native-services-js/skills/x402-payments/SKILL.md",
+      "computedHash": "59b1fb3bf5fd28ac0fb6a4e855261e3b627b513d23529ec97c228f7aa19b0aa6"
+    }
+  }
+}

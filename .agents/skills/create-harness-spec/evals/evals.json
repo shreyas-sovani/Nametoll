@@ -1,0 +1,77 @@
+{
+  "skill_name": "create-harness-spec",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I already scaffolded a Scaffold HBAR app (packages/nextjs present, yarn workspaces). Help me create an ASSERT-only hedera-harness recipe under .harness/ for an HCS proof-wall feature called proof-wall: users browse a public message wall without a wallet, and posting requires connecting a wallet. No Solidity.",
+      "expected_output": "A grilling session that asks one question at a time with a recommended answer, looks up project facts instead of asking, waits for shared understanding before writing files, then emits a minimal schemaVersion 3 recipe at .harness/spec.yaml with a baseline install command, plus .harness/prd.md and validators, leaving v3 defaults commented out and omitting skills:.",
+      "files": [],
+      "assertions": [
+        "The output satisfies: Follows grilling protocol: one question at a time / recommended answer",
+        "The output satisfies: Does not write files until shared understanding is confirmed",
+        "The output includes schemaVersion: 3: Recipe declares schemaVersion 3",
+        "The output includes .harness/spec.yaml: Writes the recipe to the project-centric .harness/ path",
+        "The output satisfies: Baseline includes a command literally named install",
+        "The output satisfies: Leaves v3-defaulted plumbing out of the recipe rather than restating it",
+        "The output satisfies: Does not emit keys removed in schema v3 (seed, generator, logging, extend, contract, skills)",
+        "The output satisfies: Names HCS / product skill discovery without listing skills: in the recipe",
+        "The output satisfies: Keeps the run blind / separates PRD from evaluate checklist",
+        "The output satisfies: Names doctor and/or check-spec.sh as the completion criterion"
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "Deepen my existing proof-wall harness recipe to EVALUATE. Derive evaluate-checklist assertions from the PRD journeys (browse without wallet; wallet-gated post).",
+      "expected_output": "An evaluate checklist at .harness/eval.json with numbered E-prefixed assertions carrying statement and howToVerify, a fail-closed evaluationRules posture, both eval and validator.enabled set in the recipe, and a reminder that the PRD must stay blind.",
+      "files": [],
+      "assertions": [
+        "The output satisfies: Uses stable numbered assertion ids (E1, E2, ...)",
+        "The output includes howToVerify: Assertions carry concrete browser verification steps",
+        "The output satisfies: Enables both eval and validator.enabled — either alone is misconfigured",
+        "The output uses the v3 default evaluate checklist path",
+        "The output satisfies: Evaluate checklist keeps a fail-closed posture",
+        "The output satisfies: Reminds the user not to leak checklist detail into the PRD",
+        "The output satisfies: Does not hand-write validator CLI flags or model names; the agent preset owns those"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "When should I enable chainValidation for my harness recipe, and what YAML fields do I need?",
+      "expected_output": "Explains that CHAIN is opt-in and requires EVALUATE, that network must be testnet, that an ECDSA operator is supplied through environment variables, and that assertions must be flagged executableWithTestSigner to actually transact.",
+      "files": [],
+      "assertions": [
+        "The output includes chainValidation: Names the chainValidation block",
+        "The output satisfies: States the network must be testnet",
+        "The output satisfies: Operator credentials come from environment variables",
+        "The output satisfies: Calls out that the operator must be ECDSA, not ED25519",
+        "The output includes executableWithTestSigner: Links chainValidation to executableWithTestSigner assertions",
+        "The output satisfies: States that CHAIN depends on EVALUATE"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "My .harness/spec.yaml has an extend.baseline block, a contract: key, and no schemaVersion. I want to add a new page to the recipe — can you edit it for me?",
+      "expected_output": "Recognizes a pre-v3 recipe, declines to treat it as loadable, explains that hedera-harness migrate is gone, and recommends rewriting to schemaVersion 3 (extend.baseline → baseline, contract: → eval:) or regenerating with init.",
+      "files": [],
+      "assertions": [
+        "The output satisfies: Identifies the recipe as predating schema v3",
+        "The output satisfies: Does not recommend the removed migrate command as the path forward",
+        "The output satisfies: Explains extend.baseline → baseline and contract → eval"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "I want the harness to build a whole HTS subscription feature: the token service layer, a management UI, and wallet-gated mint flows. Should that be one PRD or several?",
+      "expected_output": "Weighs a single PRD against ordered increments, recommends splitting only because this spans layers, explains that prd accepts a list delivered in order onto one branch, that each increment must leave the app green, and that eval: should be listed 1:1 with prd: so each slice is graded against its own checklist.",
+      "files": [],
+      "assertions": [
+        "The output satisfies: Explains that prd can be an ordered list of increments",
+        "The output satisfies: Each increment must leave the app green on its own",
+        "The output satisfies: A failing increment stops the sequence",
+        "The output satisfies: Orders increments by dependency, not size",
+        "The output satisfies: Increments deliver onto a single branch",
+        "The output satisfies: Pairs eval: 1:1 with prd: for per-increment grading"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "skill_name": "review-harness-spec",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "Review this harness recipe. .harness/spec.yaml is schemaVersion 3 with name: proof-wall and sets eval: .harness/eval.json but has no validator block. The command validator has a command named setup instead of install, and .harness/prd.md contains a line saying 'E2 must pass: the feed renders'.",
+      "expected_output": "A two-axis report that keeps Wiring and Eval separate, flags the EVALUATE pairing gap (eval without validator.enabled), the missing install command name, and the blind violation from the assertion id leaking into the PRD.",
+      "files": [],
+      "assertions": [
+        "The output satisfies: Report contains a Wiring axis",
+        "The output satisfies: Report contains an Eval axis",
+        "The output satisfies: Flags eval present but validator.enabled missing",
+        "The output satisfies: Flags the command validator missing an install-named command",
+        "The output satisfies: Flags the assertion id leaking into the PRD",
+        "The output satisfies: Uses the mechanical checker for the Wiring axis"
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "Audit whether this harness recipe is safe to enable chainValidation. The recipe has eval + validator.enabled, chainValidation.enabled true, network: mainnet, and the Playwright smoke asserts twelve pieces of UI copy across six routes.",
+      "expected_output": "Flags mainnet as rejected by the loader, notes that the Playwright stage is too thick and deep UX belongs in the evaluate checklist, and covers both axes.",
+      "files": [],
+      "assertions": [
+        "The output satisfies: Report keeps both axes",
+        "The output satisfies: Flags network: mainnet as invalid",
+        "The output includes executableWithTestSigner: Ties chainValidation to executable assertions",
+        "The output satisfies: Flags an over-stuffed Playwright stage"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Check this recipe: .harness/spec.yaml still has a skills: list with hedera-consensus-service and create-harness-spec. Also the PRD has three journeys but .harness/eval.json only has one assertion.",
+      "expected_output": "Flags that skills: was removed and hard-fails at load (do not keep the domain skill in the recipe either), and flags that two PRD journeys are ungraded.",
+      "files": [],
+      "assertions": [
+        "The output satisfies: Flags that skills: is removed from the recipe",
+        "The output satisfies: Rejects the authoring skill as a generator skill",
+        "The output satisfies: Flags journeys without checklist coverage"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Review this recipe: .harness/spec.yaml has no schemaVersion, an extend.baseline block, a generator block with cursor CLI args, and logging paths under .harness/runs/.",
+      "expected_output": "Identifies a pre-v3 recipe, stops and recommends rewriting to schemaVersion 3 (migrate is gone), and notes that generator, logging and extend were removed with the agent preset replacing hand-written CLI flags.",
+      "files": [],
+      "assertions": [
+        "The output satisfies: Identifies the recipe as pre-v3",
+        "The output satisfies: Does not treat migrate as the upgrade path",
+        "The output satisfies: Names keys removed from the current schema",
+        "The output satisfies: Explains that the agent preset replaces hand-written CLI flags"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Review this recipe: schemaVersion 3, baseline with install, and it also sets maxAttempts: 3, prd: .harness/prd.md, validators.static: .harness/validators/static.json, and constraints.packageManager: yarn@3.2.3 which matches the project lockfile. Anything wrong?",
+      "expected_output": "Confirms the recipe is valid and runnable, but notes it is padded: every one of those keys restates a v3 default or a detected value, adding drift surface for no benefit. Recommends removing them.",
+      "files": [],
+      "assertions": [
+        "The output satisfies: Recognizes the recipe is not broken",
+        "The output satisfies: Flags keys that merely restate v3 defaults",
+        "The output satisfies: Names which keys are defaulted or detected",
+        "The output satisfies: Recommends removing the redundant keys"
+      ]
+    }
+  ]
+}

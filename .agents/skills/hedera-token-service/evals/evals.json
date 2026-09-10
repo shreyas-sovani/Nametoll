@@ -1,0 +1,46 @@
+{
+  "skill_name": "hedera-token-service",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I need to create a fungible token with 8 decimals called 'GameGold' with symbol 'GG', mint 1 million initial supply to my operator account, then transfer 500 tokens to another account. Write the full JS script using @hiero-ledger/sdk.",
+      "expected_output": "A complete, runnable Node.js script that creates a fungible token, handles account creation/association, and transfers tokens using the Hiero SDK.",
+      "files": [],
+      "assertions": [
+        "The output imports from @hiero-ledger/sdk",
+        "The output uses TokenCreateTransaction to create the token",
+        "The output sets token decimals to 8 (for example via setDecimals(8) or an equivalent variable)",
+        "The output handles token association for the recipient before transfer (for example TokenAssociateTransaction, setMaxAutomaticTokenAssociations for auto-association, or explaining why association is needed)",
+        "The output uses TransferTransaction for the token transfer",
+        "The output uses a negative token amount for the sender in addTokenTransfer"
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "Write a script that creates an NFT collection with a 5% royalty fee, mints 3 NFTs with IPFS metadata URIs, and then transfers one of them to another account. Use the Hiero SDK.",
+      "expected_output": "A complete script demonstrating NFT creation with royalty fees, minting with metadata, and NFT transfer.",
+      "files": [],
+      "assertions": [
+        "The output sets token type to NonFungibleUnique",
+        "The output uses CustomRoyaltyFee for the 5% royalty",
+        "The output mints NFTs with metadata (for example addMetadata, setMetadata, or passing metadata bytes to the mint call)",
+        "The output uses addNftTransfer for NFT transfer",
+        "The output sets a supply key via setSupplyKey (required for minting)",
+        "The output configures a 5% royalty fee (for example numerator 5 / denominator 100, or numerator 1 / denominator 20, or any equivalent fraction)"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I want to airdrop a fungible token to 3 accounts — one has unlimited auto-association, one has 1 slot, and one has 0. Show me how to handle the pending airdrops (claim and cancel). JavaScript please.",
+      "expected_output": "A script showing the full airdrop lifecycle including pending airdrop handling with claim and cancel.",
+      "files": [],
+      "assertions": [
+        "The output uses TokenAirdropTransaction",
+        "The output demonstrates claiming pending airdrops",
+        "The output demonstrates cancelling pending airdrops",
+        "The output creates accounts with different auto-association settings",
+        "The output accesses pending airdrops from the record"
+      ]
+    }
+  ]
+}
