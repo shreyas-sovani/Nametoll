@@ -1,4 +1,4 @@
-# Working notes (B0–B15 live)
+# Working notes (B0–B16 live)
 
 ## Blocky402 probe (10 Sep 2026)
 
@@ -218,3 +218,18 @@ Same CRE engine as B9 (`cre/nametoll-brain`), not a second cloned `automated-liq
 - Same HTTP `handlerInTee`. Payload `{ "action": "join" }` still calls `getSecret`, then returns unsigned `{ to, data: 0xb688a363, chainId: 11155111, chain: ethereum-testnet-sepolia }`. Spend payloads unchanged.
 - Not CRE `writeReport` (that is for report consumers, not this `join()`).
 - Simulate: `docs/partners/chainlink/simulate-join.log`. No join tx broadcast. A Sepolia wallet still has to send the calldata. Do not invent a HashScan.
+
+## Sunday form swap (B16)
+
+Evaluated 11 Sep 2026 after B0–B15 were green (Nametoll vitest 100, CRE bun 8, `tsc --noEmit`, Blocky402 `/health` + `/supported` fee-payer `0.0.7162784`, public desk `/health` 200).
+
+PRD window: stay Chainlink if simulate logs exist; Graph only if composition **and** a reusable SKILL are real; World only if the Selfie flag is already on. Kill if picking a partner that did not land.
+
+| Slot rule | What is true | Call |
+| --- | --- | --- |
+| Chainlink simulate logs | `simulate-allow.log`, `simulate-deny.log`, `simulate-join.log` all show TEE Execution. Gate 403s when Brain denies. | **Keep** third slot |
+| Graph composition | One Messari lending query, two pinned subgraphs, MCP schema fetch, fail-soft. Live probe notes above. | Merchandise only |
+| Graph reusable SKILL | No Nametoll `SKILL.md` for the desk/query. `.agents/skills/subgraph-dev` is the upstream pack. | **Do not** form-pick |
+| World Selfie flag | No `@worldcoin/idkit` in `package.json`. No `selfieCheckLegacy` in `src/`. `.env.example` has no World portal names. Flag not confirmed on. | **Do not** form-pick |
+
+README swap record was written first. Form line was not changed. Submission pack still Hedera · ENS · Chainlink.

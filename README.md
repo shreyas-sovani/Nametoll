@@ -11,6 +11,20 @@ name (ENSv2) → TEE allow (CRE) → pay (Blocky402) → metered bytes → HCS b
 **Filled §9 checklists:** [`docs/submission.md`](docs/submission.md)  
 AI agents wrote code in this repo. A human directed the product and will narrate the video.
 
+## Sunday form swap (B16)
+
+This paragraph is the swap record. It was written while the form line above still named Hedera · ENS · Chainlink.
+
+**Decision: no swap.** Third slot stays Chainlink.
+
+| Candidate | Evidence (11 Sep 2026) | Form? |
+| --- | --- | --- |
+| **Chainlink** | `handlerInTee` simulate logs exist: `docs/partners/chainlink/simulate-allow.log`, `simulate-deny.log`, `simulate-join.log`. TEE gates Blocky402 settle (B9–B10). PRD: stay Chainlink if simulate logs exist. | **Yes** (third slot) |
+| **The Graph** | B5 is real Messari composition: one lending query across Aave v3 + Compound III, pinned Studio ids, MCP schemas, fail-soft. That is merchandise. This repo did not ship a Graph prize SKILL (vendored `subgraph-dev` is upstream, not a Nametoll SKILL.md). Density tax. | No |
+| **World** | Selfie Check flag was not on. No `@worldcoin/idkit`, no `selfieCheckLegacy`, no Developer Portal flag confirmation. Do not pick a corpse. | No |
+
+ETHOnline still allows only three partner prizes. Hedera (pay + HCS) and ENS (the name) stay. Graph stays off the form as live data the desk sells. World stays off the form.
+
 One app, six modules: **Directory**, **Gate**, **Brain**, **Merchandise**, **Ledger**, **Buyer**.
 
 ## Demo timestamps (2–4 min, ≥720p, human voice)
@@ -197,12 +211,12 @@ Fee-payer is **not** configured here. The Gate reads it from live `GET /supporte
 - **B12** submission pack: README timestamps → Hedera / ENS / Chainlink §9 lists in [`docs/submission.md`](docs/submission.md). Public repo. AI attributed. Form trio unchanged.
 - **B13** unused-remainder refund (Pinout shape, one topic). Credit is the settled tinybars. Burn is delivered protocols. Seller HBAR `TransferTransaction` returns unused tinybars. HCS stores prepaid / owed / refund. Blotter station 06. Not dual-topic HIP-991.
 - **B14** harness DX: in-place `init` adopt planted Yarn/Next into this npm Express desk. Open PR https://github.com/hedera-dev/hedera-harness/pull/59 (target `dev`, not merged). Follow-up commit: Scaffold-HBAR static checks are dropped on npm adopt; `constraints.packageManager` is written; only newly written `.harness/` files are adapted. No `.harness/` in this repo. No harness demo video.
-
 - **B15** same CRE HTTP TEE handler emits unsigned `join()` to live ChallengeLending `0x88574e7Cc0027afd04951daa09B64d4441931ba1`. Simulate log `docs/partners/chainlink/simulate-join.log`. Not `writeReport`. Not a cloned liquidation template. No join tx broadcast.
+- **B16** Sunday form swap evaluated. No swap. Form stays Hedera · ENS · Chainlink. Graph composition is merchandise, not a prize SKILL. World Selfie flag was not on.
 
 **Next**
 
-- Stretch **B16** only if you still want a Sunday form swap. The spine is closed. Harness PR is open, not merged.
+- Record the 2–4 min video from the timestamp table. Host a stable `PUBLIC_DESK_URL` if the ngrok origin dies. Harness PR is open, not merged. No further spine tickets.
 
 **Blockers (human, not code)**
 

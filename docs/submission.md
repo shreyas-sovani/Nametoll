@@ -2,6 +2,7 @@
 
 **Form picks (locked):** Hedera · ENS · Chainlink  
 **Off the ETHOnline form:** World and The Graph (Graph is merchandise only).  
+**B16 Sunday record:** no swap. Swap paragraph is in `README.md` under “Sunday form swap (B16)”, written while that form line still named Hedera · ENS · Chainlink. Graph composition landed; Graph prize SKILL did not. World Selfie Check flag was not on. Chainlink simulate logs keep the third slot.  
 **Repo:** https://github.com/shreyas-sovani/Nametoll (public)  
 **Video:** 2–4 min, human voice, 720p. Record the README timestamp script. Do not speed the take.
 
