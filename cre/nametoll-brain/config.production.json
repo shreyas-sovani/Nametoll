@@ -1,3 +1,4 @@
 {
-  "secretId": "SPEND_CAP"
+  "secretId": "SPEND_CAP",
+  "challengeLending": "0x88574e7Cc0027afd04951daa09B64d4441931ba1"
 }

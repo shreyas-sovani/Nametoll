@@ -7,6 +7,7 @@ Nametoll customization (B9):
 - HTTP trigger into `cre.handlerInTee` (not a normal `handler`)
 - `runtime.getSecret({ id: 'SPEND_CAP' })` inside the enclave
 - Verdict-only `{ allow, maxTinybars, reason }` — merchandise HTTP stays on the desk
+- Same handler, `{ "action": "join" }` → unsigned `join()` to official ChallengeLending `0x88574e7Cc0027afd04951daa09B64d4441931ba1` (not `writeReport`, not a second workflow)
 - **No** `ConfidentialHTTPClient` in the TEE handler
 - Secret never crosses `usingTheDons()`
 
@@ -16,6 +17,11 @@ cp .env.example .env   # set SPEND_CAP_TINYBARS_VAR; never commit .env
 cre workflow simulate nametoll-brain \
   --non-interactive --trigger-index 0 \
   --http-payload '{"requestedTinybars":"100000"}' \
+  --target staging-settings
+# same engine, unsigned join() calldata (not a broadcast):
+cre workflow simulate nametoll-brain \
+  --non-interactive --trigger-index 0 \
+  --http-payload '{"action":"join"}' \
   --target staging-settings
 ```
 

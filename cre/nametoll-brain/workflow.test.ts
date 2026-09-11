@@ -2,14 +2,22 @@ import { describe, expect } from 'bun:test'
 import type { TeeRuntime } from '@chainlink/cre-sdk'
 import { test } from '@chainlink/cre-sdk/test'
 import type { HTTPPayload } from '@chainlink/cre-sdk'
+import { encodeFunctionData, parseAbi } from 'viem'
 import { decideSpend } from './verdict'
 import { initWorkflow, onHttpTrigger } from './workflow'
 
+const OFFICIAL_CHALLENGE_LENDING = '0x88574e7Cc0027afd04951daa09B64d4441931ba1'
+const ETHONLINE_SCRAPE_CHALLENGE = '0x59d5B29FbA5ca865a171076BE94EbEeC5BCA1E04'
+const JOIN_DATA = encodeFunctionData({
+  abi: parseAbi(['function join()']),
+  functionName: 'join',
+})
+
 const CAP = '150000'
 
-function httpPayload(requestedTinybars: string): HTTPPayload {
+function httpPayload(requestedTinybars: string, extra: Record<string, unknown> = {}): HTTPPayload {
   return {
-    input: new TextEncoder().encode(JSON.stringify({ requestedTinybars })),
+    input: new TextEncoder().encode(JSON.stringify({ requestedTinybars, ...extra })),
   } as HTTPPayload
 }
 
@@ -68,5 +76,33 @@ describe('initWorkflow', () => {
     expect(handlers).toHaveLength(1)
     expect(handlers[0].fn).toBe(onHttpTrigger)
     expect(handlers[0].requirements).toBeDefined()
+  })
+})
+
+describe('join on the same CRE engine', () => {
+  test('emits unsigned join() calldata for the live official ChallengeLending', () => {
+    const { runtime } = makeFakeTeeRuntime()
+    const body = JSON.parse(onHttpTrigger(runtime, httpPayload('100000', { action: 'join' })))
+    expect(body.to).toBe(OFFICIAL_CHALLENGE_LENDING)
+    expect(body.to).not.toBe(ETHONLINE_SCRAPE_CHALLENGE)
+    expect(body.data).toBe(JOIN_DATA)
+    expect(body.chainId).toBe(11155111)
+    expect(body.action).toBe('join')
+  })
+
+  test('still fetches the TEE secret and does not log it on join', () => {
+    const { runtime, logs } = makeFakeTeeRuntime('super-secret-cap')
+    const body = JSON.parse(onHttpTrigger(runtime, httpPayload('', { action: 'join' })))
+    expect(body.data).toBe(JOIN_DATA)
+    for (const line of logs) {
+      expect(line).not.toContain('super-secret-cap')
+    }
+  })
+
+  test('spend payloads still return a verdict, not join calldata', () => {
+    const { runtime } = makeFakeTeeRuntime()
+    const body = JSON.parse(onHttpTrigger(runtime, httpPayload('100000')))
+    expect(body.allow).toBe(true)
+    expect(body.to).toBeUndefined()
   })
 })

@@ -57,4 +57,36 @@ describe("CRE confidential workflow", () => {
     expect(decideSpend("100000", "150000").allow).toBe(true);
     expect(decideSpend("200000", "150000").allow).toBe(false);
   });
+
+  it("pins join() to the live official ChallengeLending on the same HTTP TEE handler", () => {
+    const challenge = readFileSync(
+      resolve(process.cwd(), "cre/nametoll-brain/challenge.ts"),
+      "utf8",
+    );
+    const staging = readFileSync(
+      resolve(process.cwd(), "cre/nametoll-brain/config.staging.json"),
+      "utf8",
+    );
+    expect(challenge).toMatch(/function join\(\)/);
+    expect(challenge).toMatch(/0x88574e7Cc0027afd04951daa09B64d4441931ba1/);
+    expect(challenge).not.toMatch(/0x59d5B29FbA5ca865a171076BE94EbEeC5BCA1E04/);
+    expect(staging).toMatch(/0x88574e7Cc0027afd04951daa09B64d4441931ba1/);
+    expect(workflow).toMatch(/action === 'join'/);
+    expect(workflow).toMatch(/unsignedJoinCall/);
+    expect(workflow).not.toMatch(/writeReport\(/);
+    expect(workflow).not.toMatch(/CRE_LIQUIDATION_/);
+  });
+
+  it("committed join simulate log shows TEE join calldata, not a fake tx", () => {
+    const joinLog = readFileSync(
+      resolve(process.cwd(), "docs/partners/chainlink/simulate-join.log"),
+      "utf8",
+    );
+    expect(joinLog).toMatch(/TEE Execution|handlerInTee|TeeRuntime/i);
+    expect(joinLog).toMatch(/TEE handler: action=join/);
+    expect(joinLog).toMatch(/0x88574e7Cc0027afd04951daa09B64d4441931ba1/);
+    expect(joinLog).toMatch(/0xb688a363/);
+    expect(joinLog).not.toMatch(/SPEND_CAP_TINYBARS_VAR=/);
+    expect(joinLog).not.toMatch(/join\(\) tx:\s*0x[a-fA-F0-9]{64}/);
+  });
 });

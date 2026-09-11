@@ -5,7 +5,7 @@
 **Repo:** https://github.com/shreyas-sovani/Nametoll (public)  
 **Video:** 2–4 min, human voice, 720p. Record the README timestamp script. Do not speed the take.
 
-Paste the checklists below into the partner forms. Each row names the README clock and the repo evidence. `join()` is not pursued. Harness stretch is the open PR below, not a Nametoll `.harness/` recipe.
+Paste the checklists below into the partner forms. Each row names the README clock and the repo evidence. `join()` is unsigned calldata on the same CRE engine — no broadcast tx. Harness stretch is the open PR below, not a Nametoll `.harness/` recipe.
 
 ---
 
@@ -38,7 +38,7 @@ Hedera Harness stretch: open PR (not merged) https://github.com/hedera-dev/heder
 - [x] **Feature does not work without that secret/threshold** — Gate asks Brain before Blocky402 settle. Deny or skipped TEE → HTTP **403**, no merchandise, no HCS bill (`test/gate-brain.test.ts`). Clock **0:50**.
 - [x] **`cre workflow simulate` log (Nitro / us-west-2)** — `docs/partners/chainlink/simulate-allow.log` (`100000` allow) and `simulate-deny.log` (`200000` deny). Both show TEE Execution / AWS Nitro `us-west-2`. Clock **2:50**.
 - [x] **Something user-visible or onchain changes because of the TEE verdict** — over-cap Pay stays locked on the blotter; under-cap can settle. Clock **0:50** and **1:10**.
-- [ ] **`join()` tx if chasing $500** — not pursued. No challenge transaction.
+- [x] **`join()` calldata if chasing $500** — same `nametoll-brain` HTTP `handlerInTee`. Payload `{ "action": "join" }` returns unsigned `join()` to official ChallengeLending `0x88574e7Cc0027afd04951daa09B64d4441931ba1` (live challenge README; `challengeOpen` true). Selector `0xb688a363`. Simulate: `docs/partners/chainlink/simulate-join.log`. Not `writeReport`. Not the cloned `automated-liquidation-protection` template. **No join tx hash** — a wallet still has to broadcast. ETHOnline scrape `0x59d5B29F…` is a dead older deploy.
 - [x] **No Functions / Automation** — Confidential Workflows only. No `ConfidentialHTTPClient` in the TEE handler.
 
 ---

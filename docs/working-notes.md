@@ -1,4 +1,4 @@
-# Working notes (B0–B14 live)
+# Working notes (B0–B15 live)
 
 ## Blocky402 probe (10 Sep 2026)
 
@@ -185,7 +185,7 @@ Form stays Hedera + ENS + Chainlink. World and Graph are not on the form.
 - Filled `docs/analysis.md` §9 rows: `docs/submission.md`.
 - Public repo: https://github.com/shreyas-sovani/Nametoll
 - AI attributed in the README. Human still records the video.
-- `join()` not claimed. Harness PR: https://github.com/hedera-dev/hedera-harness/pull/59 (open against `dev`, not merged). No harness demo video.
+- `join()` unsigned calldata on the same CRE engine. No join tx. Harness PR: https://github.com/hedera-dev/hedera-harness/pull/59 (open against `dev`, not merged). No harness demo video.
 
 ## Unused-remainder refund (B13)
 
@@ -208,3 +208,13 @@ What broke: in-place adopt copies the Scaffold-HBAR skeleton. Baseline becomes `
 What we did not do: add `.harness/` to Nametoll. Invent a Yarn/Next bug we did not reproduce. Claim a harness demo video.
 
 Fix (upstream, not this tree): https://github.com/hedera-dev/hedera-harness/pull/59 against `dev` (open, not merged). Newly written recipes pick install/build from the detected package manager and `package.json` scripts. Copilot review follow-up on that PR: non-Scaffold `static.json` no longer asserts `yarn@3.2.3` / `packages/nextjs` / README `yarn install`; `constraints.packageManager` is written so the loader does not forbid npm; adaptation is gated on the provisioner `writtenFiles` set; install fingerprint hashes `package-lock.json` and `pnpm-lock.yaml`. Existing `.harness/spec.yaml` is left untouched. Yarn / Scaffold-HBAR still get `yarn next:build` when that is the manager (or no better script exists). Test: `adopting an npm app does not plant a yarn next:build recipe`. Harness `npm test` was 201 passed after the follow-up.
+
+## Liquidation challenge join (B15)
+
+Same CRE engine as B9 (`cre/nametoll-brain`), not a second cloned `automated-liquidation-protection` workflow. `join()` ABI is `function join() external` from the official [ChallengeLending.sol](https://github.com/solangegueiros/cf-liquidation-protection-challenge/blob/main/contracts/ChallengeLending.sol).
+
+- Live official address (challenge README + `frontend/addresses.ts`, 11 Sep 2026): `0x88574e7Cc0027afd04951daa09B64d4441931ba1`. `challengeOpen` = true, `numUsers` = 5.
+- ETHOnline prizes.txt scrape `0x59d5B29FbA5ca865a171076BE94EbEeC5BCA1E04` is an older ChallengeLending; `numUsers()` reverts. Not used.
+- Same HTTP `handlerInTee`. Payload `{ "action": "join" }` still calls `getSecret`, then returns unsigned `{ to, data: 0xb688a363, chainId: 11155111, chain: ethereum-testnet-sepolia }`. Spend payloads unchanged.
+- Not CRE `writeReport` (that is for report consumers, not this `join()`).
+- Simulate: `docs/partners/chainlink/simulate-join.log`. No join tx broadcast. A Sepolia wallet still has to send the calldata. Do not invent a HashScan.
