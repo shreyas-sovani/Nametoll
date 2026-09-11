@@ -113,7 +113,7 @@ export function renderHomePage(
     .blotter { padding: 1.1rem 1.4rem 1.3rem; }
     form.drive {
       display: grid;
-      grid-template-columns: 1fr auto auto;
+      grid-template-columns: 1fr auto auto auto;
       gap: 0.55rem 0.7rem;
       align-items: end;
       margin: 0 0 1rem;
@@ -209,6 +209,7 @@ export function renderHomePage(
         </label>
         <button type="submit" id="open-desk">Open desk</button>
         <button type="button" class="pay" id="pay-desk" disabled data-can-pay="${canPay ? "1" : "0"}">Pay</button>
+        <button type="button" id="join-desk">TEE join()</button>
       </form>
       <p id="desk-empty" class="banner">Paste a name to open the desk. Empty on purpose — the happy path does not ship a name.</p>
       <p id="desk-error" class="banner err" hidden></p>
@@ -239,6 +240,10 @@ export function renderHomePage(
           <h2>06 Remainder</h2>
           <dl id="remainder-out"></dl>
         </section>
+        <section class="station" id="station-join">
+          <h2>07 TEE join()</h2>
+          <dl id="join-out"></dl>
+        </section>
       </div>
     </div>
     <footer>
@@ -246,6 +251,8 @@ export function renderHomePage(
       Resolve: <a href="/desk/resolve"><code>/desk/resolve?name=</code></a>.
       Bills: <a href="/desk/ledger"><code>/desk/ledger</code></a>.
       Buyer CLI: <code>npm run buyer -- &lt;name-or-url&gt; [protocol-ids]</code>.
+      Join: <a href="/desk/join"><code>/desk/join</code></a> (unsigned calldata, no broadcast).
+      Recompute: <code>units * priceTinybarsPerUnit = tinybars</code>.
       Do not commit secrets. Resource server holds no facilitator key.
     </footer>
     <script>
@@ -253,12 +260,13 @@ export function renderHomePage(
         var form = document.getElementById("drive-form");
         var openBtn = document.getElementById("open-desk");
         var payBtn = document.getElementById("pay-desk");
+        var joinBtn = document.getElementById("join-desk");
         var empty = document.getElementById("desk-empty");
         var err = document.getElementById("desk-error");
         var deny = document.getElementById("desk-deny");
         var ok = document.getElementById("desk-ok");
         var lastInspect = null;
-        if (!form || !openBtn || !payBtn) return;
+        if (!form || !openBtn || !payBtn || !joinBtn) return;
 
         function protocols() {
           var units = document.getElementById("desk-units");
@@ -298,6 +306,7 @@ export function renderHomePage(
           fillDl("snapshot-out", []);
           fillDl("bill-out", []);
           fillDl("remainder-out", []);
+          fillDl("join-out", []);
         }
         function hideBanners() {
           empty.hidden = true;
@@ -336,13 +345,17 @@ export function renderHomePage(
             ["requested", body.tinybars]
           ]);
           var c = body.challenge || {};
+          var rec = body.recompute || {};
           fillDl("challenge-out", [
             ["status", c.status != null ? String(c.status) : ""],
             ["amount", c.amount],
             ["HBAR", c.amount ? hbar(c.amount) : ""],
             ["asset", c.asset],
             ["payTo", c.payTo],
-            ["scheme", c.scheme]
+            ["scheme", c.scheme],
+            ["recompute", rec.formula],
+            ["expected", rec.expectedTinybars],
+            ["matches", rec.matches != null ? String(rec.matches) : ""]
           ]);
           if (v.allow) {
             hideBanners();
@@ -363,19 +376,30 @@ export function renderHomePage(
           showInspect(body);
           var paid = body.paid || {};
           var snap = paid.body || {};
-          fillDl("snapshot-out", [
-            ["status", paid.status != null ? String(paid.status) : ""],
-            ["units", snap.units != null ? String(snap.units) : ""],
-            ["stub", snap.stub != null ? String(snap.stub) : ""],
-            ["ok", snap.ok != null ? String(snap.ok) : ""]
-          ]);
+          var merch = body.merchandise || {};
+          var protocolRows = [["status", paid.status != null ? String(paid.status) : ""],
+            ["units", merch.units != null ? String(merch.units) : (snap.units != null ? String(snap.units) : "")],
+            ["stub", merch.stub != null ? String(merch.stub) : (snap.stub != null ? String(snap.stub) : "")],
+            ["ok", merch.ok != null ? String(merch.ok) : (snap.ok != null ? String(snap.ok) : "")]
+          ];
+          (merch.protocols || []).forEach(function (protocol) {
+            protocolRows.push([
+              protocol.label || protocol.id,
+              protocol.ok ? ("tvl " + (protocol.tvl || "ok")) : (protocol.error || "fail")
+            ]);
+          });
+          fillDl("snapshot-out", protocolRows);
           var bill = body.bill || {};
+          var rec = bill.recompute || {};
           fillDl("bill-out", [
-            ["settleTx", paid.settleTx, paid.hashscanUrl],
-            ["HashScan", paid.hashscanUrl, paid.hashscanUrl],
+            ["settleTx", paid.settleTx, paid.hashscanUrl || bill.hashscanUrl],
+            ["HashScan", paid.hashscanUrl || bill.hashscanUrl, paid.hashscanUrl || bill.hashscanUrl],
             ["HCS topic", body.topicId, body.topicHashscanUrl],
             ["tinybars", bill.tinybars],
-            ["consensus", bill.consensusTime]
+            ["consensus", bill.consensusTime],
+            ["recompute", rec.formula],
+            ["expected", rec.expectedTinybars],
+            ["matches", rec.matches != null ? String(rec.matches) : ""]
           ]);
           var refundUrl = bill.refundTx
             ? "https://hashscan.io/testnet/tx/" + bill.refundTx
@@ -457,6 +481,34 @@ export function renderHomePage(
               if (lastInspect && lastInspect.verdict && lastInspect.verdict.allow && payBtn.getAttribute("data-can-pay") === "1") {
                 payBtn.disabled = false;
               }
+            });
+        });
+        joinBtn.addEventListener("click", function () {
+          joinBtn.disabled = true;
+          joinBtn.textContent = "Asking TEE…";
+          fetch("/desk/join")
+            .then(function (res) { return res.json().then(function (body) { return { res: res, body: body }; }); })
+            .then(function (pack) {
+              if (!pack.res.ok || pack.body.action !== "join") {
+                showError(pack.body.error || "join() refused.");
+                return;
+              }
+              fillDl("join-out", [
+                ["action", pack.body.action],
+                ["to", pack.body.to],
+                ["data", pack.body.data],
+                ["chainId", pack.body.chainId != null ? String(pack.body.chainId) : ""],
+                ["chain", pack.body.chain],
+                ["broadcast", "no — wallet still has to send"]
+              ]);
+              hideBanners();
+              ok.textContent = "Unsigned join() from the same CRE TEE. No transaction was broadcast.";
+              ok.hidden = false;
+            })
+            .catch(function () { showError("join() failed."); })
+            .finally(function () {
+              joinBtn.disabled = false;
+              joinBtn.textContent = "TEE join()";
             });
         });
       })();

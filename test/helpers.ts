@@ -5,6 +5,7 @@ import type { AppConfig } from "../src/config.ts";
 import type { Brain } from "../src/modules/brain/index.ts";
 
 export const allowBrain: Brain = {
+  source: "injected",
   async decide({ requestedTinybars }) {
     return {
       allow: true,

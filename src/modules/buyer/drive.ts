@@ -1,10 +1,12 @@
 import type { AppConfig } from "../../config.ts";
-import type { Bill, BrainVerdict, DeskDescriptor } from "../../types.ts";
+import type { BrainVerdict, DeskDescriptor } from "../../types.ts";
 import type { Brain } from "../brain/index.ts";
 import type { Directory } from "../directory/index.ts";
 import { meterTinybars, requestedUnits } from "../gate/meter.ts";
 import { explorerNetwork, hashscanTopicUrl } from "../ledger/hashscan.ts";
+import { auditBill, previewRecompute, type BillAudit } from "../ledger/audit.ts";
 import type { Ledger } from "../ledger/index.ts";
+import { viewMerchandise, type MerchandiseView } from "../merchandise/view.ts";
 import type { Buyer, PaidResult } from "./index.ts";
 import { fetchSnapshotChallenge, type SnapshotChallenge } from "./challenge.ts";
 
@@ -15,11 +17,13 @@ export type DeskInspect = {
   tinybars: string;
   verdict: BrainVerdict;
   challenge: SnapshotChallenge;
+  recompute: ReturnType<typeof previewRecompute>;
 };
 
 export type DeskPayResult = DeskInspect & {
   paid: PaidResult;
-  bill?: Bill;
+  merchandise: MerchandiseView;
+  bill?: BillAudit;
   topicId?: string;
   topicHashscanUrl?: string;
 };
@@ -45,6 +49,7 @@ export async function inspectNamedDesk(
     tinybars,
     verdict,
     challenge,
+    recompute: previewRecompute(units, config.priceTinybars, tinybars),
   };
 }
 
@@ -82,19 +87,18 @@ export async function payNamedDesk(
   const bill =
     bills.find((row) => row.settleTx === paid.settleTx) ?? bills.at(-1);
   const topicId = ledger?.topicId ?? config.hcsTopicId ?? inspect.descriptor.hcsTopic;
+  const network = explorerNetwork(config.network);
   return {
     ok: true,
     result: {
       ...inspect,
       paid,
-      ...(bill ? { bill } : {}),
+      merchandise: viewMerchandise(paid.body),
+      ...(bill ? { bill: auditBill(bill, config.priceTinybars, network) } : {}),
       ...(topicId
         ? {
             topicId,
-            topicHashscanUrl: hashscanTopicUrl(
-              topicId,
-              explorerNetwork(config.network),
-            ),
+            topicHashscanUrl: hashscanTopicUrl(topicId, network),
           }
         : {}),
     },

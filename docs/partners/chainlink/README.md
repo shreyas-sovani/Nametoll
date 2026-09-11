@@ -53,4 +53,6 @@ curl -sS "http://127.0.0.1:8787/desk/brain?tinybars=100000"
 npm run brain -- 100000
 ```
 
-Set `CRE_BRAIN_URL` (live HTTP trigger) or `CRE_PROJECT_DIR=cre` (simulate). If neither is set, Brain fails closed and paid snapshots return 403 — the desk does not skip the TEE.
+Set `CRE_BRAIN_URL` (live HTTP trigger) or `CRE_PROJECT_DIR=cre` (simulate). If neither is set **and** `cre/project.yaml` exists, the desk process defaults to `./cre`. If CRE is still missing, Brain fails closed and paid snapshots return 403 — the desk does not skip the TEE.
+
+`GET /desk/join` runs the same HTTP TEE handler with `{ "action": "join" }` and returns unsigned calldata. No broadcast.

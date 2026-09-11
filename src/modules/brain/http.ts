@@ -2,6 +2,7 @@ import type { Express } from "express";
 import type { Brain } from "./index.ts";
 
 export const BRAIN_PATH = "/desk/brain";
+export const JOIN_PATH = "/desk/join";
 
 export function mountBrain(app: Express, brain: Brain): void {
   app.get(BRAIN_PATH, async (req, res) => {
@@ -13,5 +14,19 @@ export function mountBrain(app: Express, brain: Brain): void {
     }
     const verdict = await brain.decide({ requestedTinybars: requested });
     res.status(verdict.allow ? 200 : 403).json({ ok: verdict.allow, ...verdict });
+  });
+
+  app.get(JOIN_PATH, async (_req, res) => {
+    if (!brain.join) {
+      res.status(503).json({ ok: false, error: "TEE unavailable" });
+      return;
+    }
+    try {
+      const call = await brain.join();
+      res.json({ ok: true, ...call });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "TEE unavailable";
+      res.status(503).json({ ok: false, error: message });
+    }
   });
 }

@@ -14,6 +14,15 @@ export type BrainVerdict = {
   reason: string;
 };
 
+/** Unsigned ChallengeLending.join() from the same CRE engine. Never a broadcast tx. */
+export type JoinCall = {
+  action: "join";
+  to: string;
+  data: string;
+  chainId: number;
+  chain: string;
+};
+
 /** HCS bill a judge can recompute. */
 export type Bill = {
   requestId: string;

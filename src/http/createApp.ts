@@ -20,6 +20,7 @@ import type { Buyer } from "../modules/buyer/index.ts";
 import { mountBuyer } from "../modules/buyer/http.ts";
 import { MODULE_NAMES } from "../types.ts";
 import { renderHomePage } from "./homePage.ts";
+import { JOIN_PATH } from "../modules/brain/http.ts";
 
 export type AppDeps = {
   ledger?: Ledger;
@@ -29,6 +30,13 @@ export type AppDeps = {
   buyer?: Buyer;
   refund?: RefundRail;
 };
+
+function resolveBrain(config: AppConfig, deps: AppDeps): Brain {
+  if (deps.brain) {
+    return { ...deps.brain, source: deps.brain.source ?? "injected" };
+  }
+  return createBrainFromConfig(config);
+}
 
 function resolveLedger(config: AppConfig, deps: AppDeps): Ledger | undefined {
   if (deps.ledger) return deps.ledger;
@@ -61,7 +69,7 @@ export async function createApp(
   const ledger = resolveLedger(config, deps);
   const merchandise = resolveMerchandise(config, deps);
   const directory = resolveDirectory(config, deps);
-  const brain = deps.brain ?? createBrainFromConfig(config);
+  const brain = resolveBrain(config, deps);
   const buyer = deps.buyer;
   const refund =
     deps.refund ??
@@ -72,7 +80,19 @@ export async function createApp(
   app.use(express.json());
 
   app.get("/health", (_req, res) => {
-    res.json({ ok: true, service: "nametoll", modules: MODULE_NAMES });
+    const source = brain.source ?? "unavailable";
+    res.json({
+      ok: true,
+      service: "nametoll",
+      modules: MODULE_NAMES,
+      brain: {
+        source,
+        configured: source !== "unavailable",
+      },
+      merchandise: config.graphGatewayKey ? "live" : "stub",
+      canPay: Boolean(buyer),
+      join: JOIN_PATH,
+    });
   });
 
   app.get("/", (_req, res) => {

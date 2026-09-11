@@ -38,11 +38,12 @@ Record the blotter at `/` (public origin below). Paste a name. Do not bake one i
 | 0:35 | Say: Permissioned Resolver + EAC operator can edit those three text keys only | ENS hierarchy / EAC |
 | 0:50 | Meter = 2 protocols. Open desk. TEE deny / over cap. Pay locked | Chainlink verdict changes the path |
 | 1:10 | Meter = 1 protocol. Open desk. TEE allow. Unpaid GET is HTTP 402 (Blocky402 / tinybars / `0.0.0`) | Hedera x402 v2 + Chainlink allow |
-| 1:30 | Pay. Open HashScan settle (example: https://hashscan.io/testnet/tx/0.0.7162784@1789065380.080315812) | Hedera paid request |
-| 2:00 | Snapshot + say 1 vs 2 protocols is `100000` vs `200000` tinybars. Station 06: prepaid − owed = refund if one protocol fail-softs | Hedera metering / remainder |
-| 2:25 | Open HCS topic `0.0.10464309` (https://hashscan.io/testnet/topic/0.0.10464309). Recompute `units * 100000 = tinybars` | Hedera HCS |
+| 1:30 | Pay. Open HashScan settle (example: https://hashscan.io/testnet/tx/0.0.7162784@1789111350.366520040) | Hedera paid request, TEE on the path |
+| 2:00 | Snapshot shows live Aave/Compound rows + TVL. Say 1 vs 2 protocols is `100000` vs `200000` tinybars on the 402. 2-protocol Pay stays locked (over cap). Station 05 recompute `units * price = tinybars` | Hedera metering |
+| 2:25 | Open HCS topic `0.0.10464309` (https://hashscan.io/testnet/topic/0.0.10464309). Recompute matches on `/desk/ledger` | Hedera HCS |
 | 2:50 | Open `docs/partners/chainlink/simulate-allow.log` — `handlerInTee`, Nitro `us-west-2`, secret cap flips allow vs deny | Chainlink simulate |
-| 3:10 | End. Keep the file under 4:00 | — |
+| 3:05 | Blotter **TEE join()** — unsigned `join()` to `0x88574e7Cc0027afd04951daa09B64d4441931ba1`, say no broadcast | Chainlink challenge |
+| 3:20 | End. Keep the file under 4:00 | — |
 
 ## Do not commit secrets
 
@@ -188,7 +189,7 @@ This tunnel dies when the local process stops. For a stable judge URL, host the 
 | `ETH_RPC_URL` | Optional Sepolia RPC for those writes |
 | `CRE_SECRETS_PATH` / `HEDERA_BUYER_KEY_PATH` | Files on disk; values stay out of git |
 | `CRE_BRAIN_URL` | Live CRE HTTP trigger. If unset, paid snapshots 403 unless `CRE_PROJECT_DIR` is set |
-| `CRE_PROJECT_DIR` / `CRE_WORKFLOW_NAME` / `CRE_TARGET` | Simulate backend. Target defaults to `staging-settings`. Workflow name defaults to `nametoll-brain` |
+| `CRE_PROJECT_DIR` / `CRE_WORKFLOW_NAME` / `CRE_TARGET` | Simulate backend. Target defaults to `staging-settings`. Workflow name defaults to `nametoll-brain`. If unset, the desk uses `./cre` when `cre/project.yaml` exists. |
 
 Fee-payer is **not** configured here. The Gate reads it from live `GET /supported` (`0.0.7162784` on testnet as of the day-one probe).
 
@@ -213,6 +214,7 @@ Fee-payer is **not** configured here. The Gate reads it from live `GET /supporte
 - **B14** harness DX: in-place `init` adopt planted Yarn/Next into this npm Express desk. Open PR https://github.com/hedera-dev/hedera-harness/pull/59 (target `dev`, not merged). Follow-up commit: Scaffold-HBAR static checks are dropped on npm adopt; `constraints.packageManager` is written; only newly written `.harness/` files are adapted. No `.harness/` in this repo. No harness demo video.
 - **B15** same CRE HTTP TEE handler emits unsigned `join()` to live ChallengeLending `0x88574e7Cc0027afd04951daa09B64d4441931ba1`. Simulate log `docs/partners/chainlink/simulate-join.log`. Not `writeReport`. Not a cloned liquidation template. No join tx broadcast.
 - **B16** Sunday form swap evaluated. No swap. Form stays Hedera · ENS · Chainlink. Graph composition is merchandise, not a prize SKILL. World Selfie flag was not on.
+- **Judge pass** public desk Brain was `TEE unavailable` (no `CRE_PROJECT_DIR`). Desk now defaults to `./cre` + `cre/.env`. Health reports `brain.source`. Blotter shows live protocol TVL, per-bill recompute, and unsigned `join()`. CI: `.github/workflows/test.yml`. Latest TEE-gated pay: https://hashscan.io/testnet/tx/0.0.7162784@1789111350.366520040
 
 **Next**
 
@@ -226,6 +228,7 @@ Fee-payer is **not** configured here. The Gate reads it from live `GET /supporte
 
 **Not blockers**
 
+- Public `/health` reports `brain.source: "simulate"`, `merchandise: "live"`, `canPay: true`. 1-protocol inspect allows; 2-protocol inspect denies over cap.
 - Graph Studio query key works. `npm run graph:probe` and `npm run graph:mcp` are green.
 - Cursor Subgraph MCP in `.cursor/mcp.json` is optional; schemas were fetched over the official SSE MCP from this repo.
 

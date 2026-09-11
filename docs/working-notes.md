@@ -175,7 +175,7 @@ curl -sS -X POST http://127.0.0.1:8787/desk/pay \
   -d '{"name":"<paste-a-name>","protocols":["aave-v3-ethereum"]}'
 ```
 
-Live inspect (11 Sep 2026, pasted `nametoll.eth`, 1 protocol): descriptor endpoint `https://nonwaxing-xeromorphic-dagmar.ngrok-free.dev`, HCS `0.0.10464309`, unpaid 402 amount `100000` / asset `0.0.0` / payTo `0.0.10463755`. Brain on a process without `CRE_BRAIN_URL` / `CRE_PROJECT_DIR` fail-closed (`TEE unavailable`) — Pay stays locked, which is B10. Public origin was restarted and now serves this blotter.
+Live inspect (11 Sep 2026, pasted `nametoll.eth`, 1 protocol): descriptor endpoint `https://nonwaxing-xeromorphic-dagmar.ngrok-free.dev`, HCS `0.0.10464309`, unpaid 402 amount `100000` / asset `0.0.0` / payTo `0.0.10463755`. An earlier process without `CRE_BRAIN_URL` / `CRE_PROJECT_DIR` fail-closed (`TEE unavailable`). That is no longer the public desk — see Judge pass below.
 
 ## Submission pack (B12)
 
@@ -233,3 +233,28 @@ PRD window: stay Chainlink if simulate logs exist; Graph only if composition **a
 | World Selfie flag | No `@worldcoin/idkit` in `package.json`. No `selfieCheckLegacy` in `src/`. `.env.example` has no World portal names. Flag not confirmed on. | **Do not** form-pick |
 
 README swap record was written first. Form line was not changed. Submission pack still Hedera · ENS · Chainlink.
+
+## Judge pass (11 Sep 2026)
+
+A third-party walk of B0–B16 against the **public** URL found the loop broken at Brain: `/desk/brain` and `/desk/inspect` returned `TEE unavailable` because the running process had neither `CRE_BRAIN_URL` nor `CRE_PROJECT_DIR`. The blotter also hid what was bought (only `ok`/`stub`/`units`), `/desk/ledger` did not attach HashScan or `units * price = tinybars` per bill, and `join()` was CLI-only.
+
+Fixes (still fail-closed if CRE is missing):
+
+- `server.ts` loads `cre/.env`, puts `~/.cre/bin` on `PATH`, and defaults `CRE_PROJECT_DIR` to `./cre` when `project.yaml` exists.
+- `GET /health` reports `brain.source`, `merchandise` live/stub, `canPay`.
+- Inspect includes a recompute preview. Paid payload includes merchandise protocol/TVL rows and an audited bill.
+- `/desk/ledger` bills include `hashscanUrl` and `recompute.matches`.
+- Blotter station 07 / `GET /desk/join` — unsigned calldata from the same CRE engine. No broadcast.
+- GitHub Actions `.github/workflows/test.yml` (`npm test` + `tsc`).
+
+Replayed on the public origin after restart:
+
+| Check | Result |
+| --- | --- |
+| `/health` | `brain.source: simulate`, `merchandise: live`, `canPay: true` |
+| 1 protocol inspect | TEE **allow**, HTTP 402 `100000` |
+| 2 protocol inspect | TEE **deny** over cap, 402 still `200000`, Pay locked |
+| `GET /desk/join` | `{ to: 0x88574e7C…, data: 0xb688a363, chainId: 11155111 }` no tx |
+| Blotter `POST /desk/pay` 1 protocol | settle `0.0.7162784@1789111350.366520040` — https://hashscan.io/testnet/tx/0.0.7162784@1789111350.366520040 — live Aave TVL, HCS `lending-risk` `1 * 100000` matches |
+
+Ngrok is still session-scoped. Remainder still has no live fail-soft HashScan (2-protocol pay is over cap). Do not invent one.

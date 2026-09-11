@@ -1,10 +1,11 @@
+import { existsSync } from "node:fs";
 import { spawn } from "node:child_process";
+import { homedir, tmpdir } from "node:os";
 import { mkdtemp, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { BrainVerdict } from "../../types.ts";
+import type { BrainVerdict, JoinCall } from "../../types.ts";
 
-export function parseCreSimulateVerdict(log: string): BrainVerdict {
+export function parseCreSimulateJson(log: string): unknown {
   const marker = "Workflow Simulation Result:";
   const idx = log.lastIndexOf(marker);
   if (idx < 0) {
@@ -21,6 +22,11 @@ export function parseCreSimulateVerdict(log: string): BrainVerdict {
   while (typeof value === "string") {
     value = JSON.parse(value);
   }
+  return value;
+}
+
+export function parseCreSimulateVerdict(log: string): BrainVerdict {
+  const value = parseCreSimulateJson(log);
   if (!value || typeof value !== "object") {
     throw new Error("CRE simulate result is not a verdict object");
   }
@@ -32,6 +38,30 @@ export function parseCreSimulateVerdict(log: string): BrainVerdict {
     allow: row.allow,
     maxTinybars: row.maxTinybars,
     reason: typeof row.reason === "string" ? row.reason : "",
+  };
+}
+
+export function parseCreSimulateJoin(log: string): JoinCall {
+  const value = parseCreSimulateJson(log);
+  if (!value || typeof value !== "object") {
+    throw new Error("CRE simulate result is not a join object");
+  }
+  const row = value as Record<string, unknown>;
+  if (
+    row.action !== "join" ||
+    typeof row.to !== "string" ||
+    typeof row.data !== "string" ||
+    typeof row.chainId !== "number" ||
+    typeof row.chain !== "string"
+  ) {
+    throw new Error("CRE simulate result is missing join() calldata");
+  }
+  return {
+    action: "join",
+    to: row.to,
+    data: row.data,
+    chainId: row.chainId,
+    chain: row.chain,
   };
 }
 
@@ -68,10 +98,15 @@ export type SimulateAskOptions = {
   creBin?: string;
 };
 
+export type CreHttpInput = {
+  requestedTinybars?: string;
+  action?: "join" | "spend";
+};
+
 export async function askCreSimulate(
   options: SimulateAskOptions,
-  input: { requestedTinybars: string },
-): Promise<BrainVerdict> {
+  input: CreHttpInput,
+): Promise<string> {
   const dir = await mkdtemp(join(tmpdir(), "nametoll-cre-"));
   const payloadPath = join(dir, "http-payload.json");
   await writeFile(payloadPath, JSON.stringify(input));
@@ -90,15 +125,36 @@ export async function askCreSimulate(
     options.target,
   ];
 
-  const log = await runCommand(bin, args, options.projectDir);
-  return parseCreSimulateVerdict(log);
+  return runCommand(bin, args, options.projectDir);
+}
+
+export async function askCreSimulateVerdict(
+  options: SimulateAskOptions,
+  input: { requestedTinybars: string },
+): Promise<BrainVerdict> {
+  return parseCreSimulateVerdict(await askCreSimulate(options, input));
+}
+
+export async function askCreSimulateJoin(
+  options: SimulateAskOptions,
+): Promise<JoinCall> {
+  return parseCreSimulateJoin(await askCreSimulate(options, { action: "join" }));
+}
+
+function creSpawnEnv(): NodeJS.ProcessEnv {
+  const creBinDir = join(homedir(), ".cre", "bin");
+  const path = process.env.PATH ?? "";
+  return {
+    ...process.env,
+    PATH: existsSync(join(creBinDir, "cre")) ? `${creBinDir}:${path}` : path,
+  };
 }
 
 function runCommand(bin: string, args: string[], cwd: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const child = spawn(bin, args, {
       cwd,
-      env: process.env,
+      env: creSpawnEnv(),
       stdio: ["ignore", "pipe", "pipe"],
     });
     let out = "";
@@ -121,8 +177,8 @@ function runCommand(bin: string, args: string[], cwd: string): Promise<string> {
 
 export async function askCreHttp(
   url: string,
-  input: { requestedTinybars: string },
-): Promise<BrainVerdict> {
+  input: CreHttpInput,
+): Promise<unknown> {
   const res = await fetch(url, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -130,12 +186,36 @@ export async function askCreHttp(
   });
   const text = await res.text();
   try {
-    const parsed: unknown = JSON.parse(text);
-    if (parsed && typeof parsed === "object" && "allow" in parsed) {
-      return parsed as BrainVerdict;
-    }
+    return JSON.parse(text);
   } catch {
-    return parseCreSimulateVerdict(text);
+    return parseCreSimulateJson(text);
   }
-  throw new Error(`CRE HTTP trigger did not return a verdict (${res.status})`);
+}
+
+export async function askCreHttpVerdict(
+  url: string,
+  input: { requestedTinybars: string },
+): Promise<BrainVerdict> {
+  const parsed = await askCreHttp(url, input);
+  if (parsed && typeof parsed === "object" && "allow" in parsed) {
+    return parsed as BrainVerdict;
+  }
+  throw new Error("CRE HTTP trigger did not return a verdict");
+}
+
+export async function askCreHttpJoin(url: string): Promise<JoinCall> {
+  const parsed = await askCreHttp(url, { action: "join" });
+  if (parsed && typeof parsed === "object") {
+    const row = parsed as Record<string, unknown>;
+    if (row.action === "join" && typeof row.to === "string" && typeof row.data === "string") {
+      return {
+        action: "join",
+        to: row.to,
+        data: row.data,
+        chainId: typeof row.chainId === "number" ? row.chainId : 11155111,
+        chain: typeof row.chain === "string" ? row.chain : "ethereum-testnet-sepolia",
+      };
+    }
+  }
+  throw new Error("CRE HTTP trigger did not return join() calldata");
 }
