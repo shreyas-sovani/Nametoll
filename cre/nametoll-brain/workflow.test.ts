@@ -3,7 +3,7 @@ import type { TeeRuntime } from '@chainlink/cre-sdk'
 import { test } from '@chainlink/cre-sdk/test'
 import type { HTTPPayload } from '@chainlink/cre-sdk'
 import { encodeFunctionData, parseAbi } from 'viem'
-import { decideSpend } from './verdict'
+import { decidePolicy, decideSpend } from './verdict'
 import { initWorkflow, onHttpTrigger } from './workflow'
 
 const OFFICIAL_CHALLENGE_LENDING = '0x88574e7Cc0027afd04951daa09B64d4441931ba1'
@@ -21,12 +21,24 @@ function httpPayload(requestedTinybars: string, extra: Record<string, unknown> =
   } as HTTPPayload
 }
 
-const makeFakeTeeRuntime = (cap = CAP) => {
+const makeFakeTeeRuntime = (
+  cap = CAP,
+  extras: { allowlist?: string; rateLimit?: string } = {},
+) => {
   const logs: string[] = []
+  const secrets: Record<string, string> = {
+    SPEND_CAP: cap,
+    BUYER_ALLOWLIST: extras.allowlist ?? '',
+    RATE_LIMIT: extras.rateLimit ?? '',
+  }
   const runtime = {
-    config: { secretId: 'SPEND_CAP' },
+    config: {
+      secretId: 'SPEND_CAP',
+      allowlistSecretId: 'BUYER_ALLOWLIST',
+      rateLimitSecretId: 'RATE_LIMIT',
+    },
     getSecret: (request: { id?: string }) => ({
-      result: () => ({ id: request.id, value: cap }),
+      result: () => ({ id: request.id, value: request.id ? (secrets[request.id] ?? '') : '' }),
     }),
     log: (message: string) => logs.push(message),
   }
@@ -67,6 +79,42 @@ describe('onHttpTrigger', () => {
       expect(line).not.toContain('super-secret-cap')
     }
     expect(logs.some((line) => line.includes('TEE handler'))).toBe(true)
+  })
+})
+
+describe('decidePolicy', () => {
+  test('returns distinct public reasons for allowlist, rate, and cap', () => {
+    expect(
+      decidePolicy({
+        requestedTinybars: '100000',
+        spendCapTinybars: CAP,
+        payer: '0.0.9',
+        allowlist: '0.0.1',
+      }).reason,
+    ).toBe('buyer not allowlisted')
+    expect(
+      decidePolicy({
+        requestedTinybars: '100000',
+        spendCapTinybars: CAP,
+        paysThisHour: '8',
+        rateLimit: '8',
+      }).reason,
+    ).toBe('rate limited')
+    expect(
+      decidePolicy({
+        requestedTinybars: '200000',
+        spendCapTinybars: CAP,
+      }).reason,
+    ).toBe('over cap')
+  })
+})
+
+describe('onHttpTrigger policy', () => {
+  test('denies an unknown payer from the allowlist secret', () => {
+    const { runtime } = makeFakeTeeRuntime(CAP, { allowlist: '0.0.1' })
+    const body = JSON.parse(onHttpTrigger(runtime, httpPayload('100000', { payer: '0.0.9' })))
+    expect(body.allow).toBe(false)
+    expect(body.reason).toBe('buyer not allowlisted')
   })
 })
 

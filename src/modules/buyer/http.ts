@@ -6,6 +6,7 @@ import { protocolIdsFromQuery } from "../gate/meter.ts";
 import type { Ledger } from "../ledger/index.ts";
 import type { Buyer } from "./index.ts";
 import { inspectNamedDesk, payNamedDesk } from "./drive.ts";
+import type { PayWindow } from "../brain/pay-window.ts";
 import {
   createPayRateLimiter,
   DEFAULT_PAY_GLOBAL_MAX,
@@ -26,6 +27,7 @@ export type BuyerHttpDeps = {
   config: AppConfig;
   buyer?: Buyer;
   ledger?: Ledger;
+  payWindow?: PayWindow;
 };
 
 export function mountBuyer(app: Express, deps: BuyerHttpDeps): void {
@@ -48,6 +50,7 @@ export function mountBuyer(app: Express, deps: BuyerHttpDeps): void {
         deps.brain,
         deps.config,
         protocolIdsFromQuery(req.query.protocols),
+        driveContext(deps),
       );
       res.json({ ok: true, ...inspect });
     } catch (error) {
@@ -101,6 +104,7 @@ export function mountBuyer(app: Express, deps: BuyerHttpDeps): void {
         deps.config,
         deps.ledger,
         protocols,
+        driveContext(deps),
       );
       if (!paid.ok) {
         res.status(paid.status).json({
@@ -115,6 +119,13 @@ export function mountBuyer(app: Express, deps: BuyerHttpDeps): void {
       sendDriveError(res, error);
     }
   });
+}
+
+function driveContext(deps: BuyerHttpDeps): { payer?: string; paysThisHour?: string } {
+  return {
+    ...(deps.config.buyerAccountId ? { payer: deps.config.buyerAccountId } : {}),
+    ...(deps.payWindow ? { paysThisHour: String(deps.payWindow.count()) } : {}),
+  };
 }
 
 function clientKey(ip?: string, remoteAddress?: string): string {

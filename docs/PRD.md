@@ -5,7 +5,7 @@
 **Form picks (locked):** Hedera · ENS · Chainlink  
 **Not on the form:** World, The Graph, everyone else  
 **Sunday (B16):** no swap. Simulate logs exist, so Chainlink stays. Graph is merchandise without a prize SKILL. World Selfie flag was not on.  
-**Live 11 Sep 2026:** TEE-gated pay, unused-remainder refund, and ChallengeLending `join()` are on explorers (`docs/submission.md`). Human remaining: 2–4 min video and a stable `PUBLIC_DESK_URL`.  
+**Live 12 Sep 2026:** TEE-gated pay, unused-remainder refund, and ChallengeLending `join()` are on explorers (`docs/submission.md`). Directory is `/desks`; agent discovers under a parent (`npm run agent`). Second live name `agent-02.nametoll.eth` has its own Permissioned Resolver. Human remaining: 2–4 min video and a stable `PUBLIC_DESK_URL`.  
 
 Nametoll is a **named pay desk**. An agent resolves a live ENSv2 name, a CRE TEE decides whether it may spend, Hedera takes HBAR through Blocky402, and the bill is on HCS. Graph data is the merchandise, not a prize slot.
 
@@ -114,7 +114,7 @@ Locked: the loop and the three partners. Unlocked: how we implement a step if th
 
 ## User stories (demo-critical)
 
-1. As a buyer agent, I want to pay a desk I found by name, so that I never embed an API key or URL.
+1. As a buyer agent, I want to pay a desk I found by name — or discover one under a parent namespace — so that I never embed an API key or URL.
 2. As a buyer agent, I want a 402 then a settle, so that I only retry after a real challenge.
 3. As a buyer agent, I want a larger multi-protocol request to cost more, so that the meter is visible on camera.
 4. As a desk operator, I want EAC so a hot account can edit price/endpoint and cannot transfer the name.

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createBrain, warmBrain } from "../src/modules/brain/index.ts";
-import { decideSpend, unavailableVerdict } from "../src/modules/brain/verdict.ts";
+import { decidePolicy, decideSpend, unavailableVerdict } from "../src/modules/brain/verdict.ts";
 import { parseCreSimulateVerdict, runTimedCommand } from "../src/modules/brain/simulate.ts";
 
 describe("brain verdict", () => {
@@ -24,6 +24,63 @@ describe("brain verdict", () => {
   it("denies a missing or unreadable spend cap", () => {
     expect(decideSpend("100000", "").allow).toBe(false);
     expect(decideSpend("100000", "not-a-number").allow).toBe(false);
+  });
+
+  it("denies a payer missing from the secret allowlist", () => {
+    expect(
+      decidePolicy({
+        requestedTinybars: "100000",
+        spendCapTinybars: "150000",
+        payer: "0.0.99",
+        allowlist: "0.0.1,0.0.2",
+      }),
+    ).toEqual({
+      allow: false,
+      maxTinybars: "150000",
+      reason: "buyer not allowlisted",
+    });
+  });
+
+  it("denies when pays this hour meet the secret rate limit", () => {
+    expect(
+      decidePolicy({
+        requestedTinybars: "100000",
+        spendCapTinybars: "150000",
+        payer: "0.0.1",
+        allowlist: "0.0.1",
+        paysThisHour: "3",
+        rateLimit: "3",
+      }),
+    ).toEqual({
+      allow: false,
+      maxTinybars: "150000",
+      reason: "rate limited",
+    });
+  });
+
+  it("still returns over cap when allowlist and rate would allow", () => {
+    expect(
+      decidePolicy({
+        requestedTinybars: "200000",
+        spendCapTinybars: "150000",
+        payer: "0.0.1",
+        allowlist: "0.0.1",
+        paysThisHour: "0",
+        rateLimit: "8",
+      }).reason,
+    ).toBe("over cap");
+  });
+
+  it("ignores empty allowlist and rate secrets so cap-only still works", () => {
+    expect(
+      decidePolicy({
+        requestedTinybars: "100000",
+        spendCapTinybars: "150000",
+        payer: "",
+        allowlist: "",
+        rateLimit: "",
+      }).reason,
+    ).toBe("under cap");
   });
 });
 
@@ -75,6 +132,26 @@ describe("brain module", () => {
     await brain.decide({ requestedTinybars: "100000" });
     await brain.decide({ requestedTinybars: "100000" });
     expect(calls).toBe(2);
+  });
+
+  it("re-asks the TEE when the payer changes on the same amount", async () => {
+    const payers: string[] = [];
+    const brain = createBrain({
+      ask: async (input) => {
+        payers.push(input.payer ?? "");
+        return decidePolicy({
+          requestedTinybars: input.requestedTinybars,
+          spendCapTinybars: "150000",
+          ...(input.payer ? { payer: input.payer } : {}),
+          allowlist: "0.0.1",
+        });
+      },
+    });
+    expect((await brain.decide({ requestedTinybars: "100000", payer: "0.0.1" })).allow).toBe(true);
+    expect((await brain.decide({ requestedTinybars: "100000", payer: "0.0.2" })).reason).toBe(
+      "buyer not allowlisted",
+    );
+    expect(payers).toEqual(["0.0.1", "0.0.2"]);
   });
 
   it("caches a successful TEE allow and a real over-cap deny", async () => {

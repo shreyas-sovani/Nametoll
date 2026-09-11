@@ -25,9 +25,10 @@ Hedera Harness stretch: open PR (not merged) https://github.com/hedera-dev/heder
 
 ## ENS
 
-- [x] **ENSv2 Sepolia, not v1** — parent `nametoll.eth`, child `desk.nametoll.eth`. Register https://sepolia.etherscan.io/tx/0x28ab9c164cca6f967413f944a3ef1f81ca3ef86f7e1620fdc5b7a57d8d7a8a96. Clock **0:15**.
+- [x] **ENSv2 Sepolia, not v1** — parent `nametoll.eth`, child `desk.nametoll.eth`, sibling `agent-02.nametoll.eth`. Register https://sepolia.etherscan.io/tx/0x28ab9c164cca6f967413f944a3ef1f81ca3ef86f7e1620fdc5b7a57d8d7a8a96. Second desk https://sepolia.etherscan.io/tx/0xd1f6f4faa9f11636fb64673ddfe6d458285e6cbf6ea79631c0d017c528c10454. Clock **0:15**.
 - [x] **Hierarchy or EAC or Permissioned Resolver demoed** — Permissioned Resolver `0x558283D5F8E36316B60be7e24F4e58C7133752D2`. Operator `0xFeAf5C921996FC53f4DEf35e181E766e6D74690A` has `ROLE_SET_TEXT` on `url` / `agent-context` / `agent-endpoint[web]` only; cannot transfer. Clock **0:35**.
-- [x] **No hardcoded name/address on the happy path** — blotter, `GET /desk/resolve?name=`, `GET /desk/inspect?name=`, and `npm run buyer -- <name>` take a pasted name. Tests forbid `.eth` on `/`. Clock **0:15**.
+- [x] **No hardcoded name/address on the happy path** — blotter, `GET /desk/resolve?name=`, `GET /desk/inspect?name=`, `GET /desk/catalog?parent=`, `/desks`, `npm run buyer -- <name>`, and `npm run agent -- <parent>` take a pasted name. Tests forbid `.eth` on `/`. Clock **0:15**.
+- [x] **Directory / second name** — `/desks` lists children of a pasted parent. `npm run ens:subname` issues a sibling with its own Permissioned Resolver + scoped EAC. Clock **0:15** / **0:35**.
 - [x] **Video + live URL + public GitHub** — this file + README clock + https://github.com/shreyas-sovani/Nametoll + public desk URL.
 
 ---
@@ -35,7 +36,7 @@ Hedera Harness stretch: open PR (not merged) https://github.com/hedera-dev/heder
 ## Chainlink
 
 - [x] **`handlerInTee` / `HandlerInTee` in the repo** — `cre/nametoll-brain/workflow.ts` from official `hello-confidential-workflows-ts`. Clock **2:50**.
-- [x] **`getSecret` inside the enclave** — `runtime.getSecret({ id: "SPEND_CAP" })`. Cap used in simulate: `150000` tinybars.
+- [x] **`getSecret` inside the enclave** — `runtime.getSecret({ id: "SPEND_CAP" })`, plus optional `BUYER_ALLOWLIST` and `RATE_LIMIT`. Cap used in simulate: `150000` tinybars. Public reasons: under/over cap, buyer not allowlisted, rate limited.
 - [x] **Feature does not work without that secret/threshold** — Gate asks Brain before Blocky402 settle. Deny or skipped TEE → HTTP **403**, no merchandise, no HCS bill (`test/gate-brain.test.ts`). Clock **0:50**.
 - [x] **`cre workflow simulate` log (Nitro / us-west-2)** — `docs/partners/chainlink/simulate-allow.log` (`100000` allow) and `simulate-deny.log` (`200000` deny). Both show TEE Execution / AWS Nitro `us-west-2`. Clock **2:50**.
 - [x] **Something user-visible or onchain changes because of the TEE verdict** — over-cap Pay stays locked on the blotter; under-cap can settle. Clock **0:50** and **1:10**.

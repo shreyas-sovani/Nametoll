@@ -288,5 +288,13 @@ export function deskDriveScript(options: {
               joinBtn.removeAttribute("aria-busy");
             });
         });
+        var seeded = new URLSearchParams(window.location.search).get("name")
+          || (window.location.hash.indexOf("name=") >= 0
+            ? decodeURIComponent(window.location.hash.split("name=")[1] || "").split("&")[0]
+            : "");
+        if (seeded) {
+          var nameField = form.querySelector('input[name="name"]');
+          if (nameField) nameField.value = seeded;
+        }
       })();`;
 }

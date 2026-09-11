@@ -5,6 +5,7 @@ import { publicDeskConfig, startDesk } from "./helpers.ts";
 function expectChrome(html: string) {
   expect(html).toMatch(/Nametoll/i);
   expect(html).toMatch(/href="\/landing"/);
+  expect(html).toMatch(/href="\/desks"/);
   expect(html).toMatch(/href="\/app"/);
   expect(html).toMatch(/href="\/docs"/);
   expect(html).toMatch(/<title>/);
@@ -96,6 +97,7 @@ describe("product pages", () => {
       expect(html).toMatch(/\/desk\/inspect/);
       expect(html).toMatch(/\/desk\/pay/);
       expect(html).toMatch(/\/desk\/resolve/);
+      expect(html).toMatch(/\/desk\/catalog/);
       expect(html).toMatch(/\/desk\/ledger/);
       expect(html).toMatch(/\/desk\/snapshot/);
       expect(html).toMatch(/tinybars/);
@@ -110,7 +112,7 @@ describe("product pages", () => {
   it("sets the pay cookie on every product page when a secret is configured", async () => {
     const desk = await startDesk({ deskPaySecret: "cookie-secret" }, publicDeskConfig());
     try {
-      for (const path of ["/", "/landing", "/app", "/docs"]) {
+      for (const path of ["/", "/landing", "/app", "/desks", "/docs"]) {
         const res = await fetch(`${desk.url}${path}`);
         const cookie = res.headers.getSetCookie?.()[0] ?? res.headers.get("set-cookie") ?? "";
         expect(cookie).toMatch(/nametoll_pay=/);

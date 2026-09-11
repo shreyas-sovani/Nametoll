@@ -6,7 +6,9 @@ import { ExactHederaScheme } from "@x402/hedera/exact/server";
 import { HBAR_ASSET_ID } from "@x402/hedera";
 import type { AppConfig } from "../../config.ts";
 import type { BrainVerdict } from "../../types.ts";
-import { createBrain, type Brain } from "../brain/index.ts";
+import { createBrain, type Brain, verdictAudit } from "../brain/index.ts";
+import type { PayWindow } from "../brain/pay-window.ts";
+import { decodePaymentSignatureHeader } from "@x402/core/http";
 import { newRequestId, type Ledger } from "../ledger/index.ts";
 import type { RefundRail } from "../ledger/refund.ts";
 import {
@@ -36,6 +38,7 @@ export function mountGate(
   merchandise: Merchandise = createMerchandise(),
   brain: Brain = createBrain(),
   refund?: RefundRail,
+  payWindow?: PayWindow,
 ): void {
   if (!config.sellerAccountId) {
     return;
@@ -52,13 +55,20 @@ export function mountGate(
     verdict: BrainVerdict;
   }>();
 
-  const refuseIfDenied = async (requestedTinybars: string): Promise<BrainVerdict> => {
+  const refuseIfDenied = async (
+    requestedTinybars: string,
+    payer?: string,
+  ): Promise<BrainVerdict> => {
     const cached = verdictStore.getStore();
     if (cached && cached.requestedTinybars === requestedTinybars) {
       return cached.verdict;
     }
     try {
-      const verdict = await brain.decide({ requestedTinybars });
+      const verdict = await brain.decide({
+        requestedTinybars,
+        ...(payer ? { payer } : {}),
+        ...(payWindow ? { paysThisHour: String(payWindow.count()) } : {}),
+      });
       if (!verdict.allow || BigInt(requestedTinybars) > BigInt(verdict.maxTinybars)) {
         return verdict.allow
           ? {
@@ -88,7 +98,7 @@ export function mountGate(
     }
     const units = requestedUnits(protocolIdsFromQuery(req.query.protocols));
     const requested = meterTinybars(config.priceTinybars, units);
-    const verdict = await refuseIfDenied(requested);
+    const verdict = await refuseIfDenied(requested, payerFromSignature(signature));
     if (!verdict.allow) {
       res.status(403).json({ ok: false, ...verdict });
       return;
@@ -98,7 +108,7 @@ export function mountGate(
 
   resourceServer.onBeforeVerify(async (context) => {
     const requested = String(context.requirements.amount);
-    const verdict = await refuseIfDenied(requested);
+    const verdict = await refuseIfDenied(requested, payerFromHook(context));
     if (!verdict.allow) {
       return { abort: true, reason: verdict.reason };
     }
@@ -107,7 +117,7 @@ export function mountGate(
 
   resourceServer.onBeforeSettle(async (context) => {
     const requested = String(context.requirements.amount);
-    const verdict = await refuseIfDenied(requested);
+    const verdict = await refuseIfDenied(requested, payerFromHook(context));
     if (!verdict.allow) {
       return { abort: true, reason: verdict.reason };
     }
@@ -146,6 +156,12 @@ export function mountGate(
             }
           }
         }
+        const verdict = await refuseIfDenied(
+          prepaidTinybars,
+          typeof context.result.payer === "string" ? context.result.payer : undefined,
+        );
+        const audit = verdictAudit(verdict);
+        payWindow?.record();
         await ledger.append({
           requestId: newRequestId(),
           name: snap && !snap.stub ? "lending-risk" : STUB_DESK_NAME,
@@ -155,6 +171,7 @@ export function mountGate(
           prepaidTinybars: settlement.prepaidTinybars,
           refundTinybars: settlement.refundTinybars,
           ...(refundTx ? { refundTx } : {}),
+          ...(audit ?? {}),
         });
       } catch (error) {
         console.error("HCS bill append failed after settle", error);
@@ -216,4 +233,28 @@ function unitsFromAmount(amount: string, unitPrice: string): number {
   const price = BigInt(unitPrice);
   if (price === 0n) return STUB_UNITS;
   return Number(BigInt(amount) / price);
+}
+
+function payerFromHook(context: unknown): string | undefined {
+  if (!context || typeof context !== "object") return undefined;
+  const result = (context as { result?: { payer?: unknown } }).result;
+  const payer = result?.payer;
+  return typeof payer === "string" && /^0\.0\.\d+$/.test(payer) ? payer : undefined;
+}
+
+function payerFromSignature(header: string): string | undefined {
+  try {
+    const decoded = decodePaymentSignatureHeader(header) as {
+      payload?: Record<string, unknown>;
+    };
+    const payload = decoded.payload;
+    if (!payload) return undefined;
+    for (const key of ["payer", "accountId"] as const) {
+      const value = payload[key];
+      if (typeof value === "string" && /^0\.0\.\d+$/.test(value)) return value;
+    }
+  } catch {
+    return undefined;
+  }
+  return undefined;
 }

@@ -1,6 +1,6 @@
 import { escapeHtml } from "./escape.ts";
 
-export type ProductPath = "/" | "/landing" | "/app" | "/docs";
+export type ProductPath = "/" | "/landing" | "/app" | "/docs" | "/desks";
 
 export type ShellOptions = {
   title: string;
@@ -629,6 +629,8 @@ select { appearance: none; }
 }
 .station dd:hover { background: var(--ink-2); color: var(--amber-hi); }
 .station dd a { color: var(--amber-hi); }
+.station p { margin: 0.85rem 0 0; }
+.station .btn { text-decoration: none; }
 
 /* ---------- docs ---------- */
 .docs {
@@ -731,6 +733,7 @@ export function renderShell(options: ShellOptions): string {
       <a class="brand" href="/"><span class="mark" aria-hidden="true"></span>Nametoll</a>
       <nav class="nav" aria-label="Product">
         <a href="/landing"${productCurrent ? ' aria-current="page"' : ""}>Product</a>
+        <a href="/desks"${options.path === "/desks" ? ' aria-current="page"' : ""}>Desks</a>
         <a href="/app"${options.path === "/app" ? ' aria-current="page"' : ""}>Desk</a>
         <a href="/docs"${options.path === "/docs" ? ' aria-current="page"' : ""}>Docs</a>
         ${options.path === "/app" ? "" : `<a class="nav-cta" href="/app">Open desk</a>`}
@@ -745,6 +748,7 @@ export function renderShell(options: ShellOptions): string {
       <span>Nametoll · named pay desk · HTTP 402</span>
       <span>
         <a href="/health"><code>/health</code></a>
+        · <a href="/desks">Desks</a>
         · <a href="/docs">Manual</a>
         · resource server holds no facilitator key
       </span>

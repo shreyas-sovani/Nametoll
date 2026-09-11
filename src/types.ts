@@ -34,6 +34,8 @@ export type Bill = {
   prepaidTinybars?: string;
   refundTinybars?: string;
   refundTx?: string;
+  verdictReason?: string;
+  verdictHash?: string;
 };
 
 export const MODULE_NAMES = [

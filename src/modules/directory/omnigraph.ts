@@ -117,10 +117,10 @@ export function metaFromOmnigraph(body: OmnigraphResponse): DeskResolutionMeta {
   };
 }
 
-export async function fetchTextsFromOmnigraph(
+export async function fetchOmnigraphDomain(
   name: string,
   ensnodeUrl = DEFAULT_ENSNODE_URL,
-): Promise<Record<string, string>> {
+): Promise<{ texts: Record<string, string>; meta: DeskResolutionMeta }> {
   const url = `${ensnodeUrl.replace(/\/+$/, "")}/api/omnigraph`;
   const res = await fetch(url, {
     method: "POST",
@@ -137,5 +137,19 @@ export async function fetchTextsFromOmnigraph(
   if (body.errors?.length) {
     throw new Error(body.errors.map((error) => error.message ?? "omnigraph").join("; "));
   }
-  return textsFromOmnigraph(body);
+  return { texts: textsFromOmnigraph(body), meta: metaFromOmnigraph(body) };
+}
+
+export async function fetchTextsFromOmnigraph(
+  name: string,
+  ensnodeUrl = DEFAULT_ENSNODE_URL,
+): Promise<Record<string, string>> {
+  return (await fetchOmnigraphDomain(name, ensnodeUrl)).texts;
+}
+
+export async function listChildNames(
+  parent: string,
+  ensnodeUrl = DEFAULT_ENSNODE_URL,
+): Promise<string[]> {
+  return (await fetchOmnigraphDomain(parent, ensnodeUrl)).meta.children;
 }

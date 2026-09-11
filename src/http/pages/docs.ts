@@ -22,6 +22,7 @@ export function renderDocsPage(
       <nav class="doc-toc" aria-label="Manual">
         <a href="#overview">Overview</a>
         <a href="#loop">The loop</a>
+        <a href="#directory">Directory</a>
         <a href="#desk">Open a desk</a>
         <a href="#402">HTTP 402</a>
         <a href="#cap">Spend cap</a>
@@ -51,6 +52,13 @@ export function renderDocsPage(
             <li>The bill is on the HCS topic. Recompute from Mirror Node.</li>
           </ol>
         </article>
+        <article class="doc-card" id="directory">
+          <h2>Directory</h2>
+          <p>A parent namespace is the catalog. <a href="/desks">/desks</a> and <code>GET /desk/catalog?parent=</code> list children, resolve each descriptor, and probe whether that origin is taking payment. <code>GET /desk/offer</code> is this origin's public price and protocol list — not the pay path.</p>
+          <p>An agent that is handed only the parent:</p>
+          <pre>npm run agent -- &lt;paste-a-parent-name&gt;</pre>
+          <p>It enumerates children, picks by price and protocols, asks the TEE, pays, and prints the receipt. That is how another agent finds a service and pays for it.</p>
+        </article>
         <article class="doc-card" id="desk">
           <h2>Open a desk</h2>
           <p>Use <a href="/app">the desk console</a> or HTTP. Type or paste the name. Choose 1 or 2 protocols. <strong>Open desk</strong> calls <code>GET /desk/inspect</code>. If the TEE allows, <strong>Pay</strong> calls <code>POST /desk/pay</code> with the same name and protocol list.</p>
@@ -64,7 +72,7 @@ export function renderDocsPage(
         </article>
         <article class="doc-card" id="cap">
           <h2>Spend cap</h2>
-          <p>The CRE handler runs in a TEE. A deny or an unavailable enclave blocks settle and merchandise. Successful verdicts are cached per tinybar amount for ${escapeHtml(String(ttlSec))}s. Failures are not cached. <code>GET /health</code> reports <code>brain.verdictTtlMs</code>.</p>
+          <p>The CRE handler runs in a TEE. Secrets: spend cap, optional buyer allowlist, optional pays-per-hour. Public reasons are <code>under cap</code>, <code>over cap</code>, <code>buyer not allowlisted</code>, and <code>rate limited</code>. A deny or an unavailable enclave blocks settle and merchandise. Successful verdicts are cached per amount, payer, and hour-count for ${escapeHtml(String(ttlSec))}s. Failures are not cached. <code>GET /health</code> reports <code>brain.verdictTtlMs</code>.</p>
           <pre>curl -sS "http://127.0.0.1:8787/desk/brain?tinybars=${escapeHtml(config.priceTinybars)}"</pre>
         </article>
         <article class="doc-card" id="meter">
@@ -98,6 +106,8 @@ export function renderDocsPage(
             <tbody>
               <tr><td>GET</td><td><code>/health</code></td><td>Liveness, modules, brain TTL, whether this origin can pay</td></tr>
               <tr><td>GET</td><td><code>/desk/resolve?name=</code></td><td>Directory descriptor from a live name</td></tr>
+              <tr><td>GET</td><td><code>/desk/catalog?parent=</code></td><td>Children of a parent, each resolved and probed</td></tr>
+              <tr><td>GET</td><td><code>/desk/offer</code></td><td>This origin's price and protocol ids</td></tr>
               <tr><td>GET</td><td><code>/desk/inspect?name=&amp;protocols=</code></td><td>Descriptor + TEE verdict + unpaid 402</td></tr>
               <tr><td>POST</td><td><code>/desk/pay</code></td><td>Settle, snapshot, bill (when matched)</td></tr>
               <tr><td>GET</td><td><code>${SNAPSHOT_PATH}</code></td><td>Merchandise; 402 if unpaid</td></tr>
@@ -119,14 +129,16 @@ curl -sS -X POST http://127.0.0.1:8787/desk/pay \\
 npm run buyer -- http://127.0.0.1:8787 aave-v3-ethereum
 npm run buyer -- http://127.0.0.1:8787 not-a-real-protocol
 npm run buyer -- &lt;paste-a-name&gt;
+npm run agent -- &lt;paste-a-parent-name&gt;
 npm run directory -- &lt;paste-a-name&gt;
+npm run ens:subname -- --plan --parent &lt;parent&gt; --label agent-02
 npm run join -- --check
 npm run join</pre>
         </article>
         <article class="doc-card" id="ops">
           <h2>Operators</h2>
           <p>Do not commit secrets. Copy <code>.env.example</code> locally. Never put a facilitator private key on the resource server. Directory text keys: <code>url</code>, <code>agent-context</code>, <code>agent-endpoint[web]</code>. CRE HTTP inside the TEE uses <code>HTTPClient</code> + <code>TeeRuntime</code> only.</p>
-          <p>Product pages: <a href="/landing">/landing</a>, <a href="/app">/app</a>, <a href="/docs">/docs</a>. <code>/</code> is the product page.</p>
+          <p>Product pages: <a href="/landing">/landing</a>, <a href="/desks">/desks</a>, <a href="/app">/app</a>, <a href="/docs">/docs</a>. <code>/</code> is the product page.</p>
         </article>
       </div>
     </div>`;

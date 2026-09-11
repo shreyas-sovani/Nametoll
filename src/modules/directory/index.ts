@@ -12,8 +12,24 @@ export { descriptorFromTexts, DeskResolveError } from "./descriptor.ts";
 export {
   DESK_RECORDS_QUERY,
   fetchTextsFromOmnigraph,
+  listChildNames,
+  metaFromOmnigraph,
   textsFromOmnigraph,
 } from "./omnigraph.ts";
+export {
+  listDesks,
+  pickDesk,
+  priceTinybarsFromRule,
+  probeDesk,
+} from "./catalog.ts";
+export type {
+  DeskCatalog,
+  DeskListing,
+  DeskProbe,
+  DeskStatus,
+  ListDesksOptions,
+  ProbeDesk,
+} from "./catalog.ts";
 
 export type FetchDeskTexts = (name: string) => Promise<Record<string, string>>;
 

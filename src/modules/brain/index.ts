@@ -9,15 +9,19 @@ import {
 } from "./simulate.ts";
 import { isUnavailableVerdict, unavailableVerdict } from "./verdict.ts";
 
+export type BrainAskInput = {
+  requestedTinybars: string;
+  payer?: string;
+  paysThisHour?: string;
+};
+
 export type Brain = {
   source?: BrainSource;
-  decide(input: { requestedTinybars: string }): Promise<BrainVerdict>;
+  decide(input: BrainAskInput): Promise<BrainVerdict>;
   join?(): Promise<JoinCall>;
 };
 
-export type BrainAsk = (input: {
-  requestedTinybars: string;
-}) => Promise<BrainVerdict>;
+export type BrainAsk = (input: BrainAskInput) => Promise<BrainVerdict>;
 
 export type BrainOptions = {
   ask?: BrainAsk;
@@ -70,7 +74,11 @@ export function createBrain(options: BrainOptions = {}): Brain {
   return {
     source,
     async decide(input) {
-      const key = input.requestedTinybars;
+      const key = [
+        input.requestedTinybars,
+        input.payer ?? "",
+        input.paysThisHour ?? "",
+      ].join("\t");
       const hit = decideCache.get(key);
       if (hit && hit.expiresAt > now()) return hit.value;
       const pending = (async () => {
@@ -138,7 +146,15 @@ export async function warmBrain(
   );
 }
 
-export { decideSpend, unavailableVerdict, isUnavailableVerdict } from "./verdict.ts";
+export {
+  decidePolicy,
+  decideSpend,
+  unavailableVerdict,
+  isUnavailableVerdict,
+} from "./verdict.ts";
+export { verdictAudit } from "./audit.ts";
+export { createPayWindow } from "./pay-window.ts";
+export type { PayWindow } from "./pay-window.ts";
 export { parseCreSimulateVerdict, redactCreLog, parseCreSimulateJoin } from "./simulate.ts";
 export { withDefaultCreProject, brainSource } from "./defaults.ts";
 export type { BrainSource } from "./defaults.ts";

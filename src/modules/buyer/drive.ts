@@ -30,18 +30,28 @@ export type DeskPayResult = DeskInspect & {
   topicHashscanUrl?: string;
 };
 
+export type DriveContext = {
+  payer?: string;
+  paysThisHour?: string;
+};
+
 export async function inspectNamedDesk(
   name: string,
   directory: Directory,
   brain: Brain,
   config: AppConfig,
   protocols?: string[],
+  context: DriveContext = {},
 ): Promise<DeskInspect> {
   const resolved = await directory.resolve(name);
   const units = requestedUnits(protocols);
   const tinybars = meterTinybars(config.priceTinybars, units);
   const [verdict, challenge] = await Promise.all([
-    brain.decide({ requestedTinybars: tinybars }),
+    brain.decide({
+      requestedTinybars: tinybars,
+      ...(context.payer ? { payer: context.payer } : {}),
+      ...(context.paysThisHour ? { paysThisHour: context.paysThisHour } : {}),
+    }),
     fetchSnapshotChallenge(resolved.descriptor.endpoint, protocols),
   ]);
   return {
@@ -63,6 +73,7 @@ export async function payNamedDesk(
   config: AppConfig,
   ledger?: Ledger,
   protocols?: string[],
+  context: DriveContext = {},
 ): Promise<
   | { ok: true; result: DeskPayResult }
   | { ok: false; status: number; inspect: DeskInspect; error?: string }
@@ -73,6 +84,7 @@ export async function payNamedDesk(
     brain,
     config,
     protocols,
+    context,
   );
   if (!inspect.verdict.allow) {
     return { ok: false, status: 403, inspect };

@@ -13,6 +13,8 @@ describe("CRE confidential workflow", () => {
   it("registers handlerInTee and loads the spend cap with getSecret", () => {
     expect(workflow).toMatch(/handlerInTee/);
     expect(workflow).toMatch(/getSecret/);
+    expect(workflow).toMatch(/BUYER_ALLOWLIST/);
+    expect(workflow).toMatch(/RATE_LIMIT/);
     expect(workflow).toMatch(/TeeRuntime/);
     expect(workflow).not.toMatch(/\bhandler\(/);
   });
@@ -54,6 +56,8 @@ describe("CRE confidential workflow", () => {
       "utf8",
     );
     expect(creVerdict).toMatch(/requested <= cap/);
+    expect(creVerdict).toMatch(/buyer not allowlisted/);
+    expect(creVerdict).toMatch(/rate limited/);
     expect(decideSpend("100000", "150000").allow).toBe(true);
     expect(decideSpend("200000", "150000").allow).toBe(false);
   });

@@ -2,6 +2,7 @@ import express, { type Express, type Request, type Response } from "express";
 import type { AppConfig } from "../config.ts";
 import {
   createBrainFromConfig,
+  createPayWindow,
   type Brain,
   warmBrain,
   warmTinybars,
@@ -10,7 +11,9 @@ import {
 import { mountBrain } from "../modules/brain/http.ts";
 import { createDirectory, type Directory } from "../modules/directory/index.ts";
 import { mountDirectory } from "../modules/directory/http.ts";
+import type { ProbeDesk } from "../modules/directory/catalog.ts";
 import { mountGate } from "../modules/gate/index.ts";
+import { deskOffer, OFFER_PATH } from "../modules/merchandise/offer.ts";
 import { createHcsLedger } from "../modules/ledger/hcs.ts";
 import { mountLedger } from "../modules/ledger/http.ts";
 import type { Ledger } from "../modules/ledger/index.ts";
@@ -22,7 +25,12 @@ import { createMerchandise, type Merchandise } from "../modules/merchandise/inde
 import type { Buyer } from "../modules/buyer/index.ts";
 import { mountBuyer } from "../modules/buyer/http.ts";
 import { MODULE_NAMES } from "../types.ts";
-import { renderAppPage, renderDocsPage, renderLandingPage } from "./pages/index.ts";
+import {
+  renderAppPage,
+  renderDesksPage,
+  renderDocsPage,
+  renderLandingPage,
+} from "./pages/index.ts";
 import { JOIN_PATH } from "../modules/brain/http.ts";
 import { paySecretCookie } from "../modules/buyer/pay-guard.ts";
 
@@ -33,6 +41,8 @@ export type AppDeps = {
   brain?: Brain;
   buyer?: Buyer;
   refund?: RefundRail;
+  listChildren?: (parent: string) => Promise<string[]>;
+  probeDesk?: ProbeDesk;
 };
 
 function resolveBrain(config: AppConfig, deps: AppDeps): Brain {
@@ -75,6 +85,7 @@ export async function createApp(
   const directory = resolveDirectory(config, deps);
   const brain = resolveBrain(config, deps);
   const buyer = deps.buyer;
+  const payWindow = createPayWindow();
   const refund =
     deps.refund ??
     (config.sellerAccountId && config.sellerPrivateKey
@@ -122,11 +133,29 @@ export async function createApp(
   app.get("/docs", (req, res) => {
     sendPage(req, res, renderDocsPage(config, pageOptions));
   });
+  app.get("/desks", (req, res) => {
+    sendPage(req, res, renderDesksPage(config, pageOptions));
+  });
 
-  mountDirectory(app, directory);
+  app.get(OFFER_PATH, (_req, res) => {
+    res.json(deskOffer(config));
+  });
+
+  mountDirectory(app, directory, {
+    ensnodeUrl: config.ensnodeUrl,
+    ...(deps.listChildren ? { listChildren: deps.listChildren } : {}),
+    ...(deps.probeDesk ? { probeDesk: deps.probeDesk } : {}),
+  });
   mountBrain(app, brain);
-  mountBuyer(app, { directory, brain, config, ...(buyer ? { buyer } : {}), ...(ledger ? { ledger } : {}) });
-  mountGate(app, config, ledger, merchandise, brain, refund);
+  mountBuyer(app, {
+    directory,
+    brain,
+    config,
+    payWindow,
+    ...(buyer ? { buyer } : {}),
+    ...(ledger ? { ledger } : {}),
+  });
+  mountGate(app, config, ledger, merchandise, brain, refund, payWindow);
   mountLedger(app, config, ledger);
 
   return app;

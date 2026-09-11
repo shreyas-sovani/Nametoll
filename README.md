@@ -29,12 +29,12 @@ One app, six modules: **Directory**, **Gate**, **Brain**, **Merchandise**, **Led
 
 ## Demo timestamps (2–4 min, ≥720p, human voice)
 
-Record the desk at `/app` (public origin below). Landing is `/` and `/landing`. Manual is `/docs`. Paste a name. Do not bake one into the take.
+Record the desk at `/app` (public origin below). Landing is `/` and `/landing`. Registry is `/desks`. Manual is `/docs`. Paste a name. Do not bake one into the take.
 
 | Clock | On camera | Qual |
 | --- | --- | --- |
 | 0:00 | Loop on screen: name → TEE → pay → meter → HCS | — |
-| 0:15 | Paste a name. Resolve shows endpoint, payTo, price, HCS topic | ENS live resolve, no hardcoded name |
+| 0:15 | Paste a parent on `/desks` or a child on `/app`. Resolve shows endpoint, payTo, price, HCS topic | ENS live resolve + directory, no hardcoded name |
 | 0:35 | Say: Permissioned Resolver + EAC operator can edit those three text keys only | ENS hierarchy / EAC |
 | 0:50 | Meter = 2 protocols. Open desk. TEE deny / over cap. Pay locked | Chainlink verdict changes the path |
 | 1:10 | Meter = 1 protocol. Open desk. TEE allow. Unpaid GET is HTTP 402 (Blocky402 / tinybars / `0.0.0`) | Hedera x402 v2 + Chainlink allow |
@@ -77,6 +77,7 @@ npm run buyer -- http://127.0.0.1:8787
 npm run buyer -- http://127.0.0.1:8787 aave-v3-ethereum
 npm run buyer -- http://127.0.0.1:8787 not-a-real-protocol
 npm run buyer -- <paste-a-name>
+npm run agent -- <paste-a-parent-name>
 npm run directory -- <paste-a-name>
 npm run join -- --check
 npm run join
@@ -88,7 +89,7 @@ Resolve without paying:
 curl -sS "http://127.0.0.1:8787/desk/resolve?name=<paste-a-name>"
 ```
 
-Judge desk (B11) is `/app` in a desktop browser. Product page is `/` (same as `/landing`). Manual is `/docs`. Same loop over HTTP:
+Judge desk (B11) is `/app` in a desktop browser. Product page is `/` (same as `/landing`). Registry is `/desks`. Manual is `/docs`. Same loop over HTTP:
 
 ```bash
 curl -sS "http://127.0.0.1:8787/desk/inspect?name=<paste-a-name>&protocols=aave-v3-ethereum"
@@ -98,9 +99,17 @@ curl -sS -X POST http://127.0.0.1:8787/desk/pay \
   -d '{"name":"<paste-a-name>","protocols":["aave-v3-ethereum"]}'
 ```
 
-`GET /desk/inspect` stays open. `POST /desk/pay` spends the operator buyer key, so it is rate-limited, optionally gated by `DESK_PAY_SECRET` (cookie on `/`, `/landing`, `/app`, `/docs`, or the header above), and pinned to `PUBLIC_DESK_URL` when that is set. Empty `x-desk-pay-secret` is ignored unless the env var is set.
+`GET /desk/inspect` stays open. `POST /desk/pay` spends the operator buyer key, so it is rate-limited, optionally gated by `DESK_PAY_SECRET` (cookie on `/`, `/landing`, `/app`, `/desks`, `/docs`, or the header above), and pinned to `PUBLIC_DESK_URL` when that is set. Empty `x-desk-pay-secret` is ignored unless the env var is set.
 
-TEE verdicts are **cached per amount** for 60s (`GET /health` → `brain.verdictTtlMs`). Unavailable / simulate failures are not cached. Restart the desk for a fresh attested `cre workflow simulate`. The enclave still gates every amount the first time it is seen in that TTL.
+An agent that is handed only a **parent** namespace:
+
+```bash
+npm run agent -- <paste-a-parent-name>
+```
+
+It lists children from the Omnigraph, picks a live desk by price/protocols, asks the TEE, pays, and prints the receipt. That is discover-then-pay. `GET /desk/catalog?parent=` and `/desks` are the same directory.
+
+TEE verdicts are **cached per amount + payer + hour-count** for 60s (`GET /health` → `brain.verdictTtlMs`). Unavailable / simulate failures are not cached. Restart the desk for a fresh attested `cre workflow simulate`. The enclave still gates every amount the first time it is seen in that TTL. Policy secrets (cap, optional `BUYER_ALLOWLIST`, optional `RATE_LIMIT`) stay in the TEE; public reasons are `under cap` / `over cap` / `buyer not allowlisted` / `rate limited`. A successful HCS bill may carry `verdictReason` and `verdictHash` of that public verdict. Recompute is still `units * priceTinybarsPerUnit = tinybars`.
 
 A successful settle prints a HashScan URL (`https://hashscan.io/testnet/tx/<id>`). Live testnet settles and HCS bills are in `docs/working-notes.md`.
 
@@ -123,6 +132,8 @@ CRE Brain (needs `cre` on PATH and `cre login` for simulate):
 npm run brain -- 100000
 npm run cre:simulate
 curl -sS "http://127.0.0.1:8787/desk/brain?tinybars=100000"
+curl -sS "http://127.0.0.1:8787/desk/catalog?parent=<paste-a-parent-name>"
+curl -sS http://127.0.0.1:8787/desk/offer
 ```
 
 Put that id in `.env` as `HCS_TOPIC_ID`. After a paid request:
@@ -149,6 +160,7 @@ HashScan of the HBAR transfer is the pay. The topic is the audit.
 | --- | --- |
 | Parent | `nametoll.eth` |
 | Child | `desk.nametoll.eth` |
+| Second desk | `agent-02.nametoll.eth` — own Permissioned Resolver `0xe41Fab44355C6169af965C7994743625198561Da` (salt index 1) + scoped EAC. Register https://sepolia.etherscan.io/tx/0xd1f6f4faa9f11636fb64673ddfe6d458285e6cbf6ea79631c0d017c528c10454 |
 | Owner | `0xD2aA21AF4faa840Dea890DB2C6649AACF2C80Ff3` |
 | Operator (text keys only) | `0xFeAf5C921996FC53f4DEf35e181E766e6D74690A` |
 | Permissioned Resolver | `0x558283D5F8E36316B60be7e24F4e58C7133752D2` |
@@ -160,7 +172,10 @@ Buyer/homepage still take a pasted name. They do not default to `nametoll.eth`.
 ```bash
 npm run directory -- nametoll.eth
 curl -sS "http://127.0.0.1:8787/desk/resolve?name=nametoll.eth"
+curl -sS "http://127.0.0.1:8787/desk/catalog?parent=nametoll.eth"
 npm run buyer -- nametoll.eth
+npm run agent -- nametoll.eth
+npm run ens:subname -- --plan --parent nametoll.eth --label agent-02
 ```
 
 ## Public desk
@@ -212,18 +227,19 @@ Fee-payer is **not** configured here. The Gate reads it from live `GET /supporte
 - **B4** HCS topic `0.0.10464309`; paid request appends a recomputable bill
 - **B5** live Messari lending snapshot (Aave v3 + Compound III). One query shape, two pinned subgraphs. Schemas fetched via Subgraph MCP + Studio gateway introspection. Fail-soft if one indexer is down. Units = requested protocol count.
 - **B6** 1 protocol = `100000` tinybars, 2 = `200000`. Live pays on HashScan + HCS (stub bills first, then live `lending-risk` bills).
-- **B7** live ENSv2 parent `nametoll.eth` and child `desk.nametoll.eth` on Sepolia. Paste either into the homepage form or `GET /desk/resolve?name=`. Permissioned Resolver + EAC (operator can edit the three desk text keys, cannot transfer the name).
+- **B7** live ENSv2 parent `nametoll.eth` and child `desk.nametoll.eth` on Sepolia. `/desks` + `GET /desk/catalog?parent=` list children and resolve each descriptor. `npm run ens:subname` issues a sibling with its own Permissioned Resolver + scoped EAC. Paste a name into `/app` or `GET /desk/resolve?name=`. Operator can edit the three desk text keys, cannot transfer the name.
 - **B8** `npm run buyer -- nametoll.eth` resolves then 402s the **resolved** endpoint. Changing `agent-endpoint[web]` via the operator changes the next resolve without a buyer code change.
-- **B9** CRE `handlerInTee` + `getSecret("SPEND_CAP")`. Official `hello-confidential-workflows-ts`. Redacted simulate logs: `docs/partners/chainlink/simulate-allow.log` (100000 under cap) and `simulate-deny.log` (200000 over cap). No `ConfidentialHTTPClient`.
+- **B9** CRE `handlerInTee` + `getSecret("SPEND_CAP")`, plus optional `BUYER_ALLOWLIST` and `RATE_LIMIT`. Distinct public reasons: under/over cap, buyer not allowlisted, rate limited. Official `hello-confidential-workflows-ts`. Redacted simulate logs: `docs/partners/chainlink/simulate-allow.log` (100000 under cap) and `simulate-deny.log` (200000 over cap). No `ConfidentialHTTPClient`.
 - **B10** Gate asks Brain before Blocky402 settle. Deny / skipped TEE → HTTP 403, no merchandise, no HCS bill. Allow → existing pay path. `GET /desk/brain?tinybars=` and `npm run brain -- 100000`.
-- **B11** desk console on `/app` (product at `/` and `/landing`, manual at `/docs`). Paste a name (none shipped). Open desk → descriptor + TEE reason + unpaid 402. Pay (server-side buyer keys) → snapshot + HashScan + HCS topic. Deny / empty / error banners. `GET /desk/inspect?name=` and `POST /desk/pay`.
+- **B11** desk console on `/app` (product at `/` and `/landing`, registry at `/desks`, manual at `/docs`). Paste a name (none shipped). Open desk → descriptor + TEE reason + unpaid 402. Pay (server-side buyer keys) → snapshot + HashScan + HCS topic. Deny / empty / error banners. `GET /desk/inspect?name=` and `POST /desk/pay`. `npm run agent -- <parent>` discovers a child and pays it.
 - **B12** submission pack: README timestamps → Hedera / ENS / Chainlink §9 lists in [`docs/submission.md`](docs/submission.md). Public repo. AI attributed. Form trio unchanged.
 - **B13** unused-remainder refund (Pinout shape, one topic). Credit is the settled tinybars. Burn is delivered protocols. Seller HBAR `TransferTransaction` returns unused tinybars. HCS stores prepaid / owed / refund. Blotter station 06. Live fail-soft: settle `0.0.7162784@1789114039.103448687`, refund `0.0.10463755@1789114039.622724528`. Not dual-topic HIP-991.
 - **B14** harness DX: in-place `init` adopt planted Yarn/Next into this npm Express desk. Open PR https://github.com/hedera-dev/hedera-harness/pull/59 (target `dev`, not merged). Follow-up commit: Scaffold-HBAR static checks are dropped on npm adopt; `constraints.packageManager` is written; only newly written `.harness/` files are adapted. No `.harness/` in this repo. No harness demo video.
 - **B15** same CRE HTTP TEE handler emits unsigned `join()` to live ChallengeLending `0x88574e7Cc0027afd04951daa09B64d4441931ba1`. Simulate log `docs/partners/chainlink/simulate-join.log`. `npm run join` broadcasts that calldata. **join() tx: 0x980aaffe6d62561964a42675f7831adbca09cf442c7db0cede9255e2ed5e3086**. Not `writeReport`. Not a cloned liquidation template.
 - **B16** Sunday form swap evaluated. No swap. Form stays Hedera · ENS · Chainlink. Graph composition is merchandise, not a prize SKILL. World Selfie flag was not on.
 - **Judge pass** public desk Brain was `TEE unavailable` (no `CRE_PROJECT_DIR`). Desk now defaults to `./cre` + `cre/.env`. Health reports `brain.source`. Blotter shows live protocol TVL, per-bill recompute, and unsigned `join()`. CI: `.github/workflows/test.yml`. Latest TEE-gated Aave pay: https://hashscan.io/testnet/tx/0.0.7162784@1789111350.366520040. Remainder refund: https://hashscan.io/testnet/tx/0.0.10463755@1789114039.622724528. Live `join()`: https://sepolia.etherscan.io/tx/0x980aaffe6d62561964a42675f7831adbca09cf442c7db0cede9255e2ed5e3086
-- **Demo hardening** Brain caches successful verdicts per amount for 60s (unavailable is not cached; simulate killed at 25s; boot warms 1- and 2-unit). `POST /desk/pay` is rate-limited, optionally `DESK_PAY_SECRET`, and pinned to `PUBLIC_DESK_URL`. Pay omits the HCS bill block unless `settleTx` matches. Tagline is metered units.
+- **Demo hardening** Brain caches successful verdicts per amount + payer + hour-count for 60s (unavailable is not cached; simulate killed at 25s; boot warms 1- and 2-unit). `POST /desk/pay` is rate-limited, optionally `DESK_PAY_SECRET`, and pinned to `PUBLIC_DESK_URL`. Pay omits the HCS bill block unless `settleTx` matches. Tagline is metered units.
+- **Discovery** `/desks` is a live catalog of children under a pasted parent. Hedera extra-points directory row: an agent finds a service by namespace and pays for it.
 
 **Next**
 

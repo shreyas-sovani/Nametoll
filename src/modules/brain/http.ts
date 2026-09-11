@@ -12,7 +12,14 @@ export function mountBrain(app: Express, brain: Brain): void {
       res.status(400).json({ ok: false, error: "tinybars query is required" });
       return;
     }
-    const verdict = await brain.decide({ requestedTinybars: requested });
+    const payer = typeof req.query.payer === "string" ? req.query.payer.trim() : "";
+    const paysThisHour =
+      typeof req.query.pays === "string" ? req.query.pays.trim() : "";
+    const verdict = await brain.decide({
+      requestedTinybars: requested,
+      ...(payer ? { payer } : {}),
+      ...(paysThisHour ? { paysThisHour } : {}),
+    });
     res.status(verdict.allow ? 200 : 403).json({ ok: verdict.allow, ...verdict });
   });
 

@@ -86,7 +86,7 @@ export function redactCreLog(log: string): string {
   return log
     .replace(/0x[a-fA-F0-9]{64}/g, "0x[redacted]")
     .replace(
-      /\b(SPEND_CAP_TINYBARS_VAR|CRE_ETH_PRIVATE_KEY|SECRET_[A-Z0-9_]+)\s*[=:]\s*\S+/gi,
+      /\b(SPEND_CAP_TINYBARS_VAR|BUYER_ALLOWLIST_VAR|RATE_LIMIT_VAR|CRE_ETH_PRIVATE_KEY|SECRET_[A-Z0-9_]+)\s*[=:]\s*\S+/gi,
       "$1=[redacted]",
     );
 }
@@ -102,6 +102,8 @@ export type SimulateAskOptions = {
 export type CreHttpInput = {
   requestedTinybars?: string;
   action?: "join" | "spend";
+  payer?: string;
+  paysThisHour?: string;
 };
 
 export async function askCreSimulate(
@@ -136,7 +138,7 @@ export async function askCreSimulate(
 
 export async function askCreSimulateVerdict(
   options: SimulateAskOptions,
-  input: { requestedTinybars: string },
+  input: { requestedTinybars: string; payer?: string; paysThisHour?: string },
 ): Promise<BrainVerdict> {
   return parseCreSimulateVerdict(await askCreSimulate(options, input));
 }
@@ -220,7 +222,7 @@ export async function askCreHttp(
 
 export async function askCreHttpVerdict(
   url: string,
-  input: { requestedTinybars: string },
+  input: { requestedTinybars: string; payer?: string; paysThisHour?: string },
 ): Promise<BrainVerdict> {
   const parsed = await askCreHttp(url, input);
   if (parsed && typeof parsed === "object" && "allow" in parsed) {

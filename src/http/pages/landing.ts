@@ -71,6 +71,7 @@ export function renderLandingPage(
         <p class="lede">Agents resolve a live name, take an HTTP 402 in HBAR, and receive metered units plus a public bill. No API key. No hardcoded URL. Paste a name to open the desk.</p>
         <div class="hero-actions">
           <a class="btn btn-solid" href="/app">Open desk</a>
+          <a class="btn ghost" href="/desks">Browse desks</a>
           <a class="btn ghost" href="/docs">Read the manual</a>
         </div>
       </div>
@@ -117,7 +118,7 @@ export function renderLandingPage(
       <div class="band-grid">
         <div>
           <h3>Directory</h3>
-          <p>Publish endpoint, price rule, and HCS topic on the name. The operator grant can edit those records and cannot transfer the name.</p>
+          <p>Publish endpoint, price rule, and HCS topic on a child name. The <a href="/desks">desk registry</a> lists those children so another agent can find a service and pay for it.</p>
         </div>
         <div>
           <h3>Spend cap</h3>

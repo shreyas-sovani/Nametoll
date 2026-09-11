@@ -268,3 +268,13 @@ Ngrok is still session-scoped. Remainder and `join()` now have live explorer evi
 - **Bill attribution:** pay waits up to 5s for an HCS row whose `settleTx` matches. No `bills.at(-1)` fallback — topic HashScan is enough if Mirror lag has not indexed yet.
 - **Copy:** loop tagline is metered units (protocol count), not bytes. Blotter meter uses pinned Messari ids. Remainder HashScan follows `config.network`.
 
+## Discovery + TEE policy (12 Sep 2026)
+
+Hedera extra-points directory and ENS “agents as namespaces,” without touching settle/refund math.
+
+- **`/desks` + `GET /desk/catalog?parent=`** — Omnigraph already selected `subdomains(first: 20)`. Catalog resolves each child descriptor and probes `/desk/offer` or an unpaid 402.
+- **`npm run agent -- <parent>`** — human hands only a parent namespace. Enumerate → pick by price/protocols → inspect → TEE → `payFromName` → receipt JSON.
+- **`npm run ens:subname -- --label agent-02`** — sibling under the parent UserRegistry, Permissioned Resolver salt index 1, scoped `authorizeTextRoles` on the three desk keys. `--plan` is unsigned. Live 12 Sep 2026: `agent-02.nametoll.eth`, resolver `0xe41Fab44355C6169af965C7994743625198561Da`, register https://sepolia.etherscan.io/tx/0xd1f6f4faa9f11636fb64673ddfe6d458285e6cbf6ea79631c0d017c528c10454.
+- **TEE policy** — `decidePolicy` in the CRE handler. Secrets: `SPEND_CAP`, optional `BUYER_ALLOWLIST`, optional `RATE_LIMIT`. Distinct reasons. Empty extra secrets keep the existing cap-only flip. HCS bills may include `verdictReason` + `verdictHash`; recompute is still units × price.
+- Pay path (Blocky402 settle, remainder refund, settleTx-matched bill) is unchanged.
+

@@ -96,12 +96,12 @@ export function v2LabelId(label: string): bigint {
   return BigInt(labelhash(label));
 }
 
-export function defaultOwnedResolverSalt(owner: `0x${string}`): bigint {
+export function defaultOwnedResolverSalt(owner: `0x${string}`, index = 0n): bigint {
   return BigInt(
     keccak256(
       encodeAbiParameters(
         [{ type: "bytes32" }, { type: "address" }, { type: "uint256" }],
-        [OWNED_RESOLVER_ID, owner, 0n],
+        [OWNED_RESOLVER_ID, owner, index],
       ),
     ),
   );
@@ -110,8 +110,9 @@ export function defaultOwnedResolverSalt(owner: `0x${string}`): bigint {
 export function computeOwnedResolverAddress(opts: {
   deployer: `0x${string}`;
   owner: `0x${string}`;
+  index?: bigint;
 }): `0x${string}` {
-  const salt = defaultOwnedResolverSalt(opts.owner);
+  const salt = defaultOwnedResolverSalt(opts.owner, opts.index ?? 0n);
   const outerSalt = keccak256(
     encodeAbiParameters(
       [{ type: "address" }, { type: "uint256" }],

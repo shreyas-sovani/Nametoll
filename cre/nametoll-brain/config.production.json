@@ -1,4 +1,6 @@
 {
   "secretId": "SPEND_CAP",
+  "allowlistSecretId": "BUYER_ALLOWLIST",
+  "rateLimitSecretId": "RATE_LIMIT",
   "challengeLending": "0x88574e7Cc0027afd04951daa09B64d4441931ba1"
 }

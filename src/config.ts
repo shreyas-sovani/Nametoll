@@ -31,6 +31,7 @@ export type AppConfig = {
   creProjectDir?: string;
   creWorkflowName?: string;
   creTarget: string;
+  buyerAccountId?: string;
   deskPaySecret?: string;
   deskPayRateMax?: number;
   deskPayRateWindowMs?: number;
@@ -74,6 +75,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   const creBrainUrl = readEnv(env, "CRE_BRAIN_URL");
   const creProjectDir = readEnv(env, "CRE_PROJECT_DIR");
   const creWorkflowName = readEnv(env, "CRE_WORKFLOW_NAME");
+  const buyerAccountId = readEnv(env, "HEDERA_BUYER_ACCOUNT_ID");
   const deskPaySecret = readEnv(env, "DESK_PAY_SECRET");
   const deskPayRateMax = readEnv(env, "DESK_PAY_RATE_MAX");
   const deskPayRateWindowMs = readEnv(env, "DESK_PAY_RATE_WINDOW_MS");
@@ -100,6 +102,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     ...(creProjectDir ? { creProjectDir } : {}),
     ...(creWorkflowName ? { creWorkflowName } : {}),
     creTarget: readEnv(env, "CRE_TARGET") ?? "staging-settings",
+    ...(buyerAccountId ? { buyerAccountId } : {}),
     ...(deskPaySecret ? { deskPaySecret } : {}),
     ...(deskPayRateMax ? { deskPayRateMax: Number.parseInt(deskPayRateMax, 10) } : {}),
     ...(deskPayRateWindowMs
