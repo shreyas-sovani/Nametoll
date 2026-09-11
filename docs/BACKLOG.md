@@ -2,7 +2,7 @@
 
 **For the build agent.** This is the direction of work. It is not a syntax guide and not a license to invent APIs.
 
-**Status 11 Sep 2026:** B0–B14 done. Live parent is `nametoll.eth` (child `desk.nametoll.eth`) on ENSv2 Sepolia. CRE simulate logs in `docs/partners/chainlink/`. Judge blotter is `/`. Submission timestamps + §9 checklists: `docs/submission.md`. Unused remainder refunds when delivered units < prepaid (Pinout shape, no dual HCS). Harness PR: https://github.com/hedera-dev/hedera-harness/pull/59 (init adopt no longer plants Yarn/Next into npm apps). Next stretch is B15+ only if you still want it.
+**Status 11 Sep 2026:** B0–B14 done. Live parent is `nametoll.eth` (child `desk.nametoll.eth`) on ENSv2 Sepolia. CRE simulate logs in `docs/partners/chainlink/`. Judge blotter is `/`. Submission timestamps + §9 checklists: `docs/submission.md`. Unused remainder refunds when delivered units < prepaid (Pinout shape, no dual HCS). Harness PR: https://github.com/hedera-dev/hedera-harness/pull/59 (open against `dev`; follow-up commit neutralized Scaffold-HBAR static checks, persisted `constraints.packageManager`, and rewrites only files `init` just wrote). Next stretch is B15+ only if you still want it.
 
 Read in this order, then execute tickets **in ID order**. Do not skip ahead to a later ticket because it looks more interesting.
 
@@ -281,7 +281,7 @@ Work top to bottom. A later ticket may assume the earlier **Done when**.
 ## Stretch (do not start if a spine ticket is open)
 
 - [x] **B13** Unused-remainder refund (Pinout shape). Only after B6 is honest. *Credit = settled tinybars. Burn = delivered protocols (stub burns all). Seller `TransferTransaction` refunds unused. HCS: `units`/`tinybars` = burned/owed; `prepaidTinybars − tinybars = refundTinybars`. Blotter station 06. No HIP-991 dual topic. 11 Sep 2026.*
-- [x] **B14** Hedera harness PR for a DX bug **this** repo actually hit. `hedera-harness init` adopt copied the Scaffold-HBAR Yarn/Next recipe into a Nametoll-shaped npm Express app (`yarn next:build`, validator forbids `npm`). Open PR (not merged): https://github.com/hedera-dev/hedera-harness/pull/59 — before/after on the PR; new test `adopting an npm app does not plant a yarn next:build recipe`. No `.harness/` in this repo. No harness demo video. 11 Sep 2026.
+- [x] **B14** Hedera harness PR for a DX bug **this** repo actually hit. `hedera-harness init` adopt copied the Scaffold-HBAR Yarn/Next recipe into a Nametoll-shaped npm Express app (`yarn next:build`, validator forbids `npm`). Open PR (not merged): https://github.com/hedera-dev/hedera-harness/pull/59 — before/after on the PR; Copilot follow-up: neutralize Scaffold-HBAR `static.json`, persist `constraints.packageManager`, adapt only newly written recipe files, hash npm/pnpm lockfiles. Test: `adopting an npm app does not plant a yarn next:build recipe`. No `.harness/` in this repo. No harness demo video. 11 Sep 2026.
 - [ ] **B15** Liquidation challenge `join()` on the **same** CRE engine. Official challenge address and repo are in `docs/prizes.txt` / analysis — do not invent a different contract.
 - [ ] **B16** Sunday form swap: Graph if B5 became real composition + reusable SKILL; World only if Selfie flag is already on. Write the swap in README before changing the form.
 

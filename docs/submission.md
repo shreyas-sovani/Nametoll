@@ -18,7 +18,7 @@ Paste the checklists below into the partner forms. Each row names the README clo
 - [x] **Metering or refund (not only flat fee)** — `100000` tinybars × protocol count. 1 vs 2 = `100000` vs `200000` on HashScan + HCS. Unused remainder (Pinout shape): credit = settled tinybars, burn = delivered protocols, seller `TransferTransaction` refunds `prepaid − owed`. HCS fields `prepaidTinybars` / `refundTinybars` / `refundTx`. Clock **2:00**. No live refund HashScan claimed yet.
 - [x] **Demo shows the paid request executing** — blotter Pay or `npm run buyer`. Clock **1:30**.
 
-Hedera Harness stretch: open PR (not merged) https://github.com/hedera-dev/hedera-harness/pull/59 — `init` adopt no longer plants `yarn next:build` into an npm Express app. Before/after table + test on the PR. No `.harness/` in Nametoll. No harness demo video.
+Hedera Harness stretch: open PR (not merged) https://github.com/hedera-dev/hedera-harness/pull/59 — `init` adopt no longer plants `yarn next:build` into an npm Express app. Follow-up: neutralized Scaffold-HBAR static assertions, persisted `constraints.packageManager`, per-file never-overwrite. Before/after table + tests on the PR. No `.harness/` in Nametoll. No harness demo video.
 
 ---
 
