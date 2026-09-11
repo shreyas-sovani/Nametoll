@@ -62,10 +62,11 @@ Here is the whole product as a story. Terms are explained the first time they ap
 
 On the happy path the name is **typed or pasted**. It is never baked into the demo as a default.
 
-The live names (as of 11 Sep 2026) are:
+The live names (as of 12 Sep 2026) are:
 
 - `nametoll.eth` — the **parent** (the family name you registered)
 - `desk.nametoll.eth` — a **child** (a sub-name under that parent)
+- `agent-02.nametoll.eth` — a **sibling** under the same parent, with its own Permissioned Resolver
 
 **ENSv2** is the new ENS on **Sepolia** (a test Ethereum network — fake money, real software). Old ENS is “one name, one owner.” ENSv2 can have a **hierarchy** (parent / child, like a folder and a file).
 
@@ -95,7 +96,7 @@ The Brain is a **CRE** workflow (**Chainlink Runtime Environment** — Chainlink
 
 A **TEE** is a **Trusted Execution Environment**: a locked room inside a cloud computer. Code in the room can read a secret. Code *outside* the room cannot peek. Even the desk operator is not supposed to see the secret at runtime.
 
-The secret here is a **spend cap** (the maximum tinybars this request may cost). **Tinybars** are Hedera’s small unit. `100_000_000` tinybars = `1` HBAR. This desk prices at `100000` tinybars per protocol, which is `0.001` HBAR.
+The required secret is a **spend cap** (the maximum tinybars this request may cost). Optional secrets can also name an allowlist of buyers and a rate limit. Empty extras keep cap-only. **Tinybars** are Hedera’s small unit. `100_000_000` tinybars = `1` HBAR. This desk prices at `100000` tinybars per protocol, which is `0.001` HBAR.
 
 The Brain returns a **verdict**:
 
@@ -105,7 +106,7 @@ The Brain returns a **verdict**:
 
 - `allow` — yes or no
 - `maxTinybars` — the ceiling
-- `reason` — a public sentence (“under cap”, “over cap”). The secret number itself is not printed.
+- `reason` — a public sentence (“under cap”, “over cap”, “buyer not allowlisted”, “rate limited”). The secret number itself is not printed.
 
 If the Brain says **deny**, or if the Brain is skipped, the Gate refuses. No pay. No data. No bill.
 
@@ -254,9 +255,9 @@ If you only remember four stories, remember **1, 3, 6, and 9**.
 
 ## What to expect when you open it
 
-### The homepage (`/`) is a blotter, not a consumer app
+### The desk console is `/app`, not a consumer checkout
 
-A **blotter** is an old desk pad where a clerk writes each step of a job. That is the UI: a ticket-looking page with six **stations**.
+`/` and `/landing` are the product page. `/desks` is the registry (paste a parent, list children). `/docs` is the manual. The drive UI is `/app`: a ticket-looking page with **stations**.
 
 1. Paste a name. The box is empty on purpose.
 2. Pick the **meter**: 1 protocol or 2.
@@ -280,7 +281,7 @@ Banners you should expect:
 - OK: TEE allowed. Unpaid GET is still 402 until you pay.
 - After pay: settled, maybe “unused remainder refunded”
 
-**Pay** on the blotter uses **server-side buyer keys** (the desk already has a test buyer, so a judge can click once). That is a demo convenience. The real buyer path is still “agent has its own key.” If buyer keys are missing, Pay stays disabled and the page tells you to use the buyer CLI.
+**Pay** on `/app` uses **server-side buyer keys** (the desk already has a test buyer, so a judge can click once). That is a demo convenience. The real buyer path is still “agent has its own key” (`npm run buyer -- <name>` or `npm run agent -- <parent>`). If buyer keys are missing, Pay stays disabled and the page tells you to use the buyer CLI.
 
 ### Commands you will see in the README
 
@@ -291,9 +292,12 @@ Banners you should expect:
 | `GET /desk/snapshot` with no payment | Should be **402** |
 | `GET /desk/resolve?name=…` | Phone-book lookup, no pay |
 | `GET /desk/inspect?name=…` | Descriptor + TEE + 402 challenge, no settle |
+| `GET /desk/catalog?parent=…` | Children of a parent + live probes |
 | `POST /desk/pay` | Demo pay (server buyer keys) |
 | `npm run buyer -- <name>` | Real consuming agent: resolve → 402 → sign → data |
+| `npm run agent -- <parent>` | Discover a child, then pay |
 | `GET /desk/ledger` | Recent bills |
+| `GET /desk/subscribe` / `/desk/claim` | Scheduled TOLL slots + claim (extra, not the 402 rail) |
 
 A successful CLI pay prints a HashScan URL.
 
@@ -330,12 +334,12 @@ Nametoll is not:
 - A World ID / Selfie login
 - A Uniswap / 1inch swap
 - Mainnet money (this is testnet)
-- A monthly subscription
+- A monthly subscription as the pay path (scheduled TOLL slots exist as extra-points; snapshot 402 is still HBAR)
 - A name that is only shown as a label while the real URL is hardcoded
 
 The Graph is the **merchandise** (what you buy). It is not currently a prize-form pick. World is not in this app.
 
-Stretch that is **not** required for the spine: a Hedera harness PR, Chainlink’s liquidation `join()` challenge, swapping the Sunday prize form.
+Stretch that **landed** and is still not required for the spine: unused-remainder refund, Hedera harness PR #59, Chainlink liquidation `join()`, Sunday form stay, `/desks` + discover-and-pay agent, second ENSv2 sibling, TEE allowlist/rate, TOLL custom fee + scheduled subscribe. ERC-8004 / A2A stayed out.
 
 ---
 
@@ -350,8 +354,8 @@ Stretch that is **not** required for the spine: a Hedera harness PR, Chainlink�
 The loop above is the contract. Implementation details can move:
 
 - Public URL may change (ngrok sessions die).
-- Exact blotter copy, refund HashScan links, and hosting may still be in flux.
-- Ticket IDs in `docs/BACKLOG.md` (`B0`…`B13`) are the build checklist. The spine is marked done as of 11 Sep 2026. Stretch is `B14+`.
+- Exact `/app` copy, refund HashScan links, and hosting may still be in flux.
+- Ticket IDs in `docs/BACKLOG.md` (`B0`…`B20`) are the build checklist. Spine B0–B12 and stretch B13–B20 are marked done as of 12 Sep 2026. Human remaining: video + stable public URL.
 
 If something on screen disagrees with this file, trust **observable behavior** (402, HashScan, topic math, simulate log) over a sentence in a doc. Then update this file.
 

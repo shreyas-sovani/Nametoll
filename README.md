@@ -42,8 +42,10 @@ Record the desk at `/app` (public origin below). Landing is `/` and `/landing`. 
 | 2:00 | Snapshot shows live Aave/Compound rows + TVL. Say 1 vs 2 protocols is `100000` vs `200000` tinybars on the 402. 2-protocol Pay stays locked (over cap). Station 06 remainder: fail-soft refund https://hashscan.io/testnet/tx/0.0.10463755@1789114039.622724528 | Hedera metering + unused remainder |
 | 2:25 | Open HCS topic `0.0.10464309` (https://hashscan.io/testnet/topic/0.0.10464309). Recompute matches on `/desk/ledger` | Hedera HCS |
 | 2:50 | Open `docs/partners/chainlink/simulate-allow.log` — `handlerInTee`, Nitro `us-west-2`, secret cap flips allow vs deny | Chainlink simulate |
-| 3:05 | Blotter **TEE join()** unsigned calldata, then live Sepolia `join()` https://sepolia.etherscan.io/tx/0x980aaffe6d62561964a42675f7831adbca09cf442c7db0cede9255e2ed5e3086 | Chainlink challenge |
+| 3:05 | `/app` **TEE join()** unsigned calldata, then live Sepolia `join()` https://sepolia.etherscan.io/tx/0x980aaffe6d62561964a42675f7831adbca09cf442c7db0cede9255e2ed5e3086 | Chainlink challenge |
 | 3:20 | End. Keep the file under 4:00 | — |
+
+If a few seconds remain after 3:05, flash TOLL `0.0.10483302` and one executed schedule (https://hashscan.io/testnet/tx/0.0.10463842@1789156008.769559934). Do not cut the pay-path clocks for it.
 
 ## Do not commit secrets
 
@@ -221,7 +223,7 @@ This tunnel dies when the local process stops. For a stable judge URL, host the 
 
 Fee-payer is **not** configured here. The Gate reads it from live `GET /supported` (`0.0.7162784` on testnet as of the day-one probe).
 
-## Status (11 Sep 2026)
+## Status (12 Sep 2026)
 
 **Done**
 
@@ -238,14 +240,16 @@ Fee-payer is **not** configured here. The Gate reads it from live `GET /supporte
 - **B10** Gate asks Brain before Blocky402 settle. Deny / skipped TEE → HTTP 403, no merchandise, no HCS bill. Allow → existing pay path. `GET /desk/brain?tinybars=` and `npm run brain -- 100000`.
 - **B11** desk console on `/app` (product at `/` and `/landing`, registry at `/desks`, manual at `/docs`). Paste a name (none shipped). Open desk → descriptor + TEE reason + unpaid 402. Pay (server-side buyer keys) → snapshot + HashScan + HCS topic. Deny / empty / error banners. `GET /desk/inspect?name=` and `POST /desk/pay`. `npm run agent -- <parent>` discovers a child and pays it.
 - **B12** submission pack: README timestamps → Hedera / ENS / Chainlink §9 lists in [`docs/submission.md`](docs/submission.md). Public repo. AI attributed. Form trio unchanged.
-- **B13** unused-remainder refund (Pinout shape, one topic). Credit is the settled tinybars. Burn is delivered protocols. Seller HBAR `TransferTransaction` returns unused tinybars. HCS stores prepaid / owed / refund. Blotter station 06. Live fail-soft: settle `0.0.7162784@1789114039.103448687`, refund `0.0.10463755@1789114039.622724528`. Not dual-topic HIP-991.
+- **B13** unused-remainder refund (Pinout shape, one topic). Credit is the settled tinybars. Burn is delivered protocols. Seller HBAR `TransferTransaction` returns unused tinybars. HCS stores prepaid / owed / refund. `/app` remainder station. Live fail-soft: settle `0.0.7162784@1789114039.103448687`, refund `0.0.10463755@1789114039.622724528`. Not dual-topic HIP-991.
 - **B14** harness DX: in-place `init` adopt planted Yarn/Next into this npm Express desk. Open PR https://github.com/hedera-dev/hedera-harness/pull/59 (target `dev`, not merged). Follow-up commit: Scaffold-HBAR static checks are dropped on npm adopt; `constraints.packageManager` is written; only newly written `.harness/` files are adapted. No `.harness/` in this repo. No harness demo video.
 - **B15** same CRE HTTP TEE handler emits unsigned `join()` to live ChallengeLending `0x88574e7Cc0027afd04951daa09B64d4441931ba1`. Simulate log `docs/partners/chainlink/simulate-join.log`. `npm run join` broadcasts that calldata. **join() tx: 0x980aaffe6d62561964a42675f7831adbca09cf442c7db0cede9255e2ed5e3086**. Not `writeReport`. Not a cloned liquidation template.
 - **B16** Sunday form swap evaluated. No swap. Form stays Hedera · ENS · Chainlink. Graph composition is merchandise, not a prize SKILL. World Selfie flag was not on.
-- **Judge pass** public desk Brain was `TEE unavailable` (no `CRE_PROJECT_DIR`). Desk now defaults to `./cre` + `cre/.env`. Health reports `brain.source`. Blotter shows live protocol TVL, per-bill recompute, and unsigned `join()`. CI: `.github/workflows/test.yml`. Latest TEE-gated Aave pay: https://hashscan.io/testnet/tx/0.0.7162784@1789111350.366520040. Remainder refund: https://hashscan.io/testnet/tx/0.0.10463755@1789114039.622724528. Live `join()`: https://sepolia.etherscan.io/tx/0x980aaffe6d62561964a42675f7831adbca09cf442c7db0cede9255e2ed5e3086
+- **Judge pass** public desk Brain was `TEE unavailable` (no `CRE_PROJECT_DIR`). Desk now defaults to `./cre` + `cre/.env`. Health reports `brain.source`. `/app` shows live protocol TVL, per-bill recompute, and unsigned `join()`. CI: `.github/workflows/test.yml`. Latest TEE-gated Aave pay: https://hashscan.io/testnet/tx/0.0.7162784@1789111350.366520040. Remainder refund: https://hashscan.io/testnet/tx/0.0.10463755@1789114039.622724528. Live `join()`: https://sepolia.etherscan.io/tx/0x980aaffe6d62561964a42675f7831adbca09cf442c7db0cede9255e2ed5e3086
 - **Demo hardening** Brain caches successful verdicts per amount + payer + hour-count for 60s (unavailable is not cached; simulate killed at 25s; boot warms 1- and 2-unit). `POST /desk/pay` is rate-limited, optionally `DESK_PAY_SECRET`, and pinned to `PUBLIC_DESK_URL`. Pay omits the HCS bill block unless `settleTx` matches. Tagline is metered units.
-- **Discovery** `/desks` is a live catalog of children under a pasted parent. Hedera extra-points directory row: an agent finds a service by namespace and pays for it.
-- **P3 HTS + scheduled subscribe** Blocky402 `/supported` does not advertise a non-HBAR asset, so `/desk/snapshot` stays `0.0.0`. Live TOLL `0.0.10483302` (custom `100000` tinybar HBAR fee) https://hashscan.io/testnet/token/0.0.10483302. Slots executed: https://hashscan.io/testnet/tx/0.0.10463842@1789156008.769559934 and https://hashscan.io/testnet/tx/0.0.10463842@1789156009.185023222. `GET /desk/claim?schedule=` delivered live Aave and HCS `subscribe` bills. ERC-8004 left out.
+- **B17** `/desks` + `GET /desk/catalog?parent=` + `npm run agent -- <parent>`. Hedera extra-points directory: an agent finds a service by namespace and pays for it.
+- **B18** sibling `agent-02.nametoll.eth` — own Permissioned Resolver + scoped EAC. `npm run ens:subname`.
+- **B19** TEE policy axes (cap / allowlist / rate). Optional CRE secret env vars default empty so cap-only simulate still boots. HCS may store `verdictReason` / `verdictHash`.
+- **B20** TOLL `0.0.10483302` (custom `100000` tinybar HBAR fee) https://hashscan.io/testnet/token/0.0.10483302. Executed slots: https://hashscan.io/testnet/tx/0.0.10463842@1789156008.769559934 and https://hashscan.io/testnet/tx/0.0.10463842@1789156009.185023222. `GET /desk/claim` delivered live Aave and HCS `subscribe` bills. Snapshot 402 stays `0.0.0`. ERC-8004 left out.
 
 **Next**
 

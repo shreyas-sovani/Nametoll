@@ -2,7 +2,7 @@
 
 **For the build agent.** This is the direction of work. It is not a syntax guide and not a license to invent APIs.
 
-**Status 12 Sep 2026:** B0–B16 done. Directory is live: `/desks` + `GET /desk/catalog?parent=` + `npm run agent -- <parent>`. `npm run ens:subname` issues a sibling desk (own Permissioned Resolver, scoped EAC). TEE policy is cap + optional allowlist + rate; public reasons stay in the enclave output; HCS may store `verdictReason`/`verdictHash`. P3: Blocky402 does not advertise HTS on `/supported`, so snapshot 402 stays `0.0.0`. TOLL token + custom HBAR fee and `wait_for_expiry` scheduled slots are a side rail (`/desk/hts`, `/desk/subscribe`, `/desk/claim`). Pay path (settle, remainder refund, settleTx-matched bill) unchanged. Public desk Brain is CRE simulate (`./cre` default) — 1 protocol allows, 2 denies over cap. Latest TEE-gated Aave settle: `0.0.7162784@1789111350.366520040`. Live remainder refund: `0.0.10463755@1789114039.622724528`. Live `join()`: `0x980aaffe6d62561964a42675f7831adbca09cf442c7db0cede9255e2ed5e3086`. Live parent is `nametoll.eth` (child `desk.nametoll.eth`) on ENSv2 Sepolia. Sunday form: **no swap** — Hedera · ENS · Chainlink.
+**Status 12 Sep 2026:** B0–**B20** done. Spine B0–B12 plus stretch B13–B20 (remainder, harness PR, `join()`, Sunday stay, discovery, ENSv2 sibling, TEE policy, TOLL + scheduled subscribe). Pay path (settle, remainder refund, settleTx-matched bill) unchanged. Snapshot 402 stays `0.0.0`. Public desk Brain is CRE simulate (`./cre` default) — 1 protocol allows, 2 denies over cap. Latest TEE-gated Aave settle: `0.0.7162784@1789111350.366520040`. Live remainder refund: `0.0.10463755@1789114039.622724528`. Live `join()`: `0x980aaffe6d62561964a42675f7831adbca09cf442c7db0cede9255e2ed5e3086`. Live names: `nametoll.eth` / `desk.nametoll.eth` / `agent-02.nametoll.eth`. Sunday form: **no swap** — Hedera · ENS · Chainlink.
 
 Read in this order, then execute tickets **in ID order**. Do not skip ahead to a later ticket because it looks more interesting.
 
@@ -32,7 +32,7 @@ Do not implement World, ATS, SwapVM, Uniswap, Privy, Arc, Ledger, Bazantic, ERC-
 
 | | |
 |---|---|
-| **Done** | B0 scaffold · B1 Gate 402 · B2 buyer pay · B3 public URL · B4 HCS bill · B5 live Messari Aave+Compound · B6 meter 1 vs 2 units · **B7** live `nametoll.eth` / `desk.nametoll.eth` · **B8** buyer paid the resolved endpoint · **B9** `handlerInTee` + redacted simulate logs · **B10** Gate refuses settle/bytes when Brain denies or is skipped · **B11** judge blotter · **B12** README timestamps + `docs/submission.md` · **B13** unused-remainder refund · **B14** [hedera-harness#59](https://github.com/hedera-dev/hedera-harness/pull/59) · **B15** unsigned `join()` on the same CRE engine + live Sepolia broadcast · **B16** Sunday form stay (Hedera · ENS · Chainlink) · **Discovery** `/desks` + `npm run agent -- <parent>` · **ENS sibling** `npm run ens:subname` · **TEE policy** allowlist + rate + cap · **P3** TOLL custom fee + scheduled subscribe (snapshot 402 still `0.0.0`) |
+| **Done** | B0–**B20** (spine B0–B12, stretch B13–B20). Directory `/desks` + `npm run agent`. Sibling `agent-02.nametoll.eth`. TEE policy axes. TOLL + scheduled subscribe. |
 | **Next** | Video + stable public URL. Live sibling `agent-02.nametoll.eth` is on Sepolia. |
 | **Human blockers** | Public desk is ngrok session-scoped. Never commit `.env`. Record the 2–4 min video. |
 | **Not blockers** | Graph Studio query key works. Sepolia owner/operator are funded testnet accounts. |
@@ -47,7 +47,7 @@ Do not implement World, ATS, SwapVM, Uniswap, Privy, Arc, Ledger, Bazantic, ERC-
 | Product / partners / quals | `docs/PRD.md` · `docs/analysis.md` §3.1–3.3, §9 |
 | x402 / Blocky402 / tinybars | `.agents/skills/x402-payments/SKILL.md` + `references/facilitator.md` + `references/examples.md` · `docs/partners/hedera/blocky402-api.md` · live `GET https://api.testnet.blocky402.com/supported` · PoC as **wiring reference only**: `vendor/x402-inference-pay-per-request-poc` (its PRD uses x402.org + flat USDC — **do not copy those two choices**) |
 | HCS / Mirror Node | `.agents/skills/hedera-consensus-service/SKILL.md` · Hedera docs MCP `https://docs.hedera.com/mcp` · `@hiero-ledger` (not `@hashgraph/sdk` unless a skill still shows that import) |
-| Hedera accounts / HTS (only if you need USDC later) | `.agents/skills/hedera-token-service/SKILL.md` · hosted network MCP is testnet-only and RETURN_BYTES — never send a private key |
+| Hedera accounts / HTS / ScheduleCreate | `.agents/skills/hedera-token-service/SKILL.md` + `references/custom-fees.md` · `.agents/skills/hiero-cli/references/schedule.md` · hosted network MCP is testnet-only and RETURN_BYTES — never send a private key. Blocky402 `/supported` does not advertise HTS — do not change snapshot asset `0.0.0`. |
 | ENSv2 / Permissioned Resolver / EAC | `.agents/skills/base/SKILL.md` · `.agents/skills/ens-protocol/SKILL.md` · `.agents/skills/enssdk/SKILL.md` · `.agents/skills/enscli/SKILL.md` · `vendor/ens-cli/README.md` (writes emit unsigned `{to,data,value}`) · `docs/partners/ens/llms.txt` · Context7 `/ensdomains/docs` · live https://docs.ens.domains/llms.txt |
 | ENS reads | `.agents/skills/omnigraph/SKILL.md` then `enscli` — do not hand-author GraphQL fields |
 | CRE / TEE | `.agents/skills/chainlink-cre-skill/SKILL.md` then the reference it names (`project-scaffolding.md`, `simulation.md`, `confidential-workflows.md`) · `docs/partners/chainlink/confidential-workflows-official.md` · `vendor/chainlink-agent-skills` · Context7 `/llmstxt/chain_link_cre_ts_llms-full_txt` · `cre templates list` for the real confidential template name — do not hand-roll a CRE project |
@@ -76,8 +76,8 @@ Buyer ──resolve──► Directory (ENSv2 descriptor)
 | Interface | Shape (logical) |
 |---|---|
 | Desk descriptor | endpoint, payTo (Hedera account id), priceRule, hcsTopic, asset `0.0.0` |
-| Brain verdict | allow, maxTinybars, public reason — no secrets |
-| Bill | requestId, name, units, tinybars, settleTx, consensusTime |
+| Brain verdict | allow, maxTinybars, public reason (cap / allowlist / rate) — no secrets |
+| Bill | requestId, name, units, tinybars, settleTx, consensusTime; optional prepaid/refund, verdict hash, scheduleId |
 | Buyer | never receives the data-plane credential |
 
 Repo layout is the build agent’s choice as long as these six boundaries stay visible. Prefer one app, not six deployables. CRE may live in its own `cre init` tree because the CLI requires that.
@@ -200,7 +200,7 @@ Work top to bottom. A later ticket may assume the earlier **Done when**.
 
 ### B7 — Directory: ENSv2 name is the desk
 
-- [x] **B7** A live ENSv2 name on **Sepolia** resolves to the desk descriptor. Happy path does not hardcode the name or the endpoint. *Live parent `nametoll.eth`, child `desk.nametoll.eth`, Permissioned Resolver + EAC, 11 Sep 2026.*
+- [x] **B7** A live ENSv2 name on **Sepolia** resolves to the desk descriptor. Happy path does not hardcode the name or the endpoint. *Live parent `nametoll.eth`, child `desk.nametoll.eth`, sibling `agent-02.nametoll.eth` (own Permissioned Resolver salt index 1), 12 Sep 2026.*
 
 **Done when:** Video/UI can type or paste a name. Resolve returns endpoint, price rule, HCS topic, pay-to. Parent/child or wildcard is real. Permissioned Resolver holds the records. One EAC grant: an operator account can edit those records and cannot transfer the name. `ens-cli` writes are unsigned — a human or wallet still broadcasts. Resolver is deployed **before** a zero-resolver register.
 
@@ -256,7 +256,7 @@ Work top to bottom. A later ticket may assume the earlier **Done when**.
 
 ### B11 — Thin operator / judge UI
 
-- [x] **B11** A page a human can drive for the 2–4 min video: paste name, show descriptor, show TEE reason, show 402 → settle, show snapshot, show HashScan + HCS topic. *`/` blotter. `GET /desk/inspect` + `POST /desk/pay`. Empty / error / deny stations. No baked-in name. 11 Sep 2026.*
+- [x] **B11** A page a human can drive for the 2–4 min video: paste name, show descriptor, show TEE reason, show 402 → settle, show snapshot, show HashScan + HCS topic. *Desk console is `/app`. Product `/` and `/landing`. Registry `/desks`. Manual `/docs`. `GET /desk/inspect` + `POST /desk/pay`. Empty / error / deny stations. No baked-in name. Frontend makeover 12 Sep 2026.*
 
 **Done when:** Happy path has no hardcoded name. Empty / error / deny states exist. Desktop-usable. Not a design prize.
 
@@ -280,10 +280,14 @@ Work top to bottom. A later ticket may assume the earlier **Done when**.
 
 ## Stretch (do not start if a spine ticket is open)
 
-- [x] **B13** Unused-remainder refund (Pinout shape). Only after B6 is honest. *Credit = settled tinybars. Burn = delivered protocols (stub burns all). Seller `TransferTransaction` refunds unused. HCS: `units`/`tinybars` = burned/owed; `prepaidTinybars − tinybars = refundTinybars`. Blotter station 06. Live fail-soft (unpinned id, 1 prepaid / 0 delivered): settle `0.0.7162784@1789114039.103448687`, refund `0.0.10463755@1789114039.622724528`. No HIP-991 dual topic. 11 Sep 2026.*
+- [x] **B13** Unused-remainder refund (Pinout shape). Only after B6 is honest. *Credit = settled tinybars. Burn = delivered protocols (stub burns all). Seller `TransferTransaction` refunds unused. HCS: `units`/`tinybars` = burned/owed; `prepaidTinybars − tinybars = refundTinybars`. `/app` remainder station. Live fail-soft (unpinned id, 1 prepaid / 0 delivered): settle `0.0.7162784@1789114039.103448687`, refund `0.0.10463755@1789114039.622724528`. No HIP-991 dual topic. 11 Sep 2026.*
 - [x] **B14** Hedera harness PR for a DX bug **this** repo actually hit. `hedera-harness init` adopt copied the Scaffold-HBAR Yarn/Next recipe into a Nametoll-shaped npm Express app (`yarn next:build`, validator forbids `npm`). Open PR (not merged): https://github.com/hedera-dev/hedera-harness/pull/59 — before/after on the PR; Copilot follow-up: neutralize Scaffold-HBAR `static.json`, persist `constraints.packageManager`, adapt only newly written recipe files, hash npm/pnpm lockfiles. Test: `adopting an npm app does not plant a yarn next:build recipe`. No `.harness/` in this repo. No harness demo video. 11 Sep 2026.
 - [x] **B15** Liquidation challenge `join()` on the **same** CRE engine. Official ABI `function join()` from [ChallengeLending.sol](https://github.com/solangegueiros/cf-liquidation-protection-challenge/blob/main/contracts/ChallengeLending.sol). Live official address from that repo’s README / `frontend/addresses.ts`: `0x88574e7Cc0027afd04951daa09B64d4441931ba1` (`challengeOpen` true 11 Sep 2026). ETHOnline scrape `0x59d5B29F…` is an older deploy (numUsers reverts) — not used. Same HTTP `handlerInTee`: `{ "action": "join" }` returns unsigned `{ to, data: 0xb688a363, chainId: 11155111 }`. `npm run join` broadcasts that calldata. **join() tx: 0x980aaffe6d62561964a42675f7831adbca09cf442c7db0cede9255e2ed5e3086** (owner `0xD2aA21AF4faa840Dea890DB2C6649AACF2C80Ff3`, `numUsers` 6). Not `writeReport`. Not the cloned liquidation template. Simulate: `docs/partners/chainlink/simulate-join.log`. 11 Sep 2026.
 - [x] **B16** Sunday form swap evaluated 11 Sep 2026. README swap record written **before** any form-line change (the line is unchanged). Graph: B5 Messari composition (Aave v3 + Compound III, one query, MCP schemas, fail-soft) is merchandise — this repo did not ship a Graph prize SKILL. World: Selfie Check flag was not on (no IDKit, no `selfieCheckLegacy`, no portal confirmation). Chainlink simulate logs exist, so the third slot stays Chainlink. Form remains Hedera · ENS · Chainlink.
+- [x] **B17** Discovery directory. `/desks` + `GET /desk/catalog?parent=` enumerate Omnigraph `subdomains(first: 20)`, resolve each child, probe `/desk/offer` or unpaid 402. `npm run agent -- <parent>` picks a live desk by price/protocols and pays via `payFromName`. Hedera extra-points “directory that makes your service findable by other agents.” 12 Sep 2026.
+- [x] **B18** Second ENSv2 desk via scripted subname. `npm run ens:subname -- --label agent-02` deploys Permissioned Resolver salt index 1, registers under the parent UserRegistry, scoped EAC on the three desk text keys. Live `agent-02.nametoll.eth` resolver `0xe41Fab44355C6169af965C7994743625198561Da`, register https://sepolia.etherscan.io/tx/0xd1f6f4faa9f11636fb64673ddfe6d458285e6cbf6ea79631c0d017c528c10454. 12 Sep 2026.
+- [x] **B19** TEE policy, not only cap. Enclave secrets: required `SPEND_CAP`, optional `BUYER_ALLOWLIST` / `RATE_LIMIT`. Distinct public reasons. Empty extras stay cap-only. HCS may store `verdictReason` / `verdictHash`. CRE spawn defaults the optional env names to empty so `cre workflow simulate` still boots. Settle/refund math unchanged. 12 Sep 2026.
+- [x] **B20** HTS custom fee + Scheduled Transactions (P3). Probed Blocky402 `/supported`: Hedera `exact`, no advertised assets — snapshot 402 stays `0.0.0`. Live TOLL `0.0.10483302` (fixed `100000` tinybar HBAR fee). Two `wait_for_expiry` slots executed: https://hashscan.io/testnet/tx/0.0.10463842@1789156008.769559934 and https://hashscan.io/testnet/tx/0.0.10463842@1789156009.185023222. `GET /desk/claim` delivered live Aave and `subscribe` bills on topic `0.0.10464309`. ERC-8004 left out. 12 Sep 2026.
 
 ---
 
@@ -294,13 +298,15 @@ Work top to bottom. A later ticket may assume the earlier **Done when**.
 | Thu–Fri | B0–B3 |
 | Fri | B7–B8 (Directory can overlap B4–B6 if two people) |
 | Fri–Sat | B9–B10 |
-| Sat | B4–B6 if not done; then B11 |
-| Sat–Sun | **B12** |
+| Sat | B4–B6 if not done; then B11; stretch B13–B16 |
+| Sat–Sun | **B12**; stretch B17–B20 if the spine holds |
 
-If CRE dies, keep B0–B8 + B11–B12 and use the PRD third-slot swap. Do not fake a TEE.
+If CRE dies, keep B0–B8 + B11–B12 and use the PRD third-slot swap. Do not fake a TEE. Stretch B17–B20 is extra-points, not a reason to reopen the spine.
 
 ---
 
 ## Definition of done (the product, not a ticket)
 
-A judge can: paste a live ENSv2 name → see a descriptor → watch an over-cap deny → watch an under-cap pay on HashScan → see metered data → recompute the HCS bill → open a redacted `cre workflow simulate` log that sits on that pay path.
+A judge can: paste a live ENSv2 name (or a parent on `/desks`) → see a descriptor → watch an over-cap deny → watch an under-cap pay on HashScan → see metered data → recompute the HCS bill → open a redacted `cre workflow simulate` log that sits on that pay path.
+
+Optional extra-points evidence (does not replace the loop): TOLL token + executed scheduled slots + `GET /desk/claim`; `npm run agent -- <parent>`.

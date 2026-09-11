@@ -33,7 +33,7 @@ This is the product. If a feature is not on this path, it is an explore window o
 1. Agent is given an ENSv2 name (typed or pasted — **never hardcoded** on the happy path).
 2. Resolve on Sepolia → endpoint, price rule, HCS topic, pay-to account.
 3. `GET` the desk. No payment → HTTP 402.
-4. CRE `handlerInTee` loads a secret spend cap (and the data-plane credential). Returns allow / deny / max tinybars. Deny → no settle.
+4. CRE `handlerInTee` loads a secret spend cap plus optional allowlist / rate (and the data-plane credential). Returns allow / deny / max tinybars. Deny → no settle.
 5. Agent signs x402 v2 `exact` HBAR. Blocky402 `verify` + `settle`. Fee-payer from `GET /supported`.
 6. Desk runs a live multi-protocol lending snapshot. Price scales with protocol count — not a flat fee.
 7. Bill on HCS. README links HashScan settle + topic id. Judge can recompute from Mirror Node.
@@ -78,18 +78,18 @@ Deep modules. Stable interfaces. Internals can change without rewriting the demo
 
 | Module | Does | Depends on | Does not |
 |---|---|---|---|
-| **Directory** | Resolve name → desk descriptor (endpoint, price rule, topic, pay-to). Operator updates via EAC. | ENSv2 Sepolia, Permissioned Resolver | Store funds or secrets |
+| **Directory** | Resolve name → desk descriptor. List children of a pasted parent (`/desks`, `GET /desk/catalog`). Operator updates via EAC. | ENSv2 Sepolia, Permissioned Resolver, Omnigraph | Store funds or secrets |
 | **Gate** | 402 challenge, verify/settle via Blocky402, refuse if TEE denied or meter unpaid | Gate client, Blocky402 `/supported` | Hold facilitator keys |
-| **Brain** | `handlerInTee`: secret cap + credential → allow/deny/max tinybars | CRE simulate (deploy is beta) | `ConfidentialHTTPClient`; leak secrets through `usingTheDons()` |
+| **Brain** | `handlerInTee`: secret cap + optional allowlist/rate → allow/deny/max tinybars | CRE simulate (deploy is beta) | `ConfidentialHTTPClient`; leak secrets through `usingTheDons()` |
 | **Merchandise** | Live multi-protocol snapshot; report billable units | Studio / Market key, pinned IDs | Be the product if Graph is not on the form |
-| **Ledger** | Append bill; expose HashScan + recompute recipe | HCS + Mirror Node | Be the payment rail |
-| **Buyer** | Resolve → 402 → sign → retry → show data + receipt | Directory, Gate | Hardcode the name |
+| **Ledger** | Append bill; expose HashScan + recompute recipe. Optional TOLL custom-fee token + `wait_for_expiry` subscribe/claim | HCS + Mirror Node + HTS/ScheduleCreate | Be the Blocky402 rail (snapshot 402 stays HBAR) |
+| **Buyer** | Resolve → 402 → sign → retry → show data + receipt. Or `npm run agent -- <parent>` (enumerate → pick → pay) | Directory, Gate | Hardcode the name |
 
 **Interfaces (stable)**
 
 - Desk descriptor: `{ endpoint, payTo, priceRule, hcsTopic, asset: "0.0.0" }` from live resolve.
-- Brain verdict: `{ allow, maxTinybars, reason }` — reason is public; secrets are not.
-- Bill: `{ requestId, name, units, tinybars, settleTx, consensusTime }` on HCS.
+- Brain verdict: `{ allow, maxTinybars, reason }` — public reasons include under/over cap, buyer not allowlisted, rate limited. Secrets stay in the enclave.
+- Bill: `{ requestId, name, units, tinybars, settleTx, consensusTime }` on HCS. Optional `prepaidTinybars` / `refundTinybars` / `refundTx`, `verdictReason` / `verdictHash`, `scheduleId`.
 - Buyer never receives the data-plane credential.
 
 ---
@@ -108,7 +108,7 @@ Locked: the loop and the three partners. Unlocked: how we implement a step if th
 | **TEE HTTP** | `HTTPClient` + `TeeRuntime` if the credential must be used in-enclave | Verdict-only TEE; merchandise fetch on the desk after allow | `ConfidentialHTTPClient` in the TEE handler |
 | **Buyer** | Headless signer + thin UI that shows resolve → 402 → receipt | WalletConnect HashPack if the video needs a human click | Agent that cannot pay without a hardcoded URL |
 | **Third-slot swap (Sunday)** | Stay Chainlink if simulate logs exist | Graph if composition + SKILL are real; World only if Selfie flag is already on | Picking a partner that did not land |
-| **Stretch only** | — | Hedera harness PR for a DX bug we actually hit; liquidation `join()` on the same CRE engine | Either as a reason the spine slips |
+| **Stretch only** | Harness PR #59 (open) and live `join()` both landed | TOLL + scheduled subscribe landed as a side rail; snapshot 402 stayed HBAR | Either as a reason the spine slips |
 
 ---
 
@@ -123,7 +123,7 @@ Locked: the loop and the three partners. Unlocked: how we implement a step if th
 7. As a judge, I want a `cre workflow simulate` log, so that I can see `handlerInTee` and `getSecret` on the pay path.
 8. As a judge, I want the video to type or paste the name, so that I know it is not hardcoded.
 
-Nice-if-free (not stories we schedule): unused-remainder refund; ENSIP-25/26; harness PR; `join()`.
+Landed after the spine (not required to keep the loop): unused-remainder refund; `join()` on the same CRE engine; `/desks` + parent-only agent; second ENSv2 sibling; TOLL custom fee + scheduled subscribe. Still not scheduled: ENSIP-25/26 as extra record types; ERC-8004 / A2A.
 
 ---
 
@@ -146,12 +146,12 @@ Test **observable behavior**, not SDK internals.
 
 | Module | Prove |
 |---|---|
-| Directory | Unknown name fails; known live name returns a descriptor; UI does not ship a baked-in name for the happy path. |
-| Gate | No header → 402; bad payload → no resource; good Blocky402 settle → resource + payment response. |
-| Brain | Missing/over-cap secret → deny and no settle; allow → settle may proceed. Simulate log committed (redact secrets). |
+| Directory | Unknown name fails; known live name returns a descriptor; UI does not ship a baked-in name for the happy path. Parent catalog lists children. |
+| Gate | No header → 402; bad payload → no resource; good Blocky402 settle → resource + payment response. Asset on `/desk/snapshot` stays `0.0.0`. |
+| Brain | Missing/over-cap secret → deny and no settle; allow → settle may proceed. Distinct public reasons for allowlist/rate when those secrets are set. Simulate log committed (redact secrets). |
 | Merchandise | Live query returns; pinned ID down → fail-soft, not a crash with fake rows. |
-| Ledger | After a paid request, Mirror Node shows a bill that matches units × price. |
-| Buyer | One scripted paid request against the live URL. |
+| Ledger | After a paid request, Mirror Node shows a bill that matches units × price. Subscribe claim bills may carry `scheduleId` without changing that formula. |
+| Buyer | One scripted paid request against the live URL. Agent handed only a parent name can discover and pay. |
 
 No prior app tests in this repo. Do not vendor-test the official x402 PoC as if it were ours.
 
@@ -161,11 +161,11 @@ No prior app tests in this repo. Do not vendor-test the official x402 PoC as if 
 
 | When | Done when |
 |---|---|
-| Thu–Fri | Live URL, one Blocky402 settle, HashScan link |
-| Fri | Live ENSv2 resolve, no hardcoded happy path, one EAC grant |
-| Fri–Sat | TEE on the pay path, simulate log in repo |
-| Sat | Meter visible; HCS bill recomputable |
-| Sat–Sun | Video + README timestamps; Sunday form = the three that actually landed |
+| Thu–Fri | Live URL, one Blocky402 settle, HashScan link — **landed** |
+| Fri | Live ENSv2 resolve, no hardcoded happy path, one EAC grant — **landed** (`nametoll.eth` / `desk.nametoll.eth` / `agent-02.nametoll.eth`) |
+| Fri–Sat | TEE on the pay path, simulate log in repo — **landed** |
+| Sat | Meter visible; HCS bill recomputable — **landed** (plus remainder refund) |
+| Sat–Sun | Video + README timestamps; Sunday form = the three that actually landed. **Code done. Human remaining: video + stable `PUBLIC_DESK_URL`.** |
 
 ---
 

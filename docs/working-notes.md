@@ -1,4 +1,13 @@
-# Working notes (B0–B16 live)
+# Working notes (B0–B20 live)
+
+Shipped index (code + explorers). Human remaining: 2–4 min video + stable `PUBLIC_DESK_URL`.
+
+| Tickets | What landed |
+| --- | --- |
+| B0–B12 | Spine: 402 → pay → HCS → live Graph meter → ENSv2 → CRE TEE → `/app` + submission clocks |
+| B13–B16 | Remainder refund, harness PR #59, live `join()`, Sunday stay (Hedera · ENS · Chainlink) |
+| B17–B19 | `/desks` + `npm run agent`, sibling `agent-02.nametoll.eth`, TEE policy axes |
+| B20 | TOLL `0.0.10483302` + two executed `wait_for_expiry` slots; snapshot 402 still `0.0.0` |
 
 ## Blocky402 probe (10 Sep 2026)
 
@@ -93,7 +102,7 @@ Recompute: `1 * 100000 = 100000`, `2 * 100000 = 200000`. Mirror messages seq 2 a
 
 ## Directory (B7) + buyer-by-name (B8) — live on Sepolia
 
-Parent = the 2LD we register. Child = a label under that parent's UserRegistry. Picked **`nametoll.eth`** (product name) because it was available; child is **`desk.nametoll.eth`**.
+Parent = the 2LD we register. Child = a label under that parent's UserRegistry. Picked **`nametoll.eth`** (product name) because it was available; first child is **`desk.nametoll.eth`**. Sibling **`agent-02.nametoll.eth`** (B18) uses the same UserRegistry and a second Permissioned Resolver (salt index 1).
 
 Record keys from live ENSIP-5 / ENSIP-26 only:
 
@@ -113,6 +122,7 @@ Record keys from live ENSIP-5 / ENSIP-26 only:
 | Subregistry deploy | https://sepolia.etherscan.io/tx/0x8a4c0bad2e2bd68d2331c21f2bca2a33d2d4265a047ddfcad5db772529a94c13 |
 | Subregistry set | https://sepolia.etherscan.io/tx/0xf46812dfcaef67de3a6bcea3eb44a07d35f16c20f0417a7707f633e9772041f8 |
 | Child `desk` | https://sepolia.etherscan.io/tx/0x52534da2069e2ac9aae5cf48a22a485f9b23dacab210360e62527a6f25fa54f3 |
+| Sibling `agent-02` | https://sepolia.etherscan.io/tx/0xd1f6f4faa9f11636fb64673ddfe6d458285e6cbf6ea79631c0d017c528c10454 |
 | Texts (parent) | https://sepolia.etherscan.io/tx/0x435eefab224179f0655616235a0866fccaaa3defe0a167555ef20e847c2fc5bb |
 | EAC `url` | https://sepolia.etherscan.io/tx/0x05549a859deb42517f633230d8872f2437a2500d6185ce1c1643ace5cebc0d26 |
 | EAC `agent-context` | https://sepolia.etherscan.io/tx/0x2720e3b5837fef7eb722f20b47ffc307b1f40df784cbb83f8626d21b14a17a87 |
@@ -130,7 +140,7 @@ Operator EAC (account 3, `ROLE_SET_TEXT` on those three keys only):
 
 Buyer-by-name (11 Sep 2026): `npm run buyer -- nametoll.eth` → resolved public desk → Blocky402 settle `0.0.7162784@1789071522.046063925` — https://hashscan.io/testnet/tx/0.0.7162784@1789071522.046063925 — live Graph body, `units: 2`.
 
-Happy path still has no baked-in name. Homepage form / `GET /desk/resolve?name=` / buyer argv take whatever name you paste.
+Happy path still has no baked-in name. `/app` form / `GET /desk/resolve?name=` / `/desks` / buyer argv take whatever name you paste.
 
 ## Brain (B9) + Gate obeys Brain (B10)
 
@@ -139,8 +149,8 @@ Official template name from `cre templates list --json`: `hello-confidential-wor
 Nametoll workflow (`cre/nametoll-brain`):
 
 - HTTP trigger (`HTTPCapability`) into `cre.handlerInTee` / `TeeRuntime`
-- `runtime.getSecret({ id: "SPEND_CAP" })` — env `SPEND_CAP_TINYBARS_VAR` via `cre/secrets.yaml`
-- Verdict-only JSON `{ allow, maxTinybars, reason }`. No `ConfidentialHTTPClient`. No `usingTheDons()` (nothing confidential crosses out except the public verdict string)
+- `runtime.getSecret({ id: "SPEND_CAP" })` — env `SPEND_CAP_TINYBARS_VAR` via `cre/secrets.yaml`. Optional `BUYER_ALLOWLIST` / `RATE_LIMIT` (B19). Empty extras stay cap-only. Desk spawn defaults those env names to `""` so `cre workflow simulate` still boots.
+- Verdict-only JSON `{ allow, maxTinybars, reason }`. Public reasons: under/over cap, buyer not allowlisted, rate limited. No `ConfidentialHTTPClient`. No `usingTheDons()` (nothing confidential crosses out except the public verdict string)
 - Cap used for scripted runs: `150000` tinybars. `100000` → allow. `200000` → over cap / deny
 
 Desk:
@@ -155,9 +165,9 @@ Desk:
 - Deny `200000`: `docs/partners/chainlink/simulate-deny.log` — same TEE banner, `verdict=deny reason=over cap`
 - Secret cap from `getSecret("SPEND_CAP")` is `150000` (public as `maxTinybars` only). No secret env lines in the committed logs. Deploy access not enabled; simulation does not need it.
 
-## Judge blotter (B11)
+## Desk console (B11)
 
-The desk console is `/app`. It does not ship a name.
+The desk console is `/app`. Product pages are `/` and `/landing`. Registry is `/desks`. Manual is `/docs`. It does not ship a name.
 
 Stations, in order: paste name → descriptor → TEE reason → unpaid 402 → snapshot → HashScan settle + HCS topic.
 
@@ -195,7 +205,7 @@ Pinout shape, not a Pinout clone. One 402 still opens a credit pool. The snapsho
 - Burn is delivered `ok` protocols. A stub body burns every prepaid unit (no fake remainder).
 - Owed = `burned * PRICE_TINYBARS`. Refund = `prepaid - owed`. HCS `units` / `tinybars` stay the owed line so `units * price = tinybars` still holds.
 - Refund rail is a seller-signed HBAR `TransferTransaction` (`@hiero-ledger/sdk`). Not a Blocky402 refund route. Seller must hold enough HBAR to cover unused remainder.
-- Blotter station 06 (`#station-remainder`) shows prepaid / burned / owed / refund / refundTx.
+- `/app` remainder station (`#station-remainder`) shows prepaid / burned / owed / refund / refundTx.
 - Proved in `test/refund.test.ts` against a fake facilitator + in-memory refund rail (payer `0.0.1`, fail-soft 2 prepaid → 1 delivered → `100000` refunded).
 - Live 11 Sep 2026, TEE cap still `150000` so 2-protocol settle stays denied. Remainder on the live desk is 1-protocol fail-soft (`npm run buyer -- http://127.0.0.1:8787 not-a-real-protocol`): prepaid `100000`, delivered `0`, refund `100000`. Settle https://hashscan.io/testnet/tx/0.0.7162784@1789114039.103448687. Refund CRYPTOTRANSFER https://hashscan.io/testnet/tx/0.0.10463755@1789114039.622724528 (seller `0.0.10463755` → buyer `0.0.10463842`, `100000` tinybars, SUCCESS). HCS `units` 0 / `tinybars` 0 / `prepaidTinybars` 100000 / `refundTinybars` 100000, recompute matches.
 
@@ -236,7 +246,7 @@ README swap record was written first. Form line was not changed. Submission pack
 
 ## Judge pass (11 Sep 2026)
 
-A third-party walk of B0–B16 against the **public** URL found the loop broken at Brain: `/desk/brain` and `/desk/inspect` returned `TEE unavailable` because the running process had neither `CRE_BRAIN_URL` nor `CRE_PROJECT_DIR`. The blotter also hid what was bought (only `ok`/`stub`/`units`), `/desk/ledger` did not attach HashScan or `units * price = tinybars` per bill, and `join()` was CLI-only.
+A third-party walk of B0–B16 against the **public** URL found the loop broken at Brain: `/desk/brain` and `/desk/inspect` returned `TEE unavailable` because the running process had neither `CRE_BRAIN_URL` nor `CRE_PROJECT_DIR`. The desk console also hid what was bought (only `ok`/`stub`/`units`), `/desk/ledger` did not attach HashScan or `units * price = tinybars` per bill, and `join()` was CLI-only.
 
 Fixes (still fail-closed if CRE is missing):
 
@@ -244,7 +254,7 @@ Fixes (still fail-closed if CRE is missing):
 - `GET /health` reports `brain.source`, `merchandise` live/stub, `canPay`.
 - Inspect includes a recompute preview. Paid payload includes merchandise protocol/TVL rows and an audited bill.
 - `/desk/ledger` bills include `hashscanUrl` and `recompute.matches`.
-- Blotter station 07 / `GET /desk/join` — unsigned calldata from the same CRE engine. Broadcast is `npm run join`, not this GET.
+- `/app` join station / `GET /desk/join` — unsigned calldata from the same CRE engine. Broadcast is `npm run join`, not this GET.
 - GitHub Actions `.github/workflows/test.yml` (`npm test` + `tsc`).
 
 Replayed on the public origin after restart:
@@ -257,7 +267,7 @@ Replayed on the public origin after restart:
 | `GET /desk/join` | `{ to: 0x88574e7C…, data: 0xb688a363, chainId: 11155111 }` unsigned |
 | Live `join()` | https://sepolia.etherscan.io/tx/0x980aaffe6d62561964a42675f7831adbca09cf442c7db0cede9255e2ed5e3086 |
 | Remainder fail-soft | settle `0.0.7162784@1789114039.103448687`, refund `0.0.10463755@1789114039.622724528` |
-| Blotter `POST /desk/pay` 1 protocol | settle `0.0.7162784@1789111350.366520040` — https://hashscan.io/testnet/tx/0.0.7162784@1789111350.366520040 — live Aave TVL, HCS `lending-risk` `1 * 100000` matches |
+| `/app` `POST /desk/pay` 1 protocol | settle `0.0.7162784@1789111350.366520040` — https://hashscan.io/testnet/tx/0.0.7162784@1789111350.366520040 — live Aave TVL, HCS `lending-risk` `1 * 100000` matches |
 
 Ngrok is still session-scoped. Remainder and `join()` now have live explorer evidence (above). Video recording and a stable `PUBLIC_DESK_URL` stay human tasks.
 
@@ -266,7 +276,7 @@ Ngrok is still session-scoped. Remainder and `join()` now have live explorer evi
 - **Brain cache:** only successful TEE verdicts are memoized, per tinybar amount, 60s TTL (`GET /health` → `brain.verdictTtlMs`). `TEE unavailable` and thrown simulate errors are not stored. `cre workflow simulate` is killed after 25s. Boot warms 1-unit and 2-unit amounts so the first inspect is not a cold 9s simulate.
 - **Pay relay:** `POST /desk/pay` is rate-limited (8/min per IP, 24/min global). `DESK_PAY_SECRET` (optional) requires `x-desk-pay-secret` or the HttpOnly cookie set on `GET /`. When `PUBLIC_DESK_URL` is set, pay refuses names whose descriptor endpoint is a different origin. `GET /desk/inspect` stays open.
 - **Bill attribution:** pay waits up to 5s for an HCS row whose `settleTx` matches. No `bills.at(-1)` fallback — topic HashScan is enough if Mirror lag has not indexed yet.
-- **Copy:** loop tagline is metered units (protocol count), not bytes. Blotter meter uses pinned Messari ids. Remainder HashScan follows `config.network`.
+- **Copy:** loop tagline is metered units (protocol count), not bytes. `/app` meter uses pinned Messari ids. Remainder HashScan follows `config.network`.
 
 ## Discovery + TEE policy (12 Sep 2026)
 

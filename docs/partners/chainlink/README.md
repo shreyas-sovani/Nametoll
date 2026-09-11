@@ -1,4 +1,4 @@
-# Chainlink CRE sources (B9–B10)
+# Chainlink CRE sources (B9–B10, B15, B19)
 
 Official surfaces only. No hosted CRE MCP.
 
@@ -13,8 +13,9 @@ Official surfaces only. No hosted CRE MCP.
 ## What exists
 
 - `cre.handlerInTee` + `TeeRuntime` + `runtime.getSecret({ id: "SPEND_CAP" })`
+- Optional enclave secrets `BUYER_ALLOWLIST` / `RATE_LIMIT` (B19). Empty extras stay cap-only. Desk spawn defaults those env names to empty so simulate still boots.
 - HTTP trigger (`HTTPCapability`). Simulation: `cre workflow simulate … --target staging-settings`
-- Public verdict `{ allow, maxTinybars, reason }`. Secret never logged.
+- Public verdict `{ allow, maxTinybars, reason }`. Reasons: under/over cap, buyer not allowlisted, rate limited. Secret never logged.
 - Desk Gate asks Brain **before** Blocky402 settle. Deny → HTTP 403, no merchandise, no HCS bill.
 
 ## What does not exist
@@ -55,6 +56,6 @@ npm run brain -- 100000
 
 Set `CRE_BRAIN_URL` (live HTTP trigger) or `CRE_PROJECT_DIR=cre` (simulate). If neither is set **and** `cre/project.yaml` exists, the desk process defaults to `./cre`. If CRE is still missing, Brain fails closed and paid snapshots return 403 — the desk does not skip the TEE.
 
-Desk Brain **caches successful verdicts per tinybar amount for 60s** (`GET /health` → `brain.verdictTtlMs`). A cold `cre workflow simulate` is ~9s; repeats of the same amount reuse that attested result until TTL or process restart. Failures (`TEE unavailable`, simulate timeout after 25s, not-logged-in) are **not** cached. Boot warms `PRICE_TINYBARS` × 1 and × 2. A judge asking “does the enclave see every request?”: no — it sees every **amount** in the TTL. Deny/allow still comes from the TEE.
+Desk Brain **caches successful verdicts per amount + payer + hour-count for 60s** (`GET /health` → `brain.verdictTtlMs`). A cold `cre workflow simulate` is ~9s; repeats of the same key reuse that attested result until TTL or process restart. Failures (`TEE unavailable`, simulate timeout after 25s, not-logged-in) are **not** cached. Boot warms `PRICE_TINYBARS` × 1 and × 2. A judge asking “does the enclave see every request?”: no — it sees every **amount/payer/hour** in the TTL. Deny/allow still comes from the TEE.
 
 `GET /desk/join` runs the same HTTP TEE handler with `{ "action": "join" }` and returns unsigned calldata. Broadcast with `npm run join`. Live Sepolia tx: https://sepolia.etherscan.io/tx/0x980aaffe6d62561964a42675f7831adbca09cf442c7db0cede9255e2ed5e3086
