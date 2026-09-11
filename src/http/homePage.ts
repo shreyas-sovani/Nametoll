@@ -251,7 +251,9 @@ export function renderHomePage(
       Resolve: <a href="/desk/resolve"><code>/desk/resolve?name=</code></a>.
       Bills: <a href="/desk/ledger"><code>/desk/ledger</code></a>.
       Buyer CLI: <code>npm run buyer -- &lt;name-or-url&gt; [protocol-ids]</code>.
-      Join: <a href="/desk/join"><code>/desk/join</code></a> (unsigned calldata, no broadcast).
+      Remainder: <code>npm run buyer -- http://127.0.0.1:8787 not-a-real-protocol</code>.
+      Join: <a href="/desk/join"><code>/desk/join</code></a> (unsigned calldata). Broadcast: <code>npm run join</code>.
+      Live join tx <code>0x980aaffe6d62561964a42675f7831adbca09cf442c7db0cede9255e2ed5e3086</code>.
       Recompute: <code>units * priceTinybarsPerUnit = tinybars</code>.
       Do not commit secrets. Resource server holds no facilitator key.
     </footer>
@@ -499,10 +501,10 @@ export function renderHomePage(
                 ["data", pack.body.data],
                 ["chainId", pack.body.chainId != null ? String(pack.body.chainId) : ""],
                 ["chain", pack.body.chain],
-                ["broadcast", "no — wallet still has to send"]
+                ["broadcast", "no — npm run join sends it"]
               ]);
               hideBanners();
-              ok.textContent = "Unsigned join() from the same CRE TEE. No transaction was broadcast.";
+              ok.textContent = "Unsigned join() from the same CRE TEE. Broadcast with npm run join — this button does not send a tx.";
               ok.hidden = false;
             })
             .catch(function () { showError("join() failed."); })

@@ -26,7 +26,7 @@ cre workflow simulate nametoll-brain \
 ```
 
 From the repo root: `npm run cre:simulate` writes redacted logs to `docs/partners/chainlink/`.
-The desk defaults to this project when `CRE_PROJECT_DIR` is unset. `GET /desk/join` is the same handler.
+The desk defaults to this project when `CRE_PROJECT_DIR` is unset. `GET /desk/join` is the same handler (unsigned). Broadcast that calldata with `npm run join`.
 
 Deploy is private-beta enrollment. Simulation is the qual evidence.
 

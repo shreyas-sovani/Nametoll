@@ -4,6 +4,7 @@
 **Submit:** Sunday 13 September 2026, 12:00pm EDT  
 **Analysis date:** 9 September 2026  
 **Revised:** 10 September 2026 — unlocked the 3-partner lock; focus is the **top 5 integrable** partners  
+**Evidence 11 September 2026:** filled §9 lives in [`docs/submission.md`](submission.md). Live `join()` is on official ChallengeLending `0x88574e7Cc0027afd04951daa09B64d4441931ba1` (not the ETHOnline scrape). Live remainder refund is on HashScan.  
 **Team status:** Start Fresh (Classic). No prior project code.  
 **Form constraint:** Select up to **3 Partner Prizes** on submit. If a partner has multiple tracks, all of them count as **one** pick.  
 **Working set:** Rank and vendor **five** partners that are both winnable and agent-buildable (official MCP / skills / `llms.txt`). Pick any 3 of those 5 on the form.  
@@ -246,7 +247,7 @@ Must: `handlerInTee` (TS) or `cre.HandlerInTee` (Go); process a secret / private
 
 Templates: [hello-confidential](https://docs.chain.link/cre-templates/hello-confidential-workflows) · [liquidation protection](https://docs.chain.link/cre-templates/automated-liquidation-protection) · [AI audit firewall](https://docs.chain.link/cre-templates/ai-audit-firewall)
 
-**Challenge:** `join()` [`0x59d5B29FbA5ca865a171076BE94EbEeC5BCA1E04`](https://sepolia.etherscan.io/address/0x59d5B29FbA5ca865a171076BE94EbEeC5BCA1E04) on Sepolia. Window from ~8–9 Sep through submission. After deadline, workflow is frozen; they run scenarios 24h. Score: don’t get liquidated, keep the loan open (continuity), spend emergency capital sparingly, keep rules in TEE. Full repay kills continuity. Do **not** submit the template unmodified.
+**Challenge:** `join()` official ChallengeLending [`0x88574e7Cc0027afd04951daa09B64d4441931ba1`](https://sepolia.etherscan.io/address/0x88574e7Cc0027afd04951daa09B64d4441931ba1) on Sepolia (`challengeOpen` true). ETHOnline prizes.txt scrape `0x59d5B29FbA5ca865a171076BE94EbEeC5BCA1E04` is an older deploy (`numUsers` reverts) — do not use. Window from ~8–9 Sep through submission. After deadline, workflow is frozen; they run scenarios 24h. Score: don’t get liquidated, keep the loan open (continuity), spend emergency capital sparingly, keep rules in TEE. Full repay kills continuity. Do **not** submit the template unmodified. Nametoll live `join()`: https://sepolia.etherscan.io/tx/0x980aaffe6d62561964a42675f7831adbca09cf442c7db0cede9255e2ed5e3086
 
 #### What past winners included
 
@@ -570,7 +571,7 @@ Spine: **discover → (optional: decide in private / prove a human) → pay → 
 
 1. **Hedera.** Live metered service (inference, data, or compute — **not** flat $0.001). x402 **v2** via **Blocky402**. Consuming agent completes one paid request on camera. Payment receipts on **HCS** a judge can recompute from Mirror Node. Clone **Pinout / Tally metering**, not AgentRouter. Optional: harness PR for a DX bug you actually hit. Skip ATS. Skills: `x402-payments`, HTS/HCS, hosted MCP.
 2. **ENS.** Each agent and each service is an ENSv2 hierarchical name on Sepolia. Wildcard off the parent. Permissioned Resolver holds endpoint, price, HCS topic. EAC so a controller can edit *only* those records. Live resolve in the video. This *is* the directory Hedera’s extra-points list asks for. Skills: `ens-protocol`, `ensskills`, `ens-cli`.
-3. **Chainlink.** CRE `handlerInTee` holds API secrets, budget caps, risk thresholds. Agent pays only when the enclave says so. Same engine can `join()` `0x59d5B29FbA5ca865a171076BE94EbEeC5BCA1E04`. Simulation logs in the submission. Skill: `chainlink-cre-skill`.
+3. **Chainlink.** CRE `handlerInTee` holds API secrets, budget caps, risk thresholds. Agent pays only when the enclave says so. Same engine can `join()` official ChallengeLending `0x88574e7Cc0027afd04951daa09B64d4441931ba1` (not the dead ETHOnline scrape). Simulation logs in the submission. Skill: `chainlink-cre-skill`.
 4. **World.** Selfie Check gates who may list a service or authorize spend — risk/eligibility/abuse, not login. AgentKit/`agentkit.fetch` if the agent is human-backed. Feedback doc they asked for. Docs MCP + portal MCP + IDKit `^4.x`. Only a form pick if the Selfie flag is on.
 5. **The Graph.** Live composed data: Standardized / Messari-shaped query across protocols, **or** Subgraph + Substreams (or MCP + a SKILL) as the agent’s data plane. Pin deployment IDs. Fail-soft. Official MCP wrappers with no composition lose.
 
@@ -594,6 +595,8 @@ Probe Blocky402 `GET https://api.testnet.blocky402.com/supported` on day one if 
 ---
 
 ## 9. Per-track qualification checklists (paste into the submission)
+
+Filled Nametoll evidence for the locked trio is in [`docs/submission.md`](submission.md). Empty boxes below are the partner-form template, not current status.
 
 ### Hedera — AI
 

@@ -38,6 +38,7 @@ describe("B12 submission pack", () => {
     expect(pack).toMatch(/0\.0\.10464309/);
     expect(pack).toMatch(/100000/);
     expect(pack).toMatch(/200000/);
+    expect(pack).toMatch(/0\.0\.10463755@1789114039\.622724528/);
     expect(pack).toMatch(/npm run buyer/);
   });
 
@@ -60,7 +61,12 @@ describe("B12 submission pack", () => {
     expect(pack).toMatch(/us-west-2|Nitro/i);
     expect(pack).toMatch(/403/);
     expect(pack).toMatch(/No Functions \/ Automation|no Functions/);
-    expect(pack).not.toMatch(/join\(\) tx:\s*0x[a-fA-F0-9]{64}/);
+    expect(pack).toMatch(
+      /join\(\) tx:\s*0x980aaffe6d62561964a42675f7831adbca09cf442c7db0cede9255e2ed5e3086/,
+    );
+    expect(pack).toMatch(
+      /sepolia\.etherscan\.io\/tx\/0x980aaffe6d62561964a42675f7831adbca09cf442c7db0cede9255e2ed5e3086/,
+    );
   });
 
   it("attributes AI and states the video rules", () => {

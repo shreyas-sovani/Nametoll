@@ -39,10 +39,10 @@ Record the blotter at `/` (public origin below). Paste a name. Do not bake one i
 | 0:50 | Meter = 2 protocols. Open desk. TEE deny / over cap. Pay locked | Chainlink verdict changes the path |
 | 1:10 | Meter = 1 protocol. Open desk. TEE allow. Unpaid GET is HTTP 402 (Blocky402 / tinybars / `0.0.0`) | Hedera x402 v2 + Chainlink allow |
 | 1:30 | Pay. Open HashScan settle (example: https://hashscan.io/testnet/tx/0.0.7162784@1789111350.366520040) | Hedera paid request, TEE on the path |
-| 2:00 | Snapshot shows live Aave/Compound rows + TVL. Say 1 vs 2 protocols is `100000` vs `200000` tinybars on the 402. 2-protocol Pay stays locked (over cap). Station 05 recompute `units * price = tinybars` | Hedera metering |
+| 2:00 | Snapshot shows live Aave/Compound rows + TVL. Say 1 vs 2 protocols is `100000` vs `200000` tinybars on the 402. 2-protocol Pay stays locked (over cap). Station 06 remainder: fail-soft refund https://hashscan.io/testnet/tx/0.0.10463755@1789114039.622724528 | Hedera metering + unused remainder |
 | 2:25 | Open HCS topic `0.0.10464309` (https://hashscan.io/testnet/topic/0.0.10464309). Recompute matches on `/desk/ledger` | Hedera HCS |
 | 2:50 | Open `docs/partners/chainlink/simulate-allow.log` — `handlerInTee`, Nitro `us-west-2`, secret cap flips allow vs deny | Chainlink simulate |
-| 3:05 | Blotter **TEE join()** — unsigned `join()` to `0x88574e7Cc0027afd04951daa09B64d4441931ba1`, say no broadcast | Chainlink challenge |
+| 3:05 | Blotter **TEE join()** unsigned calldata, then live Sepolia `join()` https://sepolia.etherscan.io/tx/0x980aaffe6d62561964a42675f7831adbca09cf442c7db0cede9255e2ed5e3086 | Chainlink challenge |
 | 3:20 | End. Keep the file under 4:00 | — |
 
 ## Do not commit secrets
@@ -75,8 +75,11 @@ Paid request (buyer key only — never the seller key). Pass a **name** (B8) or 
 ```bash
 npm run buyer -- http://127.0.0.1:8787
 npm run buyer -- http://127.0.0.1:8787 aave-v3-ethereum
+npm run buyer -- http://127.0.0.1:8787 not-a-real-protocol
 npm run buyer -- <paste-a-name>
 npm run directory -- <paste-a-name>
+npm run join -- --check
+npm run join
 ```
 
 Resolve without paying:
@@ -129,7 +132,7 @@ curl -sS http://127.0.0.1:8787/desk/ledger
 **HashScan:** https://hashscan.io/testnet/topic/0.0.10464309  
 **Mirror Node:** https://testnet.mirrornode.hedera.com/api/v1/topics/0.0.10464309/messages
 
-Recompute: `GET` the Mirror Node URL, base64-decode each `message`, then check `units * priceTinybarsPerUnit = tinybars`. If `prepaidTinybars` is present, `prepaidTinybars - tinybars = refundTinybars`. `PRICE_TINYBARS` is `100000` per **delivered** protocol. Default snapshot (Aave + Compound) is `2` units / `200000` tinybars when both indexers respond. `?protocols=aave-v3-ethereum` is `1` / `100000`. Fail-soft (one indexer down) burns the delivered count and refunds the unused prepaid tinybars to the payer.
+Recompute: `GET` the Mirror Node URL, base64-decode each `message`, then check `units * priceTinybarsPerUnit = tinybars`. If `prepaidTinybars` is present, `prepaidTinybars - tinybars = refundTinybars`. `PRICE_TINYBARS` is `100000` per **delivered** protocol. Default snapshot (Aave + Compound) is `2` units / `200000` tinybars when both indexers respond. `?protocols=aave-v3-ethereum` is `1` / `100000`. Fail-soft (unpinned or indexer down) burns the delivered count and refunds unused prepaid tinybars to the payer. Live remainder (1 prepaid, 0 delivered): settle https://hashscan.io/testnet/tx/0.0.7162784@1789114039.103448687 · refund https://hashscan.io/testnet/tx/0.0.10463755@1789114039.622724528.
 
 HashScan of the HBAR transfer is the pay. The topic is the audit.
 
@@ -210,11 +213,11 @@ Fee-payer is **not** configured here. The Gate reads it from live `GET /supporte
 - **B10** Gate asks Brain before Blocky402 settle. Deny / skipped TEE → HTTP 403, no merchandise, no HCS bill. Allow → existing pay path. `GET /desk/brain?tinybars=` and `npm run brain -- 100000`.
 - **B11** judge / operator blotter on `/`. Paste a name (none shipped). Open desk → descriptor + TEE reason + unpaid 402. Pay (server-side buyer keys) → snapshot + HashScan + HCS topic. Deny / empty / error banners. `GET /desk/inspect?name=` and `POST /desk/pay`.
 - **B12** submission pack: README timestamps → Hedera / ENS / Chainlink §9 lists in [`docs/submission.md`](docs/submission.md). Public repo. AI attributed. Form trio unchanged.
-- **B13** unused-remainder refund (Pinout shape, one topic). Credit is the settled tinybars. Burn is delivered protocols. Seller HBAR `TransferTransaction` returns unused tinybars. HCS stores prepaid / owed / refund. Blotter station 06. Not dual-topic HIP-991.
+- **B13** unused-remainder refund (Pinout shape, one topic). Credit is the settled tinybars. Burn is delivered protocols. Seller HBAR `TransferTransaction` returns unused tinybars. HCS stores prepaid / owed / refund. Blotter station 06. Live fail-soft: settle `0.0.7162784@1789114039.103448687`, refund `0.0.10463755@1789114039.622724528`. Not dual-topic HIP-991.
 - **B14** harness DX: in-place `init` adopt planted Yarn/Next into this npm Express desk. Open PR https://github.com/hedera-dev/hedera-harness/pull/59 (target `dev`, not merged). Follow-up commit: Scaffold-HBAR static checks are dropped on npm adopt; `constraints.packageManager` is written; only newly written `.harness/` files are adapted. No `.harness/` in this repo. No harness demo video.
-- **B15** same CRE HTTP TEE handler emits unsigned `join()` to live ChallengeLending `0x88574e7Cc0027afd04951daa09B64d4441931ba1`. Simulate log `docs/partners/chainlink/simulate-join.log`. Not `writeReport`. Not a cloned liquidation template. No join tx broadcast.
+- **B15** same CRE HTTP TEE handler emits unsigned `join()` to live ChallengeLending `0x88574e7Cc0027afd04951daa09B64d4441931ba1`. Simulate log `docs/partners/chainlink/simulate-join.log`. `npm run join` broadcasts that calldata. **join() tx: 0x980aaffe6d62561964a42675f7831adbca09cf442c7db0cede9255e2ed5e3086**. Not `writeReport`. Not a cloned liquidation template.
 - **B16** Sunday form swap evaluated. No swap. Form stays Hedera · ENS · Chainlink. Graph composition is merchandise, not a prize SKILL. World Selfie flag was not on.
-- **Judge pass** public desk Brain was `TEE unavailable` (no `CRE_PROJECT_DIR`). Desk now defaults to `./cre` + `cre/.env`. Health reports `brain.source`. Blotter shows live protocol TVL, per-bill recompute, and unsigned `join()`. CI: `.github/workflows/test.yml`. Latest TEE-gated pay: https://hashscan.io/testnet/tx/0.0.7162784@1789111350.366520040
+- **Judge pass** public desk Brain was `TEE unavailable` (no `CRE_PROJECT_DIR`). Desk now defaults to `./cre` + `cre/.env`. Health reports `brain.source`. Blotter shows live protocol TVL, per-bill recompute, and unsigned `join()`. CI: `.github/workflows/test.yml`. Latest TEE-gated Aave pay: https://hashscan.io/testnet/tx/0.0.7162784@1789111350.366520040. Remainder refund: https://hashscan.io/testnet/tx/0.0.10463755@1789114039.622724528. Live `join()`: https://sepolia.etherscan.io/tx/0x980aaffe6d62561964a42675f7831adbca09cf442c7db0cede9255e2ed5e3086
 
 **Next**
 
@@ -223,7 +226,6 @@ Fee-payer is **not** configured here. The Gate reads it from live `GET /supporte
 **Blockers (human, not code)**
 
 - Public judge URL: current ngrok origin dies when the local desk stops. Host `npm start` and set `PUBLIC_DESK_URL` for a stable link.
-- Live `join()` on Sepolia: a wallet must broadcast the unsigned calldata. The CRE handler does not hold `CRE_ETH_PRIVATE_KEY`.
 - Never commit `.env` (Graph key, Hedera keys, Sepolia keys, CRE secrets).
 
 **Not blockers**

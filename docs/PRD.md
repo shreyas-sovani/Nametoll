@@ -5,6 +5,7 @@
 **Form picks (locked):** Hedera · ENS · Chainlink  
 **Not on the form:** World, The Graph, everyone else  
 **Sunday (B16):** no swap. Simulate logs exist, so Chainlink stays. Graph is merchandise without a prize SKILL. World Selfie flag was not on.  
+**Live 11 Sep 2026:** TEE-gated pay, unused-remainder refund, and ChallengeLending `join()` are on explorers (`docs/submission.md`). Human remaining: 2–4 min video and a stable `PUBLIC_DESK_URL`.  
 
 Nametoll is a **named pay desk**. An agent resolves a live ENSv2 name, a CRE TEE decides whether it may spend, Hedera takes HBAR through Blocky402, and the bill is on HCS. Graph data is the merchandise, not a prize slot.
 

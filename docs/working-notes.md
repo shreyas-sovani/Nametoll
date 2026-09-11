@@ -185,7 +185,7 @@ Form stays Hedera + ENS + Chainlink. World and Graph are not on the form.
 - Filled `docs/analysis.md` §9 rows: `docs/submission.md`.
 - Public repo: https://github.com/shreyas-sovani/Nametoll
 - AI attributed in the README. Human still records the video.
-- `join()` unsigned calldata on the same CRE engine. No join tx. Harness PR: https://github.com/hedera-dev/hedera-harness/pull/59 (open against `dev`, not merged). No harness demo video.
+- `join()` unsigned calldata on the same CRE engine. Live broadcast: https://sepolia.etherscan.io/tx/0x980aaffe6d62561964a42675f7831adbca09cf442c7db0cede9255e2ed5e3086. Harness PR: https://github.com/hedera-dev/hedera-harness/pull/59 (open against `dev`, not merged). No harness demo video.
 
 ## Unused-remainder refund (B13)
 
@@ -197,7 +197,7 @@ Pinout shape, not a Pinout clone. One 402 still opens a credit pool. The snapsho
 - Refund rail is a seller-signed HBAR `TransferTransaction` (`@hiero-ledger/sdk`). Not a Blocky402 refund route. Seller must hold enough HBAR to cover unused remainder.
 - Blotter station 06 (`#station-remainder`) shows prepaid / burned / owed / refund / refundTx.
 - Proved in `test/refund.test.ts` against a fake facilitator + in-memory refund rail (payer `0.0.1`, fail-soft 2 prepaid → 1 delivered → `100000` refunded).
-- No live refund HashScan in this note. Do not invent one. A public-desk fail-soft pay (or an allow that covers 2 protocols when one indexer is down) is what would produce it. The live CRE cap `150000` still denies a 2-protocol settle, so a live remainder on camera is 1-protocol fail-soft (0 delivered → full refund) unless the cap is raised.
+- Live 11 Sep 2026, TEE cap still `150000` so 2-protocol settle stays denied. Remainder on the live desk is 1-protocol fail-soft (`npm run buyer -- http://127.0.0.1:8787 not-a-real-protocol`): prepaid `100000`, delivered `0`, refund `100000`. Settle https://hashscan.io/testnet/tx/0.0.7162784@1789114039.103448687. Refund CRYPTOTRANSFER https://hashscan.io/testnet/tx/0.0.10463755@1789114039.622724528 (seller `0.0.10463755` → buyer `0.0.10463842`, `100000` tinybars, SUCCESS). HCS `units` 0 / `tinybars` 0 / `prepaidTinybars` 100000 / `refundTinybars` 100000, recompute matches.
 
 ## Harness init-adopt (B14)
 
@@ -213,11 +213,11 @@ Fix (upstream, not this tree): https://github.com/hedera-dev/hedera-harness/pull
 
 Same CRE engine as B9 (`cre/nametoll-brain`), not a second cloned `automated-liquidation-protection` workflow. `join()` ABI is `function join() external` from the official [ChallengeLending.sol](https://github.com/solangegueiros/cf-liquidation-protection-challenge/blob/main/contracts/ChallengeLending.sol).
 
-- Live official address (challenge README + `frontend/addresses.ts`, 11 Sep 2026): `0x88574e7Cc0027afd04951daa09B64d4441931ba1`. `challengeOpen` = true, `numUsers` = 5.
+- Live official address (challenge README + `frontend/addresses.ts`, 11 Sep 2026): `0x88574e7Cc0027afd04951daa09B64d4441931ba1`. `challengeOpen` = true, `numUsers` = 6 after Nametoll `join()`.
 - ETHOnline prizes.txt scrape `0x59d5B29FbA5ca865a171076BE94EbEeC5BCA1E04` is an older ChallengeLending; `numUsers()` reverts. Not used.
 - Same HTTP `handlerInTee`. Payload `{ "action": "join" }` still calls `getSecret`, then returns unsigned `{ to, data: 0xb688a363, chainId: 11155111, chain: ethereum-testnet-sepolia }`. Spend payloads unchanged.
 - Not CRE `writeReport` (that is for report consumers, not this `join()`).
-- Simulate: `docs/partners/chainlink/simulate-join.log`. No join tx broadcast. A Sepolia wallet still has to send the calldata. Do not invent a HashScan.
+- Simulate: `docs/partners/chainlink/simulate-join.log`. `GET /desk/join` stays unsigned. `npm run join` broadcasts the same calldata with `ACC_1_PRIV_KEY` (owner). Live 11 Sep 2026: https://sepolia.etherscan.io/tx/0x980aaffe6d62561964a42675f7831adbca09cf442c7db0cede9255e2ed5e3086 from `0xD2aA21AF4faa840Dea890DB2C6649AACF2C80Ff3`. `isUser` true, `numUsers` 6. CRE handler still does not hold `CRE_ETH_PRIVATE_KEY`.
 
 ## Sunday form swap (B16)
 
@@ -244,7 +244,7 @@ Fixes (still fail-closed if CRE is missing):
 - `GET /health` reports `brain.source`, `merchandise` live/stub, `canPay`.
 - Inspect includes a recompute preview. Paid payload includes merchandise protocol/TVL rows and an audited bill.
 - `/desk/ledger` bills include `hashscanUrl` and `recompute.matches`.
-- Blotter station 07 / `GET /desk/join` — unsigned calldata from the same CRE engine. No broadcast.
+- Blotter station 07 / `GET /desk/join` — unsigned calldata from the same CRE engine. Broadcast is `npm run join`, not this GET.
 - GitHub Actions `.github/workflows/test.yml` (`npm test` + `tsc`).
 
 Replayed on the public origin after restart:
@@ -254,7 +254,9 @@ Replayed on the public origin after restart:
 | `/health` | `brain.source: simulate`, `merchandise: live`, `canPay: true` |
 | 1 protocol inspect | TEE **allow**, HTTP 402 `100000` |
 | 2 protocol inspect | TEE **deny** over cap, 402 still `200000`, Pay locked |
-| `GET /desk/join` | `{ to: 0x88574e7C…, data: 0xb688a363, chainId: 11155111 }` no tx |
+| `GET /desk/join` | `{ to: 0x88574e7C…, data: 0xb688a363, chainId: 11155111 }` unsigned |
+| Live `join()` | https://sepolia.etherscan.io/tx/0x980aaffe6d62561964a42675f7831adbca09cf442c7db0cede9255e2ed5e3086 |
+| Remainder fail-soft | settle `0.0.7162784@1789114039.103448687`, refund `0.0.10463755@1789114039.622724528` |
 | Blotter `POST /desk/pay` 1 protocol | settle `0.0.7162784@1789111350.366520040` — https://hashscan.io/testnet/tx/0.0.7162784@1789111350.366520040 — live Aave TVL, HCS `lending-risk` `1 * 100000` matches |
 
-Ngrok is still session-scoped. Remainder still has no live fail-soft HashScan (2-protocol pay is over cap). Do not invent one.
+Ngrok is still session-scoped. Remainder and `join()` now have live explorer evidence (above). Video recording and a stable `PUBLIC_DESK_URL` stay human tasks.
