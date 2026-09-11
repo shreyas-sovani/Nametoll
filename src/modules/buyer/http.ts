@@ -6,6 +6,16 @@ import { protocolIdsFromQuery } from "../gate/meter.ts";
 import type { Ledger } from "../ledger/index.ts";
 import type { Buyer } from "./index.ts";
 import { inspectNamedDesk, payNamedDesk } from "./drive.ts";
+import {
+  createPayRateLimiter,
+  DEFAULT_PAY_GLOBAL_MAX,
+  DEFAULT_PAY_RATE_MAX,
+  DEFAULT_PAY_RATE_WINDOW_MS,
+  PAY_SECRET_COOKIE,
+  PAY_SECRET_HEADER,
+  readCookie,
+  secretsMatch,
+} from "./pay-guard.ts";
 
 export const INSPECT_PATH = "/desk/inspect";
 export const PAY_PATH = "/desk/pay";
@@ -19,6 +29,12 @@ export type BuyerHttpDeps = {
 };
 
 export function mountBuyer(app: Express, deps: BuyerHttpDeps): void {
+  const limiter = createPayRateLimiter({
+    max: deps.config.deskPayRateMax ?? DEFAULT_PAY_RATE_MAX,
+    windowMs: deps.config.deskPayRateWindowMs ?? DEFAULT_PAY_RATE_WINDOW_MS,
+    globalMax: deps.config.deskPayGlobalMax ?? DEFAULT_PAY_GLOBAL_MAX,
+  });
+
   app.get(INSPECT_PATH, async (req, res) => {
     const name = typeof req.query.name === "string" ? req.query.name : "";
     if (!name.trim()) {
@@ -40,6 +56,28 @@ export function mountBuyer(app: Express, deps: BuyerHttpDeps): void {
   });
 
   app.post(PAY_PATH, async (req, res) => {
+    const limited = limiter.take(clientKey(req.ip, req.socket.remoteAddress));
+    if (!limited.ok) {
+      res.setHeader("Retry-After", String(limited.retryAfterSec));
+      res.status(429).json({ ok: false, error: "Pay rate limit. Retry shortly." });
+      return;
+    }
+    const expected = deps.config.deskPaySecret;
+    if (expected) {
+      const provided =
+        headerString(req.headers[PAY_SECRET_HEADER]) ??
+        readCookie(
+          typeof req.headers.cookie === "string" ? req.headers.cookie : undefined,
+          PAY_SECRET_COOKIE,
+        );
+      if (!secretsMatch(provided, expected)) {
+        res.status(401).json({
+          ok: false,
+          error: `Pay requires ${PAY_SECRET_HEADER}. GET /desk/inspect stays open.`,
+        });
+        return;
+      }
+    }
     if (!deps.buyer) {
       res.status(503).json({ ok: false, error: "Buyer signer is not configured on this desk." });
       return;
@@ -68,7 +106,7 @@ export function mountBuyer(app: Express, deps: BuyerHttpDeps): void {
         res.status(paid.status).json({
           ok: false,
           ...paid.inspect,
-          error: paid.inspect.verdict.reason || "Pay refused",
+          error: paid.error ?? (paid.inspect.verdict.reason || "Pay refused"),
         });
         return;
       }
@@ -77,6 +115,15 @@ export function mountBuyer(app: Express, deps: BuyerHttpDeps): void {
       sendDriveError(res, error);
     }
   });
+}
+
+function clientKey(ip?: string, remoteAddress?: string): string {
+  return ip || remoteAddress || "unknown";
+}
+
+function headerString(value: string | string[] | undefined): string | undefined {
+  if (Array.isArray(value)) return value[0];
+  return value;
 }
 
 function asRecord(value: unknown): Record<string, unknown> {

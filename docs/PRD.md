@@ -35,11 +35,11 @@ This is the product. If a feature is not on this path, it is an explore window o
 3. `GET` the desk. No payment → HTTP 402.
 4. CRE `handlerInTee` loads a secret spend cap (and the data-plane credential). Returns allow / deny / max tinybars. Deny → no settle.
 5. Agent signs x402 v2 `exact` HBAR. Blocky402 `verify` + `settle`. Fee-payer from `GET /supported`.
-6. Desk runs a live multi-protocol lending snapshot. Price scales with protocol count or bytes — not a flat fee.
+6. Desk runs a live multi-protocol lending snapshot. Price scales with protocol count — not a flat fee.
 7. Bill on HCS. README links HashScan settle + topic id. Judge can recompute from Mirror Node.
 
 ```text
-name (ENSv2) → TEE allow (CRE) → pay (Blocky402) → metered bytes → HCS bill
+name (ENSv2) → TEE allow (CRE) → pay (Blocky402) → metered units → HCS bill
 ```
 
 ---

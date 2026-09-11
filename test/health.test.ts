@@ -32,4 +32,16 @@ describe("desk health", () => {
       await desk.close();
     }
   });
+
+  it("reports the TEE verdict TTL so a judge can ask about cache honestly", async () => {
+    const desk = await startDesk({}, publicDeskConfig());
+    try {
+      const body = (await (await fetch(`${desk.url}/health`)).json()) as {
+        brain?: { verdictTtlMs?: number };
+      };
+      expect(body.brain?.verdictTtlMs).toBe(60_000);
+    } finally {
+      await desk.close();
+    }
+  });
 });

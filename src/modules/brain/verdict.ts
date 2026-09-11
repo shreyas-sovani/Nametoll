@@ -26,3 +26,11 @@ export function decideSpend(
 export function unavailableVerdict(): BrainVerdict {
   return { allow: false, maxTinybars: "0", reason: "TEE unavailable" };
 }
+
+export function isUnavailableVerdict(verdict: BrainVerdict): boolean {
+  return (
+    verdict.allow === false &&
+    verdict.maxTinybars === "0" &&
+    /unavailable/i.test(verdict.reason)
+  );
+}

@@ -3,7 +3,7 @@
 Named pay desk for ETHOnline 2026. An agent pays a live desk it found by name:
 
 ```text
-name (ENSv2) → TEE allow (CRE) → pay (Blocky402) → metered bytes → HCS bill
+name (ENSv2) → TEE allow (CRE) → pay (Blocky402) → metered units → HCS bill
 ```
 
 **Form picks:** **Hedera** · **ENS** · **Chainlink**. Not on the form: World, The Graph.  
@@ -94,8 +94,13 @@ Judge blotter (B11) is `/` in a desktop browser. Same loop over HTTP:
 curl -sS "http://127.0.0.1:8787/desk/inspect?name=<paste-a-name>&protocols=aave-v3-ethereum"
 curl -sS -X POST http://127.0.0.1:8787/desk/pay \
   -H 'content-type: application/json' \
+  -H "x-desk-pay-secret: ${DESK_PAY_SECRET:-}" \
   -d '{"name":"<paste-a-name>","protocols":["aave-v3-ethereum"]}'
 ```
+
+`GET /desk/inspect` stays open. `POST /desk/pay` spends the operator buyer key, so it is rate-limited, optionally gated by `DESK_PAY_SECRET` (blotter cookie on `/`, or the header above), and pinned to `PUBLIC_DESK_URL` when that is set. Empty `x-desk-pay-secret` is ignored unless the env var is set.
+
+TEE verdicts are **cached per amount** for 60s (`GET /health` → `brain.verdictTtlMs`). Unavailable / simulate failures are not cached. Restart the desk for a fresh attested `cre workflow simulate`. The enclave still gates every amount the first time it is seen in that TTL.
 
 A successful settle prints a HashScan URL (`https://hashscan.io/testnet/tx/<id>`). Live testnet settles and HCS bills are in `docs/working-notes.md`.
 
@@ -218,6 +223,7 @@ Fee-payer is **not** configured here. The Gate reads it from live `GET /supporte
 - **B15** same CRE HTTP TEE handler emits unsigned `join()` to live ChallengeLending `0x88574e7Cc0027afd04951daa09B64d4441931ba1`. Simulate log `docs/partners/chainlink/simulate-join.log`. `npm run join` broadcasts that calldata. **join() tx: 0x980aaffe6d62561964a42675f7831adbca09cf442c7db0cede9255e2ed5e3086**. Not `writeReport`. Not a cloned liquidation template.
 - **B16** Sunday form swap evaluated. No swap. Form stays Hedera · ENS · Chainlink. Graph composition is merchandise, not a prize SKILL. World Selfie flag was not on.
 - **Judge pass** public desk Brain was `TEE unavailable` (no `CRE_PROJECT_DIR`). Desk now defaults to `./cre` + `cre/.env`. Health reports `brain.source`. Blotter shows live protocol TVL, per-bill recompute, and unsigned `join()`. CI: `.github/workflows/test.yml`. Latest TEE-gated Aave pay: https://hashscan.io/testnet/tx/0.0.7162784@1789111350.366520040. Remainder refund: https://hashscan.io/testnet/tx/0.0.10463755@1789114039.622724528. Live `join()`: https://sepolia.etherscan.io/tx/0x980aaffe6d62561964a42675f7831adbca09cf442c7db0cede9255e2ed5e3086
+- **Demo hardening** Brain caches successful verdicts per amount for 60s (unavailable is not cached; simulate killed at 25s; boot warms 1- and 2-unit). `POST /desk/pay` is rate-limited, optionally `DESK_PAY_SECRET`, and pinned to `PUBLIC_DESK_URL`. Pay omits the HCS bill block unless `settleTx` matches. Tagline is metered units.
 
 **Next**
 

@@ -31,6 +31,11 @@ export type AppConfig = {
   creProjectDir?: string;
   creWorkflowName?: string;
   creTarget: string;
+  deskPaySecret?: string;
+  deskPayRateMax?: number;
+  deskPayRateWindowMs?: number;
+  deskPayGlobalMax?: number;
+  billMatchTimeoutMs?: number;
 };
 
 function readEnv(env: NodeJS.ProcessEnv, name: string): string | undefined {
@@ -69,6 +74,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   const creBrainUrl = readEnv(env, "CRE_BRAIN_URL");
   const creProjectDir = readEnv(env, "CRE_PROJECT_DIR");
   const creWorkflowName = readEnv(env, "CRE_WORKFLOW_NAME");
+  const deskPaySecret = readEnv(env, "DESK_PAY_SECRET");
+  const deskPayRateMax = readEnv(env, "DESK_PAY_RATE_MAX");
+  const deskPayRateWindowMs = readEnv(env, "DESK_PAY_RATE_WINDOW_MS");
+  const deskPayGlobalMax = readEnv(env, "DESK_PAY_GLOBAL_MAX");
 
   return {
     port: Number.parseInt(readEnv(env, "PORT") ?? "8787", 10),
@@ -91,5 +100,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     ...(creProjectDir ? { creProjectDir } : {}),
     ...(creWorkflowName ? { creWorkflowName } : {}),
     creTarget: readEnv(env, "CRE_TARGET") ?? "staging-settings",
+    ...(deskPaySecret ? { deskPaySecret } : {}),
+    ...(deskPayRateMax ? { deskPayRateMax: Number.parseInt(deskPayRateMax, 10) } : {}),
+    ...(deskPayRateWindowMs
+      ? { deskPayRateWindowMs: Number.parseInt(deskPayRateWindowMs, 10) }
+      : {}),
+    ...(deskPayGlobalMax ? { deskPayGlobalMax: Number.parseInt(deskPayGlobalMax, 10) } : {}),
   };
 }

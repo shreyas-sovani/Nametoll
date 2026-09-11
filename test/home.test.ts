@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { publicDeskConfig, startDesk } from "./helpers.ts";
+import { PINNED_PROTOCOLS } from "../src/modules/merchandise/deployments.ts";
 
 describe("public desk page", () => {
   it("explains the pay desk without a baked-in name", async () => {
@@ -26,6 +27,22 @@ describe("public desk page", () => {
       const html = await (await fetch(`${desk.url}/`)).text();
       expect(html).toMatch(/0\.0\.4603900/);
       expect(html).toMatch(/\/desk\/ledger/);
+    } finally {
+      await desk.close();
+    }
+  });
+
+  it("meters pinned protocol ids and HashScan URLs from config, not hardcoded testnet refunds", async () => {
+    const desk = await startDesk(
+      { network: "hedera:mainnet" },
+      publicDeskConfig(),
+    );
+    try {
+      const html = await (await fetch(`${desk.url}/`)).text();
+      expect(html).toMatch(new RegExp(PINNED_PROTOCOLS[0]!.id));
+      expect(html).toMatch(new RegExp(PINNED_PROTOCOLS[1]!.id));
+      expect(html).toMatch(/hashscan\.io\/mainnet/);
+      expect(html).not.toMatch(/hashscan\.io\/testnet\/tx\/" \+ bill\.refundTx/);
     } finally {
       await desk.close();
     }

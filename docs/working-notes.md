@@ -260,3 +260,11 @@ Replayed on the public origin after restart:
 | Blotter `POST /desk/pay` 1 protocol | settle `0.0.7162784@1789111350.366520040` — https://hashscan.io/testnet/tx/0.0.7162784@1789111350.366520040 — live Aave TVL, HCS `lending-risk` `1 * 100000` matches |
 
 Ngrok is still session-scoped. Remainder and `join()` now have live explorer evidence (above). Video recording and a stable `PUBLIC_DESK_URL` stay human tasks.
+
+## Demo hardening (11 Sep 2026)
+
+- **Brain cache:** only successful TEE verdicts are memoized, per tinybar amount, 60s TTL (`GET /health` → `brain.verdictTtlMs`). `TEE unavailable` and thrown simulate errors are not stored. `cre workflow simulate` is killed after 25s. Boot warms 1-unit and 2-unit amounts so the first inspect is not a cold 9s simulate.
+- **Pay relay:** `POST /desk/pay` is rate-limited (8/min per IP, 24/min global). `DESK_PAY_SECRET` (optional) requires `x-desk-pay-secret` or the HttpOnly cookie set on `GET /`. When `PUBLIC_DESK_URL` is set, pay refuses names whose descriptor endpoint is a different origin. `GET /desk/inspect` stays open.
+- **Bill attribution:** pay waits up to 5s for an HCS row whose `settleTx` matches. No `bills.at(-1)` fallback — topic HashScan is enough if Mirror lag has not indexed yet.
+- **Copy:** loop tagline is metered units (protocol count), not bytes. Blotter meter uses pinned Messari ids. Remainder HashScan follows `config.network`.
+

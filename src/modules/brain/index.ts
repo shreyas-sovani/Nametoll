@@ -7,7 +7,7 @@ import {
   askCreSimulateJoin,
   askCreSimulateVerdict,
 } from "./simulate.ts";
-import { unavailableVerdict } from "./verdict.ts";
+import { isUnavailableVerdict, unavailableVerdict } from "./verdict.ts";
 
 export type Brain = {
   source?: BrainSource;
@@ -28,7 +28,11 @@ export type BrainOptions = {
   target?: string;
   creBin?: string;
   source?: BrainSource;
+  now?: () => number;
+  verdictTtlMs?: number;
 };
+
+export const VERDICT_TTL_MS = 60_000;
 
 const DEFAULT_WORKFLOW = "nametoll-brain";
 const DEFAULT_TARGET = "staging-settings";
@@ -55,15 +59,20 @@ export function createBrain(options: BrainOptions = {}): Brain {
         : options.projectDir
           ? "simulate"
           : "unavailable");
-  const decideCache = new Map<string, Promise<BrainVerdict>>();
+  const decideCache = new Map<
+    string,
+    { expiresAt: number; value: Promise<BrainVerdict> }
+  >();
   let joinCache: Promise<JoinCall> | undefined;
+  const now = options.now ?? Date.now;
+  const ttlMs = options.verdictTtlMs ?? VERDICT_TTL_MS;
 
   return {
     source,
     async decide(input) {
       const key = input.requestedTinybars;
       const hit = decideCache.get(key);
-      if (hit) return hit;
+      if (hit && hit.expiresAt > now()) return hit.value;
       const pending = (async () => {
         try {
           if (options.ask) return await options.ask(input);
@@ -76,8 +85,12 @@ export function createBrain(options: BrainOptions = {}): Brain {
           return unavailableVerdict();
         }
       })();
-      decideCache.set(key, pending);
-      return pending;
+      decideCache.set(key, { expiresAt: now() + ttlMs, value: pending });
+      const verdict = await pending;
+      if (isUnavailableVerdict(verdict)) {
+        decideCache.delete(key);
+      }
+      return verdict;
     },
     async join() {
       if (joinCache) return joinCache;
@@ -109,7 +122,23 @@ export function createBrainFromConfig(config: AppConfig): Brain {
   });
 }
 
-export { decideSpend, unavailableVerdict } from "./verdict.ts";
+export function warmTinybars(priceTinybars: string): string[] {
+  const unit = BigInt(priceTinybars);
+  return [unit.toString(), (unit * 2n).toString()];
+}
+
+export async function warmBrain(
+  brain: Brain,
+  amounts: readonly string[],
+): Promise<void> {
+  await Promise.all(
+    amounts.map((requestedTinybars) =>
+      brain.decide({ requestedTinybars }).catch(() => undefined),
+    ),
+  );
+}
+
+export { decideSpend, unavailableVerdict, isUnavailableVerdict } from "./verdict.ts";
 export { parseCreSimulateVerdict, redactCreLog, parseCreSimulateJoin } from "./simulate.ts";
 export { withDefaultCreProject, brainSource } from "./defaults.ts";
 export type { BrainSource } from "./defaults.ts";

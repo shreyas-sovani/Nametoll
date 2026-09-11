@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { createBrain } from "../src/modules/brain/index.ts";
-import { decideSpend } from "../src/modules/brain/verdict.ts";
-import { parseCreSimulateVerdict } from "../src/modules/brain/simulate.ts";
+import { createBrain, warmBrain } from "../src/modules/brain/index.ts";
+import { decideSpend, unavailableVerdict } from "../src/modules/brain/verdict.ts";
+import { parseCreSimulateVerdict, runTimedCommand } from "../src/modules/brain/simulate.ts";
 
 describe("brain verdict", () => {
   it("allows when requested tinybars are at or under the secret spend cap", () => {
@@ -44,6 +44,95 @@ describe("brain module", () => {
     const verdict = await brain.decide({ requestedTinybars: "100000" });
     expect(verdict.allow).toBe(false);
     expect(verdict.reason).toMatch(/tee|brain|unavailable|skipped/i);
+  });
+
+  it("does not cache a thrown TEE failure so the next decide can recover", async () => {
+    let calls = 0;
+    const brain = createBrain({
+      ask: async () => {
+        calls += 1;
+        if (calls === 1) throw new Error("cre not logged in");
+        return decideSpend("100000", "150000");
+      },
+    });
+    const first = await brain.decide({ requestedTinybars: "100000" });
+    expect(first.allow).toBe(false);
+    expect(first.reason).toMatch(/unavailable/i);
+    const second = await brain.decide({ requestedTinybars: "100000" });
+    expect(second.allow).toBe(true);
+    expect(second.reason).toBe("under cap");
+    expect(calls).toBe(2);
+  });
+
+  it("does not cache an unavailable verdict returned by the runner", async () => {
+    let calls = 0;
+    const brain = createBrain({
+      ask: async () => {
+        calls += 1;
+        return unavailableVerdict();
+      },
+    });
+    await brain.decide({ requestedTinybars: "100000" });
+    await brain.decide({ requestedTinybars: "100000" });
+    expect(calls).toBe(2);
+  });
+
+  it("caches a successful TEE allow and a real over-cap deny", async () => {
+    const calls: string[] = [];
+    const brain = createBrain({
+      ask: async ({ requestedTinybars }) => {
+        calls.push(requestedTinybars);
+        return decideSpend(requestedTinybars, "150000");
+      },
+    });
+    expect((await brain.decide({ requestedTinybars: "100000" })).allow).toBe(true);
+    expect((await brain.decide({ requestedTinybars: "100000" })).allow).toBe(true);
+    expect((await brain.decide({ requestedTinybars: "200000" })).allow).toBe(false);
+    expect((await brain.decide({ requestedTinybars: "200000" })).reason).toBe("over cap");
+    expect(calls).toEqual(["100000", "200000"]);
+  });
+
+  it("expires a cached verdict after the TTL so a later decide re-asks the TEE", async () => {
+    let now = 0;
+    let calls = 0;
+    const brain = createBrain({
+      now: () => now,
+      verdictTtlMs: 1_000,
+      ask: async () => {
+        calls += 1;
+        return decideSpend("100000", "150000");
+      },
+    });
+    await brain.decide({ requestedTinybars: "100000" });
+    now = 999;
+    await brain.decide({ requestedTinybars: "100000" });
+    expect(calls).toBe(1);
+    now = 1_000;
+    await brain.decide({ requestedTinybars: "100000" });
+    expect(calls).toBe(2);
+  });
+
+  it("warms 1-unit and 2-unit amounts so a later decide is a cache hit", async () => {
+    const calls: string[] = [];
+    const brain = createBrain({
+      ask: async ({ requestedTinybars }) => {
+        calls.push(requestedTinybars);
+        return decideSpend(requestedTinybars, "150000");
+      },
+    });
+    await warmBrain(brain, ["100000", "200000"]);
+    expect(calls).toEqual(["100000", "200000"]);
+    expect((await brain.decide({ requestedTinybars: "100000" })).allow).toBe(true);
+    expect((await brain.decide({ requestedTinybars: "200000" })).allow).toBe(false);
+    expect(calls).toEqual(["100000", "200000"]);
+  });
+
+  it("kills a hung cre child after the simulate timeout", async () => {
+    const started = Date.now();
+    await expect(
+      runTimedCommand("sleep", ["30"], process.cwd(), 200),
+    ).rejects.toThrow(/timed out/i);
+    expect(Date.now() - started).toBeLessThan(5_000);
   });
 
   it("parses a quoted CRE simulate result string", () => {

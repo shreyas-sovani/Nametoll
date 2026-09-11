@@ -1,6 +1,8 @@
 import type { AppConfig } from "../config.ts";
 import { SNAPSHOT_PATH } from "../modules/gate/index.ts";
 import { hashscanTopicUrl, explorerNetwork } from "../modules/ledger/hashscan.ts";
+import { PINNED_PROTOCOLS } from "../modules/merchandise/deployments.ts";
+import { VERDICT_TTL_MS } from "../modules/brain/index.ts";
 
 export type HomePageOptions = {
   canPay?: boolean;
@@ -24,6 +26,8 @@ export function renderHomePage(
     ? hashscanTopicUrl(topic, explorerNetwork(config.network))
     : "";
   const canPay = options.canPay === true;
+  const network = explorerNetwork(config.network);
+  const pinnedIds = PINNED_PROTOCOLS.map((protocol) => protocol.id);
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -194,6 +198,7 @@ export function renderHomePage(
         <dt>brain</dt><dd><code>/desk/brain?tinybars=</code></dd>
         <dt>inspect</dt><dd><code>/desk/inspect?name=</code></dd>
         <dt>pay</dt><dd><code>POST /desk/pay</code></dd>
+        <dt>TEE cache</dt><dd>per amount, ${Math.round(VERDICT_TTL_MS / 1000)}s TTL; unavailable is not cached</dd>
         <dt>merchandise</dt><dd>Messari lending · live Aave v3 + Compound III · billed per delivered protocol · unused remainder refunded</dd>
         <dt>facilitator</dt><dd>${escapeHtml(config.facilitatorUrl)}</dd>
       </dl>
@@ -268,11 +273,14 @@ export function renderHomePage(
         var deny = document.getElementById("desk-deny");
         var ok = document.getElementById("desk-ok");
         var lastInspect = null;
+        var pinnedProtocols = ${JSON.stringify(pinnedIds)};
+        var hashscanTxPrefix = ${JSON.stringify(`https://hashscan.io/${network}/tx/`)};
         if (!form || !openBtn || !payBtn || !joinBtn) return;
 
         function protocols() {
           var units = document.getElementById("desk-units");
-          return units && units.value === "1" ? ["aave-v3-ethereum"] : [];
+          if (units && units.value === "1") return pinnedProtocols.slice(0, 1);
+          return pinnedProtocols.slice();
         }
         function typedName() {
           var value = new FormData(form).get("name");
@@ -403,9 +411,9 @@ export function renderHomePage(
             ["expected", rec.expectedTinybars],
             ["matches", rec.matches != null ? String(rec.matches) : ""]
           ]);
-          var refundUrl = bill.refundTx
-            ? "https://hashscan.io/testnet/tx/" + bill.refundTx
-            : "";
+          var refundUrl = bill.refundHashscanUrl || (bill.refundTx
+            ? (hashscanTxPrefix + bill.refundTx)
+            : "");
           fillDl("remainder-out", [
             ["prepaid", bill.prepaidTinybars],
             ["burned units", bill.units != null ? String(bill.units) : ""],
@@ -462,6 +470,7 @@ export function renderHomePage(
           payBtn.textContent = "Paying…";
           fetch("/desk/pay", {
             method: "POST",
+            credentials: "same-origin",
             headers: { "content-type": "application/json", accept: "application/json" },
             body: JSON.stringify({ name: name, protocols: protocols() })
           })

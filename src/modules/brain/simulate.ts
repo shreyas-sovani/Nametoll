@@ -96,6 +96,7 @@ export type SimulateAskOptions = {
   workflowName: string;
   target: string;
   creBin?: string;
+  timeoutMs?: number;
 };
 
 export type CreHttpInput = {
@@ -125,7 +126,12 @@ export async function askCreSimulate(
     options.target,
   ];
 
-  return runCommand(bin, args, options.projectDir);
+  return runTimedCommand(
+    bin,
+    args,
+    options.projectDir,
+    options.timeoutMs ?? CRE_SIMULATE_TIMEOUT_MS,
+  );
 }
 
 export async function askCreSimulateVerdict(
@@ -150,7 +156,14 @@ function creSpawnEnv(): NodeJS.ProcessEnv {
   };
 }
 
-function runCommand(bin: string, args: string[], cwd: string): Promise<string> {
+export const CRE_SIMULATE_TIMEOUT_MS = 25_000;
+
+export function runTimedCommand(
+  bin: string,
+  args: string[],
+  cwd: string,
+  timeoutMs: number = CRE_SIMULATE_TIMEOUT_MS,
+): Promise<string> {
   return new Promise((resolve, reject) => {
     const child = spawn(bin, args, {
       cwd,
@@ -158,14 +171,27 @@ function runCommand(bin: string, args: string[], cwd: string): Promise<string> {
       stdio: ["ignore", "pipe", "pipe"],
     });
     let out = "";
+    let timedOut = false;
+    const timer = setTimeout(() => {
+      timedOut = true;
+      child.kill("SIGKILL");
+    }, timeoutMs);
     child.stdout.on("data", (chunk: Buffer) => {
       out += chunk.toString("utf8");
     });
     child.stderr.on("data", (chunk: Buffer) => {
       out += chunk.toString("utf8");
     });
-    child.on("error", reject);
+    child.on("error", (error) => {
+      clearTimeout(timer);
+      reject(error);
+    });
     child.on("close", (code) => {
+      clearTimeout(timer);
+      if (timedOut) {
+        reject(new Error(`cre workflow simulate timed out after ${timeoutMs}ms`));
+        return;
+      }
       if (code !== 0) {
         reject(new Error(`cre workflow simulate exited ${code}\n${out}`));
         return;

@@ -28,6 +28,7 @@ const REQUIRED_NAMES = [
   "ACC_1_PRIV_KEY",
   "ACC3_PRIV_KEY",
   "ETH_RPC_URL",
+  "DESK_PAY_SECRET",
 ];
 
 describe(".env.example", () => {

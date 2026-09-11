@@ -313,4 +313,214 @@ describe("POST /desk/pay", () => {
       await facilitator.close();
     }
   });
+
+  it("rate-limits POST /desk/pay and leaves GET /desk/inspect open", async () => {
+    const facilitator = await startFakeFacilitator();
+    const desk = await startDesk({ facilitatorUrl: facilitator.url });
+    try {
+      const wired = await startDesk(
+        {
+          facilitatorUrl: facilitator.url,
+          deskPayRateMax: 2,
+          deskPayRateWindowMs: 60_000,
+          deskPayGlobalMax: 2,
+        },
+        undefined,
+        {
+          directory: directoryFor(desk.url),
+          buyer: testBuyer(),
+        },
+      );
+      try {
+        const pay = () =>
+          fetch(`${wired.url}/desk/pay`, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ name: FIXTURE_NAME }),
+          });
+        expect((await pay()).status).toBe(200);
+        expect((await pay()).status).toBe(200);
+        const blocked = await pay();
+        expect(blocked.status).toBe(429);
+        const inspect = await fetch(
+          `${wired.url}/desk/inspect?name=${encodeURIComponent(FIXTURE_NAME)}`,
+        );
+        expect(inspect.status).toBe(200);
+      } finally {
+        await wired.close();
+      }
+    } finally {
+      await desk.close();
+      await facilitator.close();
+    }
+  });
+
+  it("requires the pay secret header when configured and still serves inspect", async () => {
+    const facilitator = await startFakeFacilitator();
+    const desk = await startDesk({ facilitatorUrl: facilitator.url });
+    try {
+      const wired = await startDesk(
+        {
+          facilitatorUrl: facilitator.url,
+          deskPaySecret: "judge-demo-secret",
+        },
+        undefined,
+        {
+          directory: directoryFor(desk.url),
+          buyer: testBuyer(),
+        },
+      );
+      try {
+        const denied = await fetch(`${wired.url}/desk/pay`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ name: FIXTURE_NAME }),
+        });
+        expect(denied.status).toBe(401);
+        const inspect = await fetch(
+          `${wired.url}/desk/inspect?name=${encodeURIComponent(FIXTURE_NAME)}`,
+        );
+        expect(inspect.status).toBe(200);
+        const paid = await fetch(`${wired.url}/desk/pay`, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-desk-pay-secret": "judge-demo-secret",
+          },
+          body: JSON.stringify({ name: FIXTURE_NAME }),
+        });
+        expect(paid.status).toBe(200);
+      } finally {
+        await wired.close();
+      }
+    } finally {
+      await desk.close();
+      await facilitator.close();
+    }
+  });
+
+  it("accepts the HttpOnly pay cookie from GET / when a secret is configured", async () => {
+    const facilitator = await startFakeFacilitator();
+    const desk = await startDesk({ facilitatorUrl: facilitator.url });
+    try {
+      const wired = await startDesk(
+        {
+          facilitatorUrl: facilitator.url,
+          deskPaySecret: "cookie-secret",
+        },
+        undefined,
+        {
+          directory: directoryFor(desk.url),
+          buyer: testBuyer(),
+        },
+      );
+      try {
+        const home = await fetch(`${wired.url}/`);
+        const cookie = home.headers.getSetCookie?.()[0] ?? home.headers.get("set-cookie");
+        expect(cookie).toMatch(/nametoll_pay=/);
+        const paid = await fetch(`${wired.url}/desk/pay`, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            cookie: cookie!.split(";")[0]!,
+          },
+          body: JSON.stringify({ name: FIXTURE_NAME }),
+        });
+        expect(paid.status).toBe(200);
+      } finally {
+        await wired.close();
+      }
+    } finally {
+      await desk.close();
+      await facilitator.close();
+    }
+  });
+
+  it("refuses to spend buyer HBAR at an endpoint that is not the public desk", async () => {
+    const facilitator = await startFakeFacilitator();
+    const desk = await startDesk({ facilitatorUrl: facilitator.url });
+    try {
+      const wired = await startDesk(
+        {
+          facilitatorUrl: facilitator.url,
+          publicDeskUrl: "https://nametoll.example",
+        },
+        undefined,
+        {
+          directory: directoryFor(desk.url),
+          buyer: testBuyer(),
+        },
+      );
+      try {
+        const res = await fetch(`${wired.url}/desk/pay`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ name: FIXTURE_NAME }),
+        });
+        expect(res.status).toBe(403);
+        const body = (await res.json()) as { ok?: boolean; error?: string; paid?: unknown };
+        expect(body.ok).toBe(false);
+        expect(body.error).toMatch(/pinned|this desk|endpoint/i);
+        expect(body.paid).toBeUndefined();
+        const inspect = await fetch(
+          `${wired.url}/desk/inspect?name=${encodeURIComponent(FIXTURE_NAME)}`,
+        );
+        expect(inspect.status).toBe(200);
+      } finally {
+        await wired.close();
+      }
+    } finally {
+      await desk.close();
+      await facilitator.close();
+    }
+  });
+
+  it("omits the HCS bill block when settleTx is not on the topic yet", async () => {
+    const facilitator = await startFakeFacilitator();
+    const stale = createMemoryLedger("0.0.10464309");
+    await stale.append({
+      requestId: "11111111-1111-4111-8111-111111111111",
+      name: "old-unrelated",
+      units: 2,
+      tinybars: "200000",
+      settleTx: "0.0.9@1111111111.000000001",
+    });
+    const desk = await startDesk({ facilitatorUrl: facilitator.url });
+    try {
+      const wired = await startDesk(
+        {
+          facilitatorUrl: facilitator.url,
+          hcsTopicId: "0.0.10464309",
+          billMatchTimeoutMs: 0,
+        },
+        undefined,
+        {
+          directory: directoryFor(desk.url),
+          buyer: testBuyer(),
+          ledger: stale,
+        },
+      );
+      try {
+        const res = await fetch(`${wired.url}/desk/pay`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ name: FIXTURE_NAME }),
+        });
+        expect(res.status).toBe(200);
+        const body = (await res.json()) as {
+          paid?: { settleTx?: string };
+          bill?: { settleTx?: string; name?: string };
+          topicId?: string;
+        };
+        expect(body.paid?.settleTx).toBe("0.0.1@1234567890.000000001");
+        expect(body.bill).toBeUndefined();
+        expect(body.topicId).toBe("0.0.10464309");
+      } finally {
+        await wired.close();
+      }
+    } finally {
+      await desk.close();
+      await facilitator.close();
+    }
+  });
 });

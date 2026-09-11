@@ -3,6 +3,9 @@ import type { AppConfig } from "../config.ts";
 import {
   createBrainFromConfig,
   type Brain,
+  warmBrain,
+  warmTinybars,
+  VERDICT_TTL_MS,
 } from "../modules/brain/index.ts";
 import { mountBrain } from "../modules/brain/http.ts";
 import { createDirectory, type Directory } from "../modules/directory/index.ts";
@@ -21,6 +24,7 @@ import { mountBuyer } from "../modules/buyer/http.ts";
 import { MODULE_NAMES } from "../types.ts";
 import { renderHomePage } from "./homePage.ts";
 import { JOIN_PATH } from "../modules/brain/http.ts";
+import { paySecretCookie } from "../modules/buyer/pay-guard.ts";
 
 export type AppDeps = {
   ledger?: Ledger;
@@ -77,6 +81,8 @@ export async function createApp(
       ? createHbarRefundRail(config)
       : undefined);
 
+  void warmBrain(brain, warmTinybars(config.priceTinybars));
+
   app.use(express.json());
 
   app.get("/health", (_req, res) => {
@@ -88,6 +94,7 @@ export async function createApp(
       brain: {
         source,
         configured: source !== "unavailable",
+        verdictTtlMs: VERDICT_TTL_MS,
       },
       merchandise: config.graphGatewayKey ? "live" : "stub",
       canPay: Boolean(buyer),
@@ -95,7 +102,10 @@ export async function createApp(
     });
   });
 
-  app.get("/", (_req, res) => {
+  app.get("/", (req, res) => {
+    if (config.deskPaySecret) {
+      res.setHeader("Set-Cookie", paySecretCookie(config.deskPaySecret, req.secure));
+    }
     res.type("html").send(renderHomePage(config, { canPay: Boolean(buyer) }));
   });
 

@@ -6,9 +6,11 @@ import { meterTinybars, requestedUnits } from "../gate/meter.ts";
 import { explorerNetwork, hashscanTopicUrl } from "../ledger/hashscan.ts";
 import { auditBill, previewRecompute, type BillAudit } from "../ledger/audit.ts";
 import type { Ledger } from "../ledger/index.ts";
+import { waitForMatchingBill } from "../ledger/match-bill.ts";
 import { viewMerchandise, type MerchandiseView } from "../merchandise/view.ts";
 import type { Buyer, PaidResult } from "./index.ts";
 import { fetchSnapshotChallenge, type SnapshotChallenge } from "./challenge.ts";
+import { payEndpointAllowed } from "./pay-guard.ts";
 
 export type DeskInspect = {
   name: string;
@@ -63,7 +65,7 @@ export async function payNamedDesk(
   protocols?: string[],
 ): Promise<
   | { ok: true; result: DeskPayResult }
-  | { ok: false; status: number; inspect: DeskInspect }
+  | { ok: false; status: number; inspect: DeskInspect; error?: string }
 > {
   const inspect = await inspectNamedDesk(
     name,
@@ -75,6 +77,14 @@ export async function payNamedDesk(
   if (!inspect.verdict.allow) {
     return { ok: false, status: 403, inspect };
   }
+  if (!payEndpointAllowed(inspect.descriptor.endpoint, config.publicDeskUrl)) {
+    return {
+      ok: false,
+      status: 403,
+      inspect,
+      error: "Pay is pinned to this desk's public URL.",
+    };
+  }
   const paid = await buyer.payFromName(
     name,
     directory,
@@ -83,9 +93,13 @@ export async function payNamedDesk(
   if (paid.status !== 200 || !paid.settleTx) {
     return { ok: false, status: paid.status || 502, inspect };
   }
-  const bills = ledger ? await ledger.list() : [];
-  const bill =
-    bills.find((row) => row.settleTx === paid.settleTx) ?? bills.at(-1);
+  const bill = await waitForMatchingBill(
+    ledger,
+    paid.settleTx,
+    config.billMatchTimeoutMs !== undefined
+      ? { timeoutMs: config.billMatchTimeoutMs }
+      : {},
+  );
   const topicId = ledger?.topicId ?? config.hcsTopicId ?? inspect.descriptor.hcsTopic;
   const network = explorerNetwork(config.network);
   return {
