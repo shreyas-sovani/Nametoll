@@ -67,6 +67,7 @@ export function encodeBillPayload(draft: BillDraft): string {
     ...(draft.refundTx !== undefined ? { refundTx: draft.refundTx } : {}),
     ...(draft.verdictReason !== undefined ? { verdictReason: draft.verdictReason } : {}),
     ...(draft.verdictHash !== undefined ? { verdictHash: draft.verdictHash } : {}),
+    ...(draft.scheduleId !== undefined ? { scheduleId: draft.scheduleId } : {}),
   });
 }
 
@@ -110,5 +111,6 @@ export function billFromMirrorMessage(
       ? { verdictReason: record.verdictReason }
       : {}),
     ...(typeof record.verdictHash === "string" ? { verdictHash: record.verdictHash } : {}),
+    ...(typeof record.scheduleId === "string" ? { scheduleId: record.scheduleId } : {}),
   };
 }

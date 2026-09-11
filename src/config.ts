@@ -37,6 +37,7 @@ export type AppConfig = {
   deskPayRateWindowMs?: number;
   deskPayGlobalMax?: number;
   billMatchTimeoutMs?: number;
+  htsTokenId?: string;
 };
 
 function readEnv(env: NodeJS.ProcessEnv, name: string): string | undefined {
@@ -80,6 +81,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   const deskPayRateMax = readEnv(env, "DESK_PAY_RATE_MAX");
   const deskPayRateWindowMs = readEnv(env, "DESK_PAY_RATE_WINDOW_MS");
   const deskPayGlobalMax = readEnv(env, "DESK_PAY_GLOBAL_MAX");
+  const htsTokenId = readEnv(env, "HTS_TOKEN_ID");
 
   return {
     port: Number.parseInt(readEnv(env, "PORT") ?? "8787", 10),
@@ -109,5 +111,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       ? { deskPayRateWindowMs: Number.parseInt(deskPayRateWindowMs, 10) }
       : {}),
     ...(deskPayGlobalMax ? { deskPayGlobalMax: Number.parseInt(deskPayGlobalMax, 10) } : {}),
+    ...(htsTokenId ? { htsTokenId } : {}),
   };
 }

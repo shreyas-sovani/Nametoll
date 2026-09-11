@@ -128,6 +128,10 @@ export function renderLandingPage(
           <h3>Public bill</h3>
           <p>Anyone with the topic id can recompute <code>units * priceTinybarsPerUnit = tinybars</code> from Mirror Node.</p>
         </div>
+        <div>
+          <h3>Subscribe</h3>
+          <p>Pre-authorize N weekly snapshots with scheduled transfers. HTS custom fees sit on that rail. The per-request 402 stays HBAR.</p>
+        </div>
       </div>
     </section>`;
   return renderShell({

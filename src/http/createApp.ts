@@ -17,6 +17,8 @@ import { deskOffer, OFFER_PATH } from "../modules/merchandise/offer.ts";
 import { createHcsLedger } from "../modules/ledger/hcs.ts";
 import { mountLedger } from "../modules/ledger/http.ts";
 import type { Ledger } from "../modules/ledger/index.ts";
+import { mountSubscribe } from "../modules/ledger/subscribe-http.ts";
+import type { LookupSchedule } from "../modules/ledger/subscribe-http.ts";
 import {
   createHbarRefundRail,
   type RefundRail,
@@ -43,6 +45,7 @@ export type AppDeps = {
   refund?: RefundRail;
   listChildren?: (parent: string) => Promise<string[]>;
   probeDesk?: ProbeDesk;
+  lookupSchedule?: LookupSchedule;
 };
 
 function resolveBrain(config: AppConfig, deps: AppDeps): Brain {
@@ -156,6 +159,13 @@ export async function createApp(
     ...(ledger ? { ledger } : {}),
   });
   mountGate(app, config, ledger, merchandise, brain, refund, payWindow);
+  mountSubscribe(app, {
+    config,
+    merchandise,
+    brain,
+    ...(ledger ? { ledger } : {}),
+    ...(deps.lookupSchedule ? { lookupSchedule: deps.lookupSchedule } : {}),
+  });
   mountLedger(app, config, ledger);
 
   return app;

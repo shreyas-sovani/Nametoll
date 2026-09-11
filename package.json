@@ -20,6 +20,8 @@
     "ens:subname": "tsx src/modules/directory/issue-subname.ts",
     "brain": "tsx src/modules/brain/cli.ts",
     "join": "tsx src/modules/brain/join-cli.ts",
+    "subscribe": "tsx src/modules/ledger/subscribe-cli.ts",
+    "hts": "tsx src/modules/ledger/hts-cli.ts",
     "cre:simulate": "tsx src/modules/brain/run-simulate.ts",
     "test": "vitest run",
     "test:watch": "vitest",

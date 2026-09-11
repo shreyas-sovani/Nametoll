@@ -30,6 +30,7 @@ export function renderDocsPage(
         <a href="#remainder">Remainder</a>
         <a href="#ledger">Ledger</a>
         <a href="#http">HTTP API</a>
+        <a href="#subscribe">Subscribe</a>
         <a href="#cli">Agent CLI</a>
         <a href="#ops">Operators</a>
       </nav>
@@ -99,6 +100,18 @@ export function renderDocsPage(
           <p>Pay attaches the bill only when the settle transaction is on the topic. If Mirror Node is still catching up, the HashScan settle link still stands; the bill block is omitted rather than showing someone else’s receipt.</p>
           <pre>curl -sS http://127.0.0.1:8787/desk/ledger</pre>
         </article>
+        <article class="doc-card" id="subscribe">
+          <h2>Subscribe</h2>
+          <p>Recurring snapshots use Hedera scheduled transactions, not a second 402. The buyer pre-authorizes N transfers with <code>wait_for_expiry</code>. Each slot expires at most 62 days out. When Mirror Node shows <code>executed_timestamp</code>, <code>GET /desk/claim?schedule=</code> delivers one snapshot. The HBAR snapshot 402 stays asset <code>0.0.0</code>.</p>
+          <p>HTS is a desk-credit token with a custom fixed HBAR fee to the seller. Blocky402 <code>/supported</code> does not advertise a non-HBAR asset, so the pay path does not switch tokens. <code>GET /desk/hts</code> publishes the token plan. <code>npm run hts -- create</code> broadcasts it. Put the id in <code>HTS_TOKEN_ID</code>.</p>
+          <pre>curl -sS "http://127.0.0.1:8787/desk/subscribe?slots=2&amp;intervalSec=604800"
+curl -sS http://127.0.0.1:8787/desk/hts
+npm run subscribe -- --plan --slots 2 --interval-sec 120
+npm run subscribe -- --slots 2 --interval-sec 120
+npm run hts -- probe
+npm run hts -- plan
+curl -sS "http://127.0.0.1:8787/desk/claim?schedule=&lt;0.0.x&gt;"</pre>
+        </article>
         <article class="doc-card" id="http">
           <h2>HTTP API</h2>
           <table>
@@ -114,6 +127,9 @@ export function renderDocsPage(
               <tr><td>GET</td><td><code>/desk/brain?tinybars=</code></td><td>Public verdict for an amount</td></tr>
               <tr><td>GET</td><td><code>/desk/join</code></td><td>Unsigned <code>join()</code> from the same TEE — this origin does not broadcast it</td></tr>
               <tr><td>GET</td><td><code>/desk/ledger</code></td><td>Topic, bills, recompute recipe</td></tr>
+              <tr><td>GET</td><td><code>/desk/subscribe?slots=</code></td><td>Unsigned scheduled-payment plan</td></tr>
+              <tr><td>GET</td><td><code>/desk/claim?schedule=</code></td><td>Deliver a snapshot after a slot executes</td></tr>
+              <tr><td>GET</td><td><code>/desk/hts</code></td><td>TOLL token plan + Blocky402 asset probe</td></tr>
             </tbody>
           </table>
           <pre>curl -sS "http://127.0.0.1:8787/desk/inspect?name=&lt;paste-a-name&gt;&amp;protocols=aave-v3-ethereum"
@@ -132,6 +148,8 @@ npm run buyer -- &lt;paste-a-name&gt;
 npm run agent -- &lt;paste-a-parent-name&gt;
 npm run directory -- &lt;paste-a-name&gt;
 npm run ens:subname -- --plan --parent &lt;parent&gt; --label agent-02
+npm run subscribe -- --plan --slots 2 --interval-sec 120
+npm run hts -- probe
 npm run join -- --check
 npm run join</pre>
         </article>

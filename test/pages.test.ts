@@ -99,6 +99,9 @@ describe("product pages", () => {
       expect(html).toMatch(/\/desk\/resolve/);
       expect(html).toMatch(/\/desk\/catalog/);
       expect(html).toMatch(/\/desk\/ledger/);
+      expect(html).toMatch(/\/desk\/subscribe/);
+      expect(html).toMatch(/\/desk\/claim/);
+      expect(html).toMatch(/\/desk\/hts/);
       expect(html).toMatch(/\/desk\/snapshot/);
       expect(html).toMatch(/tinybars/);
       expect(html).toMatch(/402/);

@@ -43,6 +43,23 @@ describe("mirror bill", () => {
     expect(billMatchesPrice(bill!, "100000")).toBe(true);
   });
 
+  it("keeps an optional schedule id without changing recompute", () => {
+    const payload = {
+      requestId: "11111111-1111-4111-8111-111111111111",
+      name: "subscribe",
+      units: 1,
+      tinybars: "100000",
+      settleTx: "1789000000.000000001",
+      scheduleId: "0.0.77",
+    };
+    const bill = billFromMirrorMessage({
+      consensus_timestamp: "1683553059.977315003",
+      message: Buffer.from(JSON.stringify(payload), "utf8").toString("base64"),
+    });
+    expect(bill?.scheduleId).toBe("0.0.77");
+    expect(billMatchesPrice(bill!, "100000")).toBe(true);
+  });
+
   it("ignores a message that is not a nametoll bill", () => {
     expect(
       billFromMirrorMessage({

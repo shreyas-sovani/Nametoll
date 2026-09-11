@@ -42,6 +42,8 @@ export function renderAppPage(
             <dt>brain</dt><dd><code>/desk/brain?tinybars=</code></dd>
             <dt>inspect</dt><dd><code>/desk/inspect?name=</code></dd>
             <dt>pay</dt><dd><code>POST /desk/pay</code></dd>
+            <dt>subscribe</dt><dd><code>/desk/subscribe</code> · <code>/desk/claim</code></dd>
+            <dt>HTS</dt><dd><code>/desk/hts</code></dd>
             <dt>TEE cache</dt><dd>per amount, ${Math.round(VERDICT_TTL_MS / 1000)}s TTL; unavailable is not cached</dd>
             <dt>merchandise</dt><dd>Messari lending · live Aave v3 + Compound III · billed per delivered protocol · unused remainder refunded</dd>
             <dt>facilitator</dt><dd>${escapeHtml(config.facilitatorUrl)}</dd>

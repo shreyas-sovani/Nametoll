@@ -149,13 +149,21 @@ export async function askCreSimulateJoin(
   return parseCreSimulateJoin(await askCreSimulate(options, { action: "join" }));
 }
 
-function creSpawnEnv(): NodeJS.ProcessEnv {
+export function creSecretEnv(
+  env: NodeJS.ProcessEnv = process.env,
+): NodeJS.ProcessEnv {
   const creBinDir = join(homedir(), ".cre", "bin");
-  const path = process.env.PATH ?? "";
+  const path = env.PATH ?? "";
   return {
-    ...process.env,
+    ...env,
     PATH: existsSync(join(creBinDir, "cre")) ? `${creBinDir}:${path}` : path,
+    BUYER_ALLOWLIST_VAR: env.BUYER_ALLOWLIST_VAR ?? "",
+    RATE_LIMIT_VAR: env.RATE_LIMIT_VAR ?? "",
   };
+}
+
+function creSpawnEnv(): NodeJS.ProcessEnv {
+  return creSecretEnv();
 }
 
 export const CRE_SIMULATE_TIMEOUT_MS = 25_000;

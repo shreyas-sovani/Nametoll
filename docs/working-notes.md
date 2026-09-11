@@ -278,3 +278,31 @@ Hedera extra-points directory and ENS “agents as namespaces,” without touchi
 - **TEE policy** — `decidePolicy` in the CRE handler. Secrets: `SPEND_CAP`, optional `BUYER_ALLOWLIST`, optional `RATE_LIMIT`. Distinct reasons. Empty extra secrets keep the existing cap-only flip. HCS bills may include `verdictReason` + `verdictHash`; recompute is still units × price.
 - Pay path (Blocky402 settle, remainder refund, settleTx-matched bill) is unchanged.
 
+## P3 HTS + scheduled subscribe (12 Sep 2026)
+
+Probed live `GET https://api.testnet.blocky402.com/supported`: Hedera `exact` + fee-payer `0.0.7162784`, **no advertised assets**. Official `@x402/hedera` and Hedera exact-scheme docs allow HTS, but this facilitator does not list a token. Snapshot 402 stays `0.0.0`. Do not switch the pay path.
+
+- **TOLL** — `TokenCreate` plan with `CustomFixedFee` in HBAR (`PRICE_TINYBARS`) to the seller, collectors exempt so treasury airdrops do not self-charge. `GET /desk/hts`, `npm run hts -- plan|create|fund`.
+- **Subscribe** — N `ScheduleCreateTransaction` wrappers around a transfer, `setWaitForExpiry(true)`, expiry ≤ 62 days (`5,356,800` s). Default interval is one week. `GET /desk/subscribe?slots=`, `npm run subscribe -- --plan`.
+- **Claim** — `GET /desk/claim?schedule=` reads Mirror `executed_timestamp` / `deleted` / `wait_for_expiry`. One HCS bill per schedule id. TEE still gates the prepaid amount.
+- ERC-8004 left out.
+
+**Live 12 Sep 2026 (testnet)**
+
+| | |
+| --- | --- |
+| TOLL | `0.0.10483302` — https://hashscan.io/testnet/token/0.0.10483302 — create `0.0.10463755@1789155985.567441938` |
+| Custom fee | fixed `100000` tinybars HBAR → collector `0.0.10463755`, `all_collectors_are_exempt: true` (Mirror `custom_fees.fixed_fees`) |
+| Buyer associate | `0.0.10463842@1789155993.345935080` |
+| Treasury airdrop | `0.0.10463755@1789155996.194571771` (8 TOLL) |
+| Slot 1 | schedule `0.0.10483309` — https://hashscan.io/testnet/schedule/0.0.10483309 — executed `1789156192.017736208`, scheduled transfer https://hashscan.io/testnet/tx/0.0.10463842@1789156008.769559934 |
+| Slot 2 | schedule `0.0.10483311` — https://hashscan.io/testnet/schedule/0.0.10483311 — executed `1789156372.012777751`, scheduled transfer https://hashscan.io/testnet/tx/0.0.10463842@1789156009.185023222 |
+
+Each executed slot: `scheduled: true`, 1 TOLL buyer `0.0.10463842` → seller `0.0.10463755`, plus protocol custom fee `100000` tinybars HBAR to the seller. Balances after both slots: seller 994 TOLL, buyer 6 TOLL.
+
+`GET /desk/claim?schedule=` then delivered live Aave (1 unit) and appended HCS `subscribe` bills on topic `0.0.10464309` (`1 * 100000`, `scheduleId` set). Replay of slot 1 is `already claimed`. Unpaid `GET /desk/snapshot` is still HTTP 402 / asset `0.0.0`.
+
+CRE simulate was failing after P2 because `secrets.yaml` lists `BUYER_ALLOWLIST` / `RATE_LIMIT` and the CLI requires those env names. Desk spawn now defaults the two optional vars to empty so cap-only still boots.
+
+Blocky402 probe the same hour: `hederaExact: true`, `advertisedAssets: []`, `blocky402Hts: unadvertised`. Snapshot 402 unchanged.
+

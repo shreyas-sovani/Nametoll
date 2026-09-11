@@ -79,6 +79,8 @@ npm run buyer -- http://127.0.0.1:8787 not-a-real-protocol
 npm run buyer -- <paste-a-name>
 npm run agent -- <paste-a-parent-name>
 npm run directory -- <paste-a-name>
+npm run subscribe -- --plan --slots 2 --interval-sec 120
+npm run hts -- probe
 npm run join -- --check
 npm run join
 ```
@@ -134,6 +136,8 @@ npm run cre:simulate
 curl -sS "http://127.0.0.1:8787/desk/brain?tinybars=100000"
 curl -sS "http://127.0.0.1:8787/desk/catalog?parent=<paste-a-parent-name>"
 curl -sS http://127.0.0.1:8787/desk/offer
+curl -sS "http://127.0.0.1:8787/desk/subscribe?slots=2&intervalSec=604800"
+curl -sS http://127.0.0.1:8787/desk/hts
 ```
 
 Put that id in `.env` as `HCS_TOPIC_ID`. After a paid request:
@@ -213,6 +217,7 @@ This tunnel dies when the local process stops. For a stable judge URL, host the 
 | `CRE_SECRETS_PATH` / `HEDERA_BUYER_KEY_PATH` | Files on disk; values stay out of git |
 | `CRE_BRAIN_URL` | Live CRE HTTP trigger. If unset, paid snapshots 403 unless `CRE_PROJECT_DIR` is set |
 | `CRE_PROJECT_DIR` / `CRE_WORKFLOW_NAME` / `CRE_TARGET` | Simulate backend. Target defaults to `staging-settings`. Workflow name defaults to `nametoll-brain`. If unset, the desk uses `./cre` when `cre/project.yaml` exists. |
+| `HTS_TOKEN_ID` | Optional TOLL desk-credit token. Custom HBAR fee on transfers. Does not change snapshot 402 asset `0.0.0`. |
 
 Fee-payer is **not** configured here. The Gate reads it from live `GET /supported` (`0.0.7162784` on testnet as of the day-one probe).
 
@@ -240,6 +245,7 @@ Fee-payer is **not** configured here. The Gate reads it from live `GET /supporte
 - **Judge pass** public desk Brain was `TEE unavailable` (no `CRE_PROJECT_DIR`). Desk now defaults to `./cre` + `cre/.env`. Health reports `brain.source`. Blotter shows live protocol TVL, per-bill recompute, and unsigned `join()`. CI: `.github/workflows/test.yml`. Latest TEE-gated Aave pay: https://hashscan.io/testnet/tx/0.0.7162784@1789111350.366520040. Remainder refund: https://hashscan.io/testnet/tx/0.0.10463755@1789114039.622724528. Live `join()`: https://sepolia.etherscan.io/tx/0x980aaffe6d62561964a42675f7831adbca09cf442c7db0cede9255e2ed5e3086
 - **Demo hardening** Brain caches successful verdicts per amount + payer + hour-count for 60s (unavailable is not cached; simulate killed at 25s; boot warms 1- and 2-unit). `POST /desk/pay` is rate-limited, optionally `DESK_PAY_SECRET`, and pinned to `PUBLIC_DESK_URL`. Pay omits the HCS bill block unless `settleTx` matches. Tagline is metered units.
 - **Discovery** `/desks` is a live catalog of children under a pasted parent. Hedera extra-points directory row: an agent finds a service by namespace and pays for it.
+- **P3 HTS + scheduled subscribe** Blocky402 `/supported` does not advertise a non-HBAR asset, so `/desk/snapshot` stays `0.0.0`. Live TOLL `0.0.10483302` (custom `100000` tinybar HBAR fee) https://hashscan.io/testnet/token/0.0.10483302. Slots executed: https://hashscan.io/testnet/tx/0.0.10463842@1789156008.769559934 and https://hashscan.io/testnet/tx/0.0.10463842@1789156009.185023222. `GET /desk/claim?schedule=` delivered live Aave and HCS `subscribe` bills. ERC-8004 left out.
 
 **Next**
 

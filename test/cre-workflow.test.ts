@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { parseCreSimulateVerdict } from "../src/modules/brain/simulate.ts";
+import { creSecretEnv, parseCreSimulateVerdict } from "../src/modules/brain/simulate.ts";
 import { decideSpend } from "../src/modules/brain/verdict.ts";
 
 describe("CRE confidential workflow", () => {
@@ -48,6 +48,16 @@ describe("CRE confidential workflow", () => {
       allow: false,
       reason: "over cap",
     });
+  });
+
+  it("defaults optional TEE secret env vars so CRE can substitute them", () => {
+    const env = creSecretEnv({ SPEND_CAP_TINYBARS_VAR: "150000" });
+    expect(env.BUYER_ALLOWLIST_VAR).toBe("");
+    expect(env.RATE_LIMIT_VAR).toBe("");
+    expect(env.SPEND_CAP_TINYBARS_VAR).toBe("150000");
+    expect(creSecretEnv({ BUYER_ALLOWLIST_VAR: "0.0.1" }).BUYER_ALLOWLIST_VAR).toBe(
+      "0.0.1",
+    );
   });
 
   it("keeps the CRE verdict copy aligned with the desk", () => {
