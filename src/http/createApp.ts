@@ -1,4 +1,4 @@
-import express, { type Express } from "express";
+import express, { type Express, type Request, type Response } from "express";
 import type { AppConfig } from "../config.ts";
 import {
   createBrainFromConfig,
@@ -22,7 +22,7 @@ import { createMerchandise, type Merchandise } from "../modules/merchandise/inde
 import type { Buyer } from "../modules/buyer/index.ts";
 import { mountBuyer } from "../modules/buyer/http.ts";
 import { MODULE_NAMES } from "../types.ts";
-import { renderHomePage } from "./homePage.ts";
+import { renderAppPage, renderDocsPage, renderLandingPage } from "./pages/index.ts";
 import { JOIN_PATH } from "../modules/brain/http.ts";
 import { paySecretCookie } from "../modules/buyer/pay-guard.ts";
 
@@ -102,11 +102,25 @@ export async function createApp(
     });
   });
 
-  app.get("/", (req, res) => {
+  const pageOptions = { canPay: Boolean(buyer) };
+  const sendPage = (req: Request, res: Response, html: string) => {
     if (config.deskPaySecret) {
       res.setHeader("Set-Cookie", paySecretCookie(config.deskPaySecret, req.secure));
     }
-    res.type("html").send(renderHomePage(config, { canPay: Boolean(buyer) }));
+    res.type("html").send(html);
+  };
+
+  app.get("/", (req, res) => {
+    sendPage(req, res, renderLandingPage(config, pageOptions));
+  });
+  app.get("/landing", (req, res) => {
+    sendPage(req, res, renderLandingPage(config, pageOptions));
+  });
+  app.get("/app", (req, res) => {
+    sendPage(req, res, renderAppPage(config, pageOptions));
+  });
+  app.get("/docs", (req, res) => {
+    sendPage(req, res, renderDocsPage(config, pageOptions));
   });
 
   mountDirectory(app, directory);

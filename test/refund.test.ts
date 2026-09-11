@@ -68,7 +68,7 @@ describe("B13 unused-remainder refund", () => {
   it("is a blotter station a judge can read", async () => {
     const desk = await startDesk();
     try {
-      const html = await (await fetch(`${desk.url}/`)).text();
+      const html = await (await fetch(`${desk.url}/app`)).text();
       expect(html).toMatch(/id="station-remainder"/);
       expect(html).toMatch(/remainder|refund/i);
     } finally {

@@ -311,7 +311,7 @@ Workflow Simulation Result:
   it("blotter HTML has join + recompute stations a human can drive", async () => {
     const desk = await startDesk({}, publicDeskConfig());
     try {
-      const html = await (await fetch(`${desk.url}/`)).text();
+      const html = await (await fetch(`${desk.url}/app`)).text();
       expect(html).toMatch(/id="station-join"/);
       expect(html).toMatch(/id="join-desk"/);
       expect(html).toMatch(/\/desk\/join/);

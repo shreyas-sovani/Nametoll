@@ -1,0 +1,140 @@
+import type { AppConfig } from "../../config.ts";
+import { SNAPSHOT_PATH } from "../../modules/gate/index.ts";
+import { VERDICT_TTL_MS } from "../../modules/brain/index.ts";
+import { explorerNetwork, hashscanTopicUrl } from "../../modules/ledger/hashscan.ts";
+import { RECOMPUTE_RECIPE } from "../../modules/ledger/http.ts";
+import { PINNED_PROTOCOLS } from "../../modules/merchandise/deployments.ts";
+import { escapeHtml, tinybarsToHbar } from "./escape.ts";
+import { renderShell } from "./shell.ts";
+import type { ProductPageOptions } from "./landing.ts";
+
+export function renderDocsPage(
+  config: AppConfig,
+  _options: ProductPageOptions = {},
+): string {
+  const network = explorerNetwork(config.network);
+  const topic = config.hcsTopicId;
+  const topicUrl = topic ? hashscanTopicUrl(topic, network) : "";
+  const priceHbar = tinybarsToHbar(config.priceTinybars);
+  const ttlSec = Math.round(VERDICT_TTL_MS / 1000);
+  const body = `
+    <div class="docs">
+      <nav class="doc-toc" aria-label="Manual">
+        <a href="#overview">Overview</a>
+        <a href="#loop">The loop</a>
+        <a href="#desk">Open a desk</a>
+        <a href="#402">HTTP 402</a>
+        <a href="#cap">Spend cap</a>
+        <a href="#meter">Metering</a>
+        <a href="#remainder">Remainder</a>
+        <a href="#ledger">Ledger</a>
+        <a href="#http">HTTP API</a>
+        <a href="#cli">Agent CLI</a>
+        <a href="#ops">Operators</a>
+      </nav>
+      <div>
+        <article class="doc-card" id="overview">
+          <p class="eyebrow">Manual</p>
+          <h1>Nametoll</h1>
+          <p>Nametoll is a named pay desk. A buyer agent is given a name, not a URL and not an API key. The desk resolves that name, asks a TEE whether the spend is under cap, challenges unpaid GETs with HTTP 402, settles HBAR through Blocky402, returns metered units, and appends a bill the public can recompute.</p>
+          <p>This origin sells live lending-risk snapshots. Price is ${escapeHtml(config.priceTinybars)} tinybars per requested protocol${priceHbar ? ` (${escapeHtml(priceHbar)})` : ""} on ${escapeHtml(config.network)}.</p>
+        </article>
+        <article class="doc-card" id="loop">
+          <h2>The loop</h2>
+          <pre>name → TEE allow → pay (Blocky402) → metered units → HCS bill</pre>
+          <ol>
+            <li>Paste or pass a name. The happy path does not ship one.</li>
+            <li>Directory returns endpoint, pay-to, price rule, HCS topic, asset <code>0.0.0</code>.</li>
+            <li>Brain returns <code>allow</code>, <code>maxTinybars</code>, and a public reason. Secrets stay in the enclave.</li>
+            <li>Unpaid <code>GET ${SNAPSHOT_PATH}</code> is HTTP 402.</li>
+            <li>Pay settles <code>exact</code> HBAR. The snapshot is billed per delivered protocol.</li>
+            <li>The bill is on the HCS topic. Recompute from Mirror Node.</li>
+          </ol>
+        </article>
+        <article class="doc-card" id="desk">
+          <h2>Open a desk</h2>
+          <p>Use <a href="/app">the desk console</a> or HTTP. Type or paste the name. Choose 1 or 2 protocols. <strong>Open desk</strong> calls <code>GET /desk/inspect</code>. If the TEE allows, <strong>Pay</strong> calls <code>POST /desk/pay</code> with the same name and protocol list.</p>
+          <p>Pay spends the operator buyer key on this origin. It is rate-limited, optionally gated by a shared secret cookie or <code>x-desk-pay-secret</code>, and pinned to <code>PUBLIC_DESK_URL</code> when that is set. Inspect stays open.</p>
+        </article>
+        <article class="doc-card" id="402">
+          <h2>HTTP 402</h2>
+          <p>The resource is <code>${SNAPSHOT_PATH}</code>. Amounts are tinybars. Asset is Hedera <code>0.0.0</code>. Scheme is x402 v2 <code>exact</code>. Facilitator: <code>${escapeHtml(config.facilitatorUrl)}</code>. This process does not hold a facilitator key. Fee-payer comes from live <code>GET /supported</code>.</p>
+          <pre>curl -sD - -H 'Accept: application/json' \\
+  http://127.0.0.1:8787${SNAPSHOT_PATH}</pre>
+        </article>
+        <article class="doc-card" id="cap">
+          <h2>Spend cap</h2>
+          <p>The CRE handler runs in a TEE. A deny or an unavailable enclave blocks settle and merchandise. Successful verdicts are cached per tinybar amount for ${escapeHtml(String(ttlSec))}s. Failures are not cached. <code>GET /health</code> reports <code>brain.verdictTtlMs</code>.</p>
+          <pre>curl -sS "http://127.0.0.1:8787/desk/brain?tinybars=${escapeHtml(config.priceTinybars)}"</pre>
+        </article>
+        <article class="doc-card" id="meter">
+          <h2>Metering</h2>
+          <p>Units are the number of protocols in the request, not response bytes. Catalog on this desk:</p>
+          <table>
+            <thead><tr><th>id</th><th>label</th><th>network</th></tr></thead>
+            <tbody>
+              ${PINNED_PROTOCOLS.map(
+                (protocol) =>
+                  `<tr><td><code>${escapeHtml(protocol.id)}</code></td><td>${escapeHtml(protocol.label)}</td><td>${escapeHtml(protocol.network)}</td></tr>`,
+              ).join("")}
+            </tbody>
+          </table>
+          <p>1 protocol = ${escapeHtml(config.priceTinybars)} tinybars. 2 protocols = twice that. If an indexer is down, that protocol fail-softs; you are billed for delivered units.</p>
+        </article>
+        <article class="doc-card" id="remainder">
+          <h2>Remainder</h2>
+          <p>Prepaid tinybars are the 402 amount. Owed tinybars are delivered units × price. If the desk delivers fewer units than prepaid, unused remainder is refunded as a seller-signed HBAR transfer. The HCS bill stores prepaid, owed, and refund. There is no second topic.</p>
+        </article>
+        <article class="doc-card" id="ledger">
+          <h2>Ledger</h2>
+          <p>${topic && topicUrl ? `Topic <a href="${escapeHtml(topicUrl)}" rel="noreferrer" target="_blank"><code>${escapeHtml(topic)}</code></a>.` : "Configure an HCS topic to publish bills."} Recipe: ${escapeHtml(RECOMPUTE_RECIPE)}</p>
+          <p>Pay attaches the bill only when the settle transaction is on the topic. If Mirror Node is still catching up, the HashScan settle link still stands; the bill block is omitted rather than showing someone else’s receipt.</p>
+          <pre>curl -sS http://127.0.0.1:8787/desk/ledger</pre>
+        </article>
+        <article class="doc-card" id="http">
+          <h2>HTTP API</h2>
+          <table>
+            <thead><tr><th>Method</th><th>Path</th><th>Does</th></tr></thead>
+            <tbody>
+              <tr><td>GET</td><td><code>/health</code></td><td>Liveness, modules, brain TTL, whether this origin can pay</td></tr>
+              <tr><td>GET</td><td><code>/desk/resolve?name=</code></td><td>Directory descriptor from a live name</td></tr>
+              <tr><td>GET</td><td><code>/desk/inspect?name=&amp;protocols=</code></td><td>Descriptor + TEE verdict + unpaid 402</td></tr>
+              <tr><td>POST</td><td><code>/desk/pay</code></td><td>Settle, snapshot, bill (when matched)</td></tr>
+              <tr><td>GET</td><td><code>${SNAPSHOT_PATH}</code></td><td>Merchandise; 402 if unpaid</td></tr>
+              <tr><td>GET</td><td><code>/desk/brain?tinybars=</code></td><td>Public verdict for an amount</td></tr>
+              <tr><td>GET</td><td><code>/desk/join</code></td><td>Unsigned <code>join()</code> from the same TEE — this origin does not broadcast it</td></tr>
+              <tr><td>GET</td><td><code>/desk/ledger</code></td><td>Topic, bills, recompute recipe</td></tr>
+            </tbody>
+          </table>
+          <pre>curl -sS "http://127.0.0.1:8787/desk/inspect?name=&lt;paste-a-name&gt;&amp;protocols=aave-v3-ethereum"
+curl -sS -X POST http://127.0.0.1:8787/desk/pay \\
+  -H 'content-type: application/json' \\
+  -H "x-desk-pay-secret: \${DESK_PAY_SECRET:-}" \\
+  -d '{"name":"&lt;paste-a-name&gt;","protocols":["aave-v3-ethereum"]}'</pre>
+        </article>
+        <article class="doc-card" id="cli">
+          <h2>Agent CLI</h2>
+          <p>Headless buyer. Pass a name or a desk URL. Protocol ids are optional; omit them to request the full catalog. A protocol id that is not in the catalog is how you exercise unused-remainder refund.</p>
+          <pre>npm run buyer -- http://127.0.0.1:8787
+npm run buyer -- http://127.0.0.1:8787 aave-v3-ethereum
+npm run buyer -- http://127.0.0.1:8787 not-a-real-protocol
+npm run buyer -- &lt;paste-a-name&gt;
+npm run directory -- &lt;paste-a-name&gt;
+npm run join -- --check
+npm run join</pre>
+        </article>
+        <article class="doc-card" id="ops">
+          <h2>Operators</h2>
+          <p>Do not commit secrets. Copy <code>.env.example</code> locally. Never put a facilitator private key on the resource server. Directory text keys: <code>url</code>, <code>agent-context</code>, <code>agent-endpoint[web]</code>. CRE HTTP inside the TEE uses <code>HTTPClient</code> + <code>TeeRuntime</code> only.</p>
+          <p>Product pages: <a href="/landing">/landing</a>, <a href="/app">/app</a>, <a href="/docs">/docs</a>. <code>/</code> is the product page.</p>
+        </article>
+      </div>
+    </div>`;
+  return renderShell({
+    title: "Manual · Nametoll",
+    description:
+      "How to pay a Nametoll desk by name: resolve, HTTP 402, TEE cap, metered units, HCS bill.",
+    path: "/docs",
+    body,
+  });
+}

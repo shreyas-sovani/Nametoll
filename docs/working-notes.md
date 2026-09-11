@@ -157,7 +157,7 @@ Desk:
 
 ## Judge blotter (B11)
 
-The homepage is the 2–4 min video desk. It does not ship a name.
+The desk console is `/app`. It does not ship a name.
 
 Stations, in order: paste name → descriptor → TEE reason → unpaid 402 → snapshot → HashScan settle + HCS topic.
 

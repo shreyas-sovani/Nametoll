@@ -38,7 +38,7 @@ describe("public desk page", () => {
       publicDeskConfig(),
     );
     try {
-      const html = await (await fetch(`${desk.url}/`)).text();
+      const html = await (await fetch(`${desk.url}/app`)).text();
       expect(html).toMatch(new RegExp(PINNED_PROTOCOLS[0]!.id));
       expect(html).toMatch(new RegExp(PINNED_PROTOCOLS[1]!.id));
       expect(html).toMatch(/hashscan\.io\/mainnet/);

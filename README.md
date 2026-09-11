@@ -29,7 +29,7 @@ One app, six modules: **Directory**, **Gate**, **Brain**, **Merchandise**, **Led
 
 ## Demo timestamps (2–4 min, ≥720p, human voice)
 
-Record the blotter at `/` (public origin below). Paste a name. Do not bake one into the take.
+Record the desk at `/app` (public origin below). Landing is `/` and `/landing`. Manual is `/docs`. Paste a name. Do not bake one into the take.
 
 | Clock | On camera | Qual |
 | --- | --- | --- |
@@ -88,7 +88,7 @@ Resolve without paying:
 curl -sS "http://127.0.0.1:8787/desk/resolve?name=<paste-a-name>"
 ```
 
-Judge blotter (B11) is `/` in a desktop browser. Same loop over HTTP:
+Judge desk (B11) is `/app` in a desktop browser. Product page is `/` (same as `/landing`). Manual is `/docs`. Same loop over HTTP:
 
 ```bash
 curl -sS "http://127.0.0.1:8787/desk/inspect?name=<paste-a-name>&protocols=aave-v3-ethereum"
@@ -98,7 +98,7 @@ curl -sS -X POST http://127.0.0.1:8787/desk/pay \
   -d '{"name":"<paste-a-name>","protocols":["aave-v3-ethereum"]}'
 ```
 
-`GET /desk/inspect` stays open. `POST /desk/pay` spends the operator buyer key, so it is rate-limited, optionally gated by `DESK_PAY_SECRET` (blotter cookie on `/`, or the header above), and pinned to `PUBLIC_DESK_URL` when that is set. Empty `x-desk-pay-secret` is ignored unless the env var is set.
+`GET /desk/inspect` stays open. `POST /desk/pay` spends the operator buyer key, so it is rate-limited, optionally gated by `DESK_PAY_SECRET` (cookie on `/`, `/landing`, `/app`, `/docs`, or the header above), and pinned to `PUBLIC_DESK_URL` when that is set. Empty `x-desk-pay-secret` is ignored unless the env var is set.
 
 TEE verdicts are **cached per amount** for 60s (`GET /health` → `brain.verdictTtlMs`). Unavailable / simulate failures are not cached. Restart the desk for a fresh attested `cre workflow simulate`. The enclave still gates every amount the first time it is seen in that TTL.
 
@@ -216,7 +216,7 @@ Fee-payer is **not** configured here. The Gate reads it from live `GET /supporte
 - **B8** `npm run buyer -- nametoll.eth` resolves then 402s the **resolved** endpoint. Changing `agent-endpoint[web]` via the operator changes the next resolve without a buyer code change.
 - **B9** CRE `handlerInTee` + `getSecret("SPEND_CAP")`. Official `hello-confidential-workflows-ts`. Redacted simulate logs: `docs/partners/chainlink/simulate-allow.log` (100000 under cap) and `simulate-deny.log` (200000 over cap). No `ConfidentialHTTPClient`.
 - **B10** Gate asks Brain before Blocky402 settle. Deny / skipped TEE → HTTP 403, no merchandise, no HCS bill. Allow → existing pay path. `GET /desk/brain?tinybars=` and `npm run brain -- 100000`.
-- **B11** judge / operator blotter on `/`. Paste a name (none shipped). Open desk → descriptor + TEE reason + unpaid 402. Pay (server-side buyer keys) → snapshot + HashScan + HCS topic. Deny / empty / error banners. `GET /desk/inspect?name=` and `POST /desk/pay`.
+- **B11** desk console on `/app` (product at `/` and `/landing`, manual at `/docs`). Paste a name (none shipped). Open desk → descriptor + TEE reason + unpaid 402. Pay (server-side buyer keys) → snapshot + HashScan + HCS topic. Deny / empty / error banners. `GET /desk/inspect?name=` and `POST /desk/pay`.
 - **B12** submission pack: README timestamps → Hedera / ENS / Chainlink §9 lists in [`docs/submission.md`](docs/submission.md). Public repo. AI attributed. Form trio unchanged.
 - **B13** unused-remainder refund (Pinout shape, one topic). Credit is the settled tinybars. Burn is delivered protocols. Seller HBAR `TransferTransaction` returns unused tinybars. HCS stores prepaid / owed / refund. Blotter station 06. Live fail-soft: settle `0.0.7162784@1789114039.103448687`, refund `0.0.10463755@1789114039.622724528`. Not dual-topic HIP-991.
 - **B14** harness DX: in-place `init` adopt planted Yarn/Next into this npm Express desk. Open PR https://github.com/hedera-dev/hedera-harness/pull/59 (target `dev`, not merged). Follow-up commit: Scaffold-HBAR static checks are dropped on npm adopt; `constraints.packageManager` is written; only newly written `.harness/` files are adapted. No `.harness/` in this repo. No harness demo video.

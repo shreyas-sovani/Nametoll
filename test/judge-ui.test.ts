@@ -57,7 +57,7 @@ describe("judge / operator page", () => {
   it("is a driveable desk with empty state and no baked-in name", async () => {
     const desk = await startDesk({}, publicDeskConfig());
     try {
-      const res = await fetch(`${desk.url}/`);
+      const res = await fetch(`${desk.url}/app`);
       expect(res.status).toBe(200);
       const html = await res.text();
       expect(html).toMatch(/paste a name/i);
