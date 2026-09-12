@@ -36,7 +36,7 @@ export function renderDesksPage(
           <label class="name-field">Parent namespace
             <input name="parent" autocomplete="off" spellcheck="false" placeholder="Paste a parent name" />
           </label>
-          <button type="submit">List desks</button>
+          <button type="submit" id="list-desks">List desks</button>
         </form>
         <p class="banner" id="registry-empty" role="status">Paste a parent name. Children with desk records appear here.</p>
         <p class="banner err" id="registry-error" role="alert" hidden></p>

@@ -149,6 +149,10 @@ describe("product pages", () => {
     try {
       const html = await (await fetch(`${desk.url}/desks`)).text();
       expect(html).toMatch(/id="claim-form"/);
+      expect(html).toMatch(/id="list-desks"/);
+      expect(html).toMatch(/Listing/);
+      expect(html).toMatch(/aria-busy/);
+      expect(html).toMatch(/if \(busy\) return/);
       expect(html).toMatch(/\/desk\/claim/);
     } finally {
       await desk.close();

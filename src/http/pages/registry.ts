@@ -2,10 +2,25 @@ export const deskRegistryScript = `
 (function () {
   var form = document.getElementById("registry-form");
   var parentInput = form && form.querySelector('input[name="parent"]');
+  var btn = document.getElementById("list-desks");
   var empty = document.getElementById("registry-empty");
   var error = document.getElementById("registry-error");
   var list = document.getElementById("desk-registry");
-  if (!form || !parentInput || !empty || !error || !list) return;
+  var lamp = document.querySelector(".hero-lamp");
+  if (!form || !parentInput || !btn || !empty || !error || !list) return;
+  var idleLabel = btn.textContent || "List desks";
+  var busy = false;
+
+  function setBusy(on) {
+    busy = on;
+    btn.disabled = on;
+    btn.textContent = on ? "Listing…" : idleLabel;
+    if (on) btn.setAttribute("aria-busy", "true");
+    else btn.removeAttribute("aria-busy");
+    form.setAttribute("aria-busy", on ? "true" : "false");
+    parentInput.disabled = on;
+    if (lamp) lamp.setAttribute("data-state", on ? "busy" : "unpaid");
+  }
 
   function show(node, on) {
     if (on) node.removeAttribute("hidden");
@@ -53,30 +68,44 @@ export const deskRegistryScript = `
     list.innerHTML = "";
     show(list, false);
     if (!parent) {
+      empty.textContent = "Paste a parent name. Children with desk records appear here.";
       show(empty, true);
       return;
     }
-    var res = await fetch("/desk/catalog?parent=" + encodeURIComponent(parent), {
-      headers: { accept: "application/json" },
-    });
-    var body = await res.json();
-    if (!res.ok || !body.ok) {
-      error.textContent = body.error || "Catalog failed.";
+    setBusy(true);
+    empty.textContent = "Resolving children and probing each desk. This can take a moment.";
+    show(empty, true);
+    try {
+      var res = await fetch("/desk/catalog?parent=" + encodeURIComponent(parent), {
+        headers: { accept: "application/json" },
+      });
+      var body = await res.json();
+      show(empty, false);
+      if (!res.ok || !body.ok) {
+        error.textContent = body.error || "Catalog failed.";
+        show(error, true);
+        return;
+      }
+      var desks = body.desks || [];
+      if (!desks.length) {
+        empty.textContent = "No children under that parent.";
+        show(empty, true);
+        return;
+      }
+      list.innerHTML = desks.map(card).join("");
+      show(list, true);
+    } catch (_e) {
+      show(empty, false);
+      error.textContent = "Catalog failed.";
       show(error, true);
-      return;
+    } finally {
+      setBusy(false);
     }
-    var desks = body.desks || [];
-    if (!desks.length) {
-      empty.textContent = "No children under that parent.";
-      show(empty, true);
-      return;
-    }
-    list.innerHTML = desks.map(card).join("");
-    show(list, true);
   }
 
   form.addEventListener("submit", function (event) {
     event.preventDefault();
+    if (busy) return;
     var parent = parentInput.value.trim();
     var url = new URL(window.location.href);
     if (parent) url.searchParams.set("parent", parent);
