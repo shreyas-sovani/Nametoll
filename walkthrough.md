@@ -103,7 +103,7 @@ Footer, every page:
 
 ### What you see
 
-A dark SaaS page, not a ticket blotter.
+A light SaaS page (bone white, terracotta accent), not a ticket blotter.
 
 Left: eyebrow `Named toll · HTTP 402` with a small lamp, headline **Pay any desk by its name.**, lede about agents / 402 / HBAR / public bill. Three buttons:
 
@@ -113,7 +113,7 @@ Left: eyebrow `Named toll · HTTP 402` with a small lamp, headline **Pay any des
 
 Right: a card stamped **402**, titled **One request, five gates**: Name → Cap → 402 → Meter → Bill.
 
-Below that, a scrolling marquee (HTTP 402, x402 v2, asset 0.0.0, TEE, remainder, HCS…). Then **The loop** (five lanes), **What the desk sells** (Aave v3 Ethereum + Compound III), **This origin** (live config grid), **For operators** (Directory / Spend cap / Public bill / Subscribe).
+Below that, a static facts strip (HTTP 402, x402 v2, asset 0.0.0, TEE, remainder, HCS…). Then **The loop** (five lanes), **What the desk sells** (Aave v3 Ethereum + Compound III), **This origin** (live config grid), **For operators** (Directory / Spend cap / Public bill / Subscribe).
 
 ### What it means
 

@@ -36,7 +36,7 @@ function liveStatus(config: AppConfig, canPay: boolean): string {
     </dl>`;
 }
 
-const MARQUEE_ITEMS = [
+const FACTS = [
   "HTTP 402 Payment Required",
   "x402 v2 · exact",
   "asset 0.0.0 · HBAR",
@@ -48,14 +48,12 @@ const MARQUEE_ITEMS = [
   "recompute from Mirror Node",
 ];
 
-function marquee(): string {
-  const items = MARQUEE_ITEMS.map(
+function factsStrip(): string {
+  const items = FACTS.map(
     (item) => `<span><b>${escapeHtml(item)}</b></span>`,
   ).join("");
   return `
-    <div class="marquee" aria-hidden="true">
-      <div class="marquee-track"><div class="marquee-group">${items}</div><div class="marquee-group">${items}</div></div>
-    </div>`;
+    <div class="strip" aria-hidden="true">${items}</div>`;
 }
 
 export function renderLandingPage(
@@ -87,7 +85,7 @@ export function renderLandingPage(
         </ol>
       </div>
     </section>
-    ${marquee()}
+    ${factsStrip()}
     <section class="reveal">
       <h2 style="margin-bottom: 1rem">The loop</h2>
       <ol class="lane">
