@@ -130,7 +130,7 @@ export function renderLandingPage(
         </div>
         <div>
           <h3>Subscribe</h3>
-          <p>Pre-authorize N weekly snapshots with scheduled transfers. HTS custom fees sit on that rail. The per-request 402 stays HBAR.</p>
+          <p>Pre-authorize N weekly snapshots with scheduled transfers. <a href="/app#subscribe">Plan slots on the desk</a> or read the <a href="/docs#subscribe">manual</a>. HTS custom fees sit on that rail. The per-request 402 stays HBAR.</p>
         </div>
       </div>
     </section>`;

@@ -63,7 +63,7 @@ export function renderDocsPage(
         <article class="doc-card" id="desk">
           <h2>Open a desk</h2>
           <p>Use <a href="/app">the desk console</a> or HTTP. Type or paste the name. Choose 1 or 2 protocols. <strong>Open desk</strong> calls <code>GET /desk/inspect</code>. If the TEE allows, <strong>Pay</strong> calls <code>POST /desk/pay</code> with the same name and protocol list.</p>
-          <p>Pay spends the operator buyer key on this origin. It is rate-limited, optionally gated by a shared secret cookie or <code>x-desk-pay-secret</code>, and pinned to <code>PUBLIC_DESK_URL</code> when that is set. Inspect stays open.</p>
+          <p>Pay can spend the operator buyer key or a guest account from <code>POST /desk/session</code> (ephemeral ECDSA, seller-funded 0.5 HBAR). Both are rate-limited, optionally gated by a shared secret cookie or <code>x-desk-pay-secret</code>, and pinned to <code>PUBLIC_DESK_URL</code> when that is set. Inspect stays open.</p>
         </article>
         <article class="doc-card" id="402">
           <h2>HTTP 402</h2>
@@ -102,7 +102,7 @@ export function renderDocsPage(
         </article>
         <article class="doc-card" id="subscribe">
           <h2>Subscribe</h2>
-          <p>Recurring snapshots use Hedera scheduled transactions, not a second 402. The buyer pre-authorizes N transfers with <code>wait_for_expiry</code>. Each slot expires at most 62 days out. When Mirror Node shows <code>executed_timestamp</code>, <code>GET /desk/claim?schedule=</code> delivers one snapshot. The HBAR snapshot 402 stays asset <code>0.0.0</code>.</p>
+          <p>Recurring snapshots use Hedera scheduled transactions, not a second 402. Plan them on <a href="/app#subscribe">the desk</a> or via HTTP. The buyer pre-authorizes N transfers with <code>wait_for_expiry</code>. Each slot expires at most 62 days out. When Mirror Node shows <code>executed_timestamp</code>, claim on <a href="/desks">/desks</a> or <code>GET /desk/claim?schedule=</code> delivers one snapshot. The HBAR snapshot 402 stays asset <code>0.0.0</code>.</p>
           <p>HTS is a desk-credit token with a custom fixed HBAR fee to the seller. Blocky402 <code>/supported</code> does not advertise a non-HBAR asset, so the pay path does not switch tokens. <code>GET /desk/hts</code> publishes the token plan. <code>npm run hts -- create</code> broadcasts it. Put the id in <code>HTS_TOKEN_ID</code>.</p>
           <pre>curl -sS "http://127.0.0.1:8787/desk/subscribe?slots=2&amp;intervalSec=604800"
 curl -sS http://127.0.0.1:8787/desk/hts
@@ -122,7 +122,10 @@ curl -sS "http://127.0.0.1:8787/desk/claim?schedule=&lt;0.0.x&gt;"</pre>
               <tr><td>GET</td><td><code>/desk/catalog?parent=</code></td><td>Children of a parent, each resolved and probed</td></tr>
               <tr><td>GET</td><td><code>/desk/offer</code></td><td>This origin's price and protocol ids</td></tr>
               <tr><td>GET</td><td><code>/desk/inspect?name=&amp;protocols=</code></td><td>Descriptor + TEE verdict + unpaid 402</td></tr>
-              <tr><td>POST</td><td><code>/desk/pay</code></td><td>Settle, snapshot, bill (when matched)</td></tr>
+              <tr><td>POST</td><td><code>/desk/pay</code></td><td>Settle, snapshot, bill (when matched). Body <code>payer: guest|operator</code></td></tr>
+              <tr><td>POST</td><td><code>/desk/session</code></td><td>Create an in-memory guest buyer and faucet 0.5 HBAR</td></tr>
+              <tr><td>GET</td><td><code>/desk/session</code></td><td>Current guest account, if the session cookie is set</td></tr>
+              <tr><td>POST</td><td><code>/desk/register</code></td><td>Issue a child that resells this desk (price/payTo fixed)</td></tr>
               <tr><td>GET</td><td><code>${SNAPSHOT_PATH}</code></td><td>Merchandise; 402 if unpaid</td></tr>
               <tr><td>GET</td><td><code>/desk/brain?tinybars=</code></td><td>Public verdict for an amount</td></tr>
               <tr><td>GET</td><td><code>/desk/join</code></td><td>Unsigned <code>join()</code> from the same TEE — this origin does not broadcast it</td></tr>
@@ -156,7 +159,7 @@ npm run join</pre>
         <article class="doc-card" id="ops">
           <h2>Operators</h2>
           <p>Do not commit secrets. Copy <code>.env.example</code> locally. Never put a facilitator private key on the resource server. Directory text keys: <code>url</code>, <code>agent-context</code>, <code>agent-endpoint[web]</code>. CRE HTTP inside the TEE uses <code>HTTPClient</code> + <code>TeeRuntime</code> only.</p>
-          <p>Product pages: <a href="/landing">/landing</a>, <a href="/desks">/desks</a>, <a href="/app">/app</a>, <a href="/docs">/docs</a>. <code>/</code> is the product page.</p>
+          <p>Product pages: <a href="/landing">/landing</a>, <a href="/desks">/desks</a>, <a href="/register">/register</a>, <a href="/app">/app</a>, <a href="/docs">/docs</a>. <code>/</code> is the product page. <a href="/register">/register</a> issues a child that resells this desk — label and endpoint vary; price and pay-to do not.</p>
         </article>
       </div>
     </div>`;

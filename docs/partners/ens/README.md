@@ -25,7 +25,7 @@ Desk records (documented keys only):
 | `url` | ENSIP-5 | Fallback origin |
 | `agent-context` | ENSIP-26 | JSON `{ payTo, priceRule, hcsTopic, asset: "0.0.0" }` |
 
-Happy path does not ship a name. Type or paste one into `GET /desk/resolve?name=`, `/desks`, or `npm run directory -- <name>`.
+Happy path does not ship a name. Type or paste one into `GET /desk/resolve?name=`, `/desks`, or `npm run directory -- <name>`. `/register` + `POST /desk/register` issue a child via the existing `issueDeskChild` write path. Label and endpoint vary; `payTo`, `priceRule`, topic, and asset `0.0.0` are this origin's (`ENS_PARENT` selects the parent). Do not accept a judge-supplied price.
 
 ## Live Sepolia (11–12 Sep 2026)
 

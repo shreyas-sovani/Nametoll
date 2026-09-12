@@ -4,7 +4,7 @@ import type { Brain } from "../brain/index.ts";
 import { DeskResolveError, type Directory } from "../directory/index.ts";
 import { protocolIdsFromQuery } from "../gate/meter.ts";
 import type { Ledger } from "../ledger/index.ts";
-import type { Buyer } from "./index.ts";
+import { createBuyer, type Buyer } from "./index.ts";
 import { inspectNamedDesk, payNamedDesk } from "./drive.ts";
 import type { PayWindow } from "../brain/pay-window.ts";
 import {
@@ -12,11 +12,11 @@ import {
   DEFAULT_PAY_GLOBAL_MAX,
   DEFAULT_PAY_RATE_MAX,
   DEFAULT_PAY_RATE_WINDOW_MS,
-  PAY_SECRET_COOKIE,
-  PAY_SECRET_HEADER,
-  readCookie,
-  secretsMatch,
+  type PayRateLimiter,
 } from "./pay-guard.ts";
+import { clientKey, paySecretOk } from "./session-http.ts";
+import { GUEST_COOKIE, type GuestStore } from "./session.ts";
+import { readCookie } from "./pay-guard.ts";
 
 export const INSPECT_PATH = "/desk/inspect";
 export const PAY_PATH = "/desk/pay";
@@ -28,14 +28,18 @@ export type BuyerHttpDeps = {
   buyer?: Buyer;
   ledger?: Ledger;
   payWindow?: PayWindow;
+  guestStore?: GuestStore;
+  limiter?: PayRateLimiter;
 };
 
 export function mountBuyer(app: Express, deps: BuyerHttpDeps): void {
-  const limiter = createPayRateLimiter({
-    max: deps.config.deskPayRateMax ?? DEFAULT_PAY_RATE_MAX,
-    windowMs: deps.config.deskPayRateWindowMs ?? DEFAULT_PAY_RATE_WINDOW_MS,
-    globalMax: deps.config.deskPayGlobalMax ?? DEFAULT_PAY_GLOBAL_MAX,
-  });
+  const limiter =
+    deps.limiter ??
+    createPayRateLimiter({
+      max: deps.config.deskPayRateMax ?? DEFAULT_PAY_RATE_MAX,
+      windowMs: deps.config.deskPayRateWindowMs ?? DEFAULT_PAY_RATE_WINDOW_MS,
+      globalMax: deps.config.deskPayGlobalMax ?? DEFAULT_PAY_GLOBAL_MAX,
+    });
 
   app.get(INSPECT_PATH, async (req, res) => {
     const name = typeof req.query.name === "string" ? req.query.name : "";
@@ -50,7 +54,7 @@ export function mountBuyer(app: Express, deps: BuyerHttpDeps): void {
         deps.brain,
         deps.config,
         protocolIdsFromQuery(req.query.protocols),
-        driveContext(deps),
+        driveContext(deps, req, typeof req.query.payer === "string" ? req.query.payer : ""),
       );
       res.json({ ok: true, ...inspect });
     } catch (error) {
@@ -65,24 +69,11 @@ export function mountBuyer(app: Express, deps: BuyerHttpDeps): void {
       res.status(429).json({ ok: false, error: "Pay rate limit. Retry shortly." });
       return;
     }
-    const expected = deps.config.deskPaySecret;
-    if (expected) {
-      const provided =
-        headerString(req.headers[PAY_SECRET_HEADER]) ??
-        readCookie(
-          typeof req.headers.cookie === "string" ? req.headers.cookie : undefined,
-          PAY_SECRET_COOKIE,
-        );
-      if (!secretsMatch(provided, expected)) {
-        res.status(401).json({
-          ok: false,
-          error: `Pay requires ${PAY_SECRET_HEADER}. GET /desk/inspect stays open.`,
-        });
-        return;
-      }
-    }
-    if (!deps.buyer) {
-      res.status(503).json({ ok: false, error: "Buyer signer is not configured on this desk." });
+    if (!paySecretOk(req, deps.config.deskPaySecret)) {
+      res.status(401).json({
+        ok: false,
+        error: "Pay requires x-desk-pay-secret. GET /desk/inspect stays open.",
+      });
       return;
     }
     const body = asRecord(req.body);
@@ -95,16 +86,22 @@ export function mountBuyer(app: Express, deps: BuyerHttpDeps): void {
     }
     const protocols =
       protocolIdsFromQuery(body.protocols) ?? protocolIdsFromQuery(req.query.protocols);
+    const payerMode = typeof body.payer === "string" ? body.payer : "";
+    const resolved = resolvePayer(deps, req, payerMode);
+    if (!resolved.ok) {
+      res.status(resolved.status).json({ ok: false, error: resolved.error });
+      return;
+    }
     try {
       const paid = await payNamedDesk(
         name,
         deps.directory,
         deps.brain,
-        deps.buyer,
+        resolved.buyer,
         deps.config,
         deps.ledger,
         protocols,
-        driveContext(deps),
+        resolved.context,
       );
       if (!paid.ok) {
         res.status(paid.status).json({
@@ -121,20 +118,59 @@ export function mountBuyer(app: Express, deps: BuyerHttpDeps): void {
   });
 }
 
-function driveContext(deps: BuyerHttpDeps): { payer?: string; paysThisHour?: string } {
+function driveContext(
+  deps: BuyerHttpDeps,
+  req: { headers: { cookie?: string | undefined } },
+  payerMode: string,
+): { payer?: string; paysThisHour?: string } {
+  const resolved = resolvePayer(deps, req, payerMode);
   return {
-    ...(deps.config.buyerAccountId ? { payer: deps.config.buyerAccountId } : {}),
+    ...(resolved.ok && resolved.context.payer ? { payer: resolved.context.payer } : {}),
+    ...(!resolved.ok && deps.config.buyerAccountId
+      ? { payer: deps.config.buyerAccountId }
+      : {}),
     ...(deps.payWindow ? { paysThisHour: String(deps.payWindow.count()) } : {}),
   };
 }
 
-function clientKey(ip?: string, remoteAddress?: string): string {
-  return ip || remoteAddress || "unknown";
-}
-
-function headerString(value: string | string[] | undefined): string | undefined {
-  if (Array.isArray(value)) return value[0];
-  return value;
+function resolvePayer(
+  deps: BuyerHttpDeps,
+  req: { headers: { cookie?: string | undefined } },
+  payerMode: string,
+):
+  | { ok: true; buyer: Buyer; context: { payer?: string; paysThisHour?: string } }
+  | { ok: false; status: number; error: string } {
+  const hour = deps.payWindow ? { paysThisHour: String(deps.payWindow.count()) } : {};
+  if (payerMode === "guest") {
+    const id = readCookie(
+      typeof req.headers.cookie === "string" ? req.headers.cookie : undefined,
+      GUEST_COOKIE,
+    );
+    const guest = id && deps.guestStore ? deps.guestStore.get(id) : undefined;
+    if (!guest) {
+      return { ok: false, status: 401, error: "Guest session required. POST /desk/session first." };
+    }
+    return {
+      ok: true,
+      buyer: createBuyer({
+        accountId: guest.accountId,
+        privateKey: guest.privateKey,
+        network: deps.config.network,
+      }),
+      context: { payer: guest.accountId, ...hour },
+    };
+  }
+  if (!deps.buyer) {
+    return { ok: false, status: 503, error: "Buyer signer is not configured on this desk." };
+  }
+  return {
+    ok: true,
+    buyer: deps.buyer,
+    context: {
+      ...(deps.config.buyerAccountId ? { payer: deps.config.buyerAccountId } : {}),
+      ...hour,
+    },
+  };
 }
 
 function asRecord(value: unknown): Record<string, unknown> {

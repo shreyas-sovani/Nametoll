@@ -34,6 +34,7 @@ import {
 import { DESK_TEXT_KEY_LIST, DESK_TEXT_KEYS } from "./keys.ts";
 import { childName } from "./parent-name.ts";
 import { loadSepoliaAccounts } from "./sepolia-accounts.ts";
+import type { ConstrainedDeskRecords, IssuedDesk } from "./register.ts";
 import { ENS_CLI, type WritePlan } from "./write-plan.ts";
 
 const STATE_PATH = resolve(".ens/sepolia-live.json");
@@ -216,6 +217,28 @@ export async function runIssueSubname(opts: {
     throw new Error("Set PUBLIC_DESK_URL, HEDERA_SELLER_ACCOUNT_ID, and HCS_TOPIC_ID.");
   }
 
+  const issued = await issueDeskChild({
+    parent,
+    label,
+    endpoint,
+    payTo,
+    priceRule,
+    hcsTopic,
+    asset: HBAR_ASSET,
+  });
+  console.log(JSON.stringify(issued, null, 2));
+}
+
+export async function issueDeskChild(input: ConstrainedDeskRecords): Promise<IssuedDesk> {
+  const { owner, operator } = loadSepoliaAccounts();
+  const state = loadState();
+  const parent = input.parent.trim();
+  const label = input.label.trim();
+  const endpoint = input.endpoint;
+  const payTo = input.payTo;
+  const hcsTopic = input.hcsTopic;
+  const priceRule = input.priceRule;
+
   const rpc = process.env.ETH_RPC_URL?.trim() || "https://ethereum-sepolia-rpc.publicnode.com";
   const publicClient = createPublicClient({ chain: sepolia, transport: http(rpc) });
   const wallet = createWalletClient({ account: owner, chain: sepolia, transport: http(rpc) });
@@ -264,9 +287,10 @@ export async function runIssueSubname(opts: {
     functionName: "getState",
     args: [v2LabelId(label)],
   });
+  let registerTx: Hex | undefined;
   if (childState.status !== V2Status.REGISTERED) {
     const block = await publicClient.getBlock();
-    const hash = await send(publicClient, wallet, owner, {
+    registerTx = await send(publicClient, wallet, owner, {
       address: subregistry,
       abi: v2RegistryAbi,
       functionName: "register",
@@ -279,7 +303,7 @@ export async function runIssueSubname(opts: {
         block.timestamp + YEAR_SECONDS,
       ],
     });
-    logStep("child", { child, hash });
+    logStep("child", { child, hash: registerTx });
   } else {
     logStep("child", { child, alreadyRegistered: true });
   }
@@ -341,23 +365,12 @@ export async function runIssueSubname(opts: {
 
   const agents = [...new Set([...(state.agents ?? []), child])];
   saveState({ parent, subregistry, agents });
-  console.log(
-    JSON.stringify(
-      {
-        parent,
-        child,
-        owner: owner.address,
-        operator: operator.address,
-        resolver,
-        subregistry,
-        endpoint,
-        payTo,
-        hcsTopic,
-      },
-      null,
-      2,
-    ),
-  );
+  return {
+    parent,
+    child,
+    resolver,
+    ...(registerTx ? { registerTx } : {}),
+  };
 }
 
 const invoked = process.argv[1]?.includes("issue-subname");

@@ -293,7 +293,9 @@ Banners you should expect:
 | `GET /desk/resolve?name=…` | Phone-book lookup, no pay |
 | `GET /desk/inspect?name=…` | Descriptor + TEE + 402 challenge, no settle |
 | `GET /desk/catalog?parent=…` | Children of a parent + live probes (Omnigraph, or `LabelRegistered` if ENSNode TLS fails) |
-| `POST /desk/pay` | Demo pay (server buyer keys) |
+| `POST /desk/pay` | Demo pay (operator key or `{ payer: "guest" }`) |
+| `POST /desk/session` | Ephemeral guest buyer + 0.5 HBAR faucet |
+| `POST /desk/register` | Child name that resells this desk (price/payTo fixed) |
 | `npm run buyer -- <name>` | Real consuming agent: resolve → 402 → sign → data |
 | `npm run agent -- <parent>` | Discover a child, then pay |
 | `GET /desk/ledger` | Recent bills |
@@ -339,7 +341,7 @@ Nametoll is not:
 
 The Graph is the **merchandise** (what you buy). It is not currently a prize-form pick. World is not in this app.
 
-Stretch that **landed** and is still not required for the spine: unused-remainder refund, Hedera harness PR #59, Chainlink liquidation `join()`, Sunday form stay, `/desks` + discover-and-pay agent, second ENSv2 sibling, TEE allowlist/rate, TOLL custom fee + scheduled subscribe. ERC-8004 / A2A stayed out.
+Stretch that **landed** and is still not required for the spine: unused-remainder refund, Hedera harness PR #59, Chainlink liquidation `join()`, Sunday form stay, `/desks` + discover-and-pay agent, second ENSv2 sibling, TEE allowlist/rate, TOLL custom fee + scheduled subscribe, guest session pay, `/register`, claim/subscribe UI. Per-desk 402 pricing and ERC-8004 / A2A stayed out.
 
 ---
 

@@ -1,6 +1,6 @@
 import { escapeHtml } from "./escape.ts";
 
-export type ProductPath = "/" | "/landing" | "/app" | "/docs" | "/desks";
+export type ProductPath = "/" | "/landing" | "/app" | "/docs" | "/desks" | "/register";
 
 export type ShellOptions = {
   title: string;
@@ -553,15 +553,23 @@ html.js .reveal.in { opacity: 1; transform: none; }
 }
 .console .lede { font-size: 1rem; margin-bottom: 1.2rem; }
 form.drive {
-  display: grid;
-  grid-template-columns: 1fr auto auto auto;
+  display: flex;
+  flex-wrap: wrap;
   gap: 0.6rem 0.65rem;
   align-items: end;
   margin: 0 0 1.1rem;
 }
-form.drive label { font-size: 0.82rem; color: var(--mute-2); display: grid; gap: 0.35rem; }
-form.drive .name-field { grid-column: 1 / -1; }
-input[name="name"], select {
+form.drive label, form.side label { font-size: 0.82rem; color: var(--mute-2); display: grid; gap: 0.35rem; }
+form.drive .name-field { flex: 1 1 100%; }
+form.side {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.6rem;
+  align-items: end;
+  margin: 0 0 0.8rem;
+}
+form.side:has(input[name="intervalSec"]) { grid-template-columns: 1fr 1fr auto; }
+input, select {
   width: 100%;
   border: 1px solid var(--line-2);
   background: var(--ink-0);
@@ -573,8 +581,8 @@ input[name="name"], select {
   border-radius: 0.6rem;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
-input[name="name"]::placeholder { color: var(--mute-2); }
-input[name="name"]:focus, select:focus {
+input::placeholder { color: var(--mute-2); }
+input:focus, select:focus {
   border-color: var(--amber);
   box-shadow: 0 0 0 3px rgba(255,178,36,0.15);
 }
@@ -734,6 +742,7 @@ export function renderShell(options: ShellOptions): string {
       <nav class="nav" aria-label="Product">
         <a href="/landing"${productCurrent ? ' aria-current="page"' : ""}>Product</a>
         <a href="/desks"${options.path === "/desks" ? ' aria-current="page"' : ""}>Desks</a>
+        <a href="/register"${options.path === "/register" ? ' aria-current="page"' : ""}>Register</a>
         <a href="/app"${options.path === "/app" ? ' aria-current="page"' : ""}>Desk</a>
         <a href="/docs"${options.path === "/docs" ? ' aria-current="page"' : ""}>Docs</a>
         ${options.path === "/app" ? "" : `<a class="nav-cta" href="/app">Open desk</a>`}

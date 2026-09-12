@@ -103,7 +103,7 @@ curl -sS -X POST http://127.0.0.1:8787/desk/pay \
   -d '{"name":"<paste-a-name>","protocols":["aave-v3-ethereum"]}'
 ```
 
-`GET /desk/inspect` stays open. `POST /desk/pay` spends the operator buyer key, so it is rate-limited, optionally gated by `DESK_PAY_SECRET` (cookie on `/`, `/landing`, `/app`, `/desks`, `/docs`, or the header above), and pinned to `PUBLIC_DESK_URL` when that is set. Empty `x-desk-pay-secret` is ignored unless the env var is set.
+`GET /desk/inspect` stays open. `POST /desk/pay` spends the operator buyer key **or** a guest session (`{ "payer": "guest" }` after `POST /desk/session`). Both are rate-limited, optionally gated by `DESK_PAY_SECRET` (cookie on `/`, `/landing`, `/app`, `/desks`, `/docs`, `/register`, or the header above), and pinned to `PUBLIC_DESK_URL` when that is set. Empty `x-desk-pay-secret` is ignored unless the env var is set. Guest keys stay in memory; the JSON never includes them.
 
 An agent that is handed only a **parent** namespace:
 
@@ -136,6 +136,10 @@ CRE Brain (needs `cre` on PATH and `cre login` for simulate):
 npm run brain -- 100000
 npm run cre:simulate
 curl -sS "http://127.0.0.1:8787/desk/brain?tinybars=100000"
+curl -sS -X POST http://127.0.0.1:8787/desk/session
+curl -sS -X POST http://127.0.0.1:8787/desk/register \
+  -H 'content-type: application/json' \
+  -d '{"label":"<paste-a-label>"}'
 curl -sS "http://127.0.0.1:8787/desk/catalog?parent=<paste-a-parent-name>"
 curl -sS http://127.0.0.1:8787/desk/offer
 curl -sS "http://127.0.0.1:8787/desk/subscribe?slots=2&intervalSec=604800"
@@ -250,6 +254,9 @@ Fee-payer is **not** configured here. The Gate reads it from live `GET /supporte
 - **B18** sibling `agent-02.nametoll.eth` — own Permissioned Resolver + scoped EAC. `npm run ens:subname`.
 - **B19** TEE policy axes (cap / allowlist / rate). Optional CRE secret env vars default empty so cap-only simulate still boots. HCS may store `verdictReason` / `verdictHash`.
 - **B20** TOLL `0.0.10483302` (custom `100000` tinybar HBAR fee) https://hashscan.io/testnet/token/0.0.10483302. Executed slots: https://hashscan.io/testnet/tx/0.0.10463842@1789156008.769559934 and https://hashscan.io/testnet/tx/0.0.10463842@1789156009.185023222. `GET /desk/claim` delivered live Aave and HCS `subscribe` bills. Snapshot 402 stays `0.0.0`. ERC-8004 left out.
+- **B21** Guest session pay. `POST /desk/session` + `/app` payer toggle. HashScan settle can show the guest account. TEE/HCS see that payer id.
+- **B22** `/register` issues a child that resells this desk. Label + endpoint vary; price and pay-to stay `config`. Set `ENS_PARENT`.
+- **B23–B24** Claim + subscribe forms on `/app` and `/desks`. Landing Subscribe links `/app#subscribe`. Per-desk 402 pricing skipped.
 
 **Next**
 

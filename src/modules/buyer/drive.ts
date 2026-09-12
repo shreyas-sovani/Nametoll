@@ -20,6 +20,7 @@ export type DeskInspect = {
   verdict: BrainVerdict;
   challenge: SnapshotChallenge;
   recompute: ReturnType<typeof previewRecompute>;
+  payer?: string;
 };
 
 export type DeskPayResult = DeskInspect & {
@@ -62,6 +63,7 @@ export async function inspectNamedDesk(
     verdict,
     challenge,
     recompute: previewRecompute(units, config.priceTinybars, tinybars),
+    ...(context.payer ? { payer: context.payer } : {}),
   };
 }
 

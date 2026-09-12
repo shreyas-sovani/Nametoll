@@ -71,6 +71,8 @@ describe("judge / operator page", () => {
       expect(html).toMatch(/id="station-bill"/);
       expect(html).toMatch(/\/desk\/inspect/);
       expect(html).toMatch(/\/desk\/pay/);
+      expect(html).toMatch(/id="payer-mode"/);
+      expect(html).toMatch(/id="claim-form"/);
       expect(html).toMatch(/HashScan/i);
       expect(html).toMatch(/HCS/);
       expect(html.toLowerCase()).not.toMatch(/\.eth/);

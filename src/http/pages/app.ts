@@ -5,6 +5,7 @@ import { explorerNetwork, hashscanTopicUrl } from "../../modules/ledger/hashscan
 import { PINNED_PROTOCOLS } from "../../modules/merchandise/deployments.ts";
 import { deskDriveScript } from "./drive.ts";
 import { escapeHtml, tinybarsToHbar } from "./escape.ts";
+import { claimFormHtml, sideFormsScript, subscribeFormHtml } from "./side-forms.ts";
 import { renderShell } from "./shell.ts";
 import type { ProductPageOptions } from "./landing.ts";
 
@@ -42,6 +43,7 @@ export function renderAppPage(
             <dt>brain</dt><dd><code>/desk/brain?tinybars=</code></dd>
             <dt>inspect</dt><dd><code>/desk/inspect?name=</code></dd>
             <dt>pay</dt><dd><code>POST /desk/pay</code></dd>
+            <dt>guest</dt><dd><code>POST /desk/session</code></dd>
             <dt>subscribe</dt><dd><code>/desk/subscribe</code> · <code>/desk/claim</code></dd>
             <dt>HTS</dt><dd><code>/desk/hts</code></dd>
             <dt>TEE cache</dt><dd>per amount, ${Math.round(VERDICT_TTL_MS / 1000)}s TTL; unavailable is not cached</dd>
@@ -73,10 +75,18 @@ export function renderAppPage(
               <option value="2">2 protocols · 2 × price</option>
             </select>
           </label>
+          <label for="payer-mode">Payer
+            <select id="payer-mode" name="payer">
+              <option value="operator">operator key</option>
+              <option value="guest">my guest account</option>
+            </select>
+          </label>
           <button type="submit" id="open-desk">Open desk</button>
           <button type="button" class="pay" id="pay-desk" disabled data-can-pay="${canPay ? "1" : "0"}">Pay</button>
           <button type="button" class="ghost" id="join-desk">TEE join()</button>
+          <button type="button" class="ghost" id="guest-create">Create guest account</button>
         </form>
+        <p id="guest-status" class="banner" hidden role="status"></p>
         <p id="desk-empty" class="banner" role="status">Paste a name to open the desk. Empty on purpose — the happy path does not ship a name.</p>
         <p id="desk-error" class="banner err" hidden role="alert"></p>
         <p id="desk-deny" class="banner deny" hidden role="alert"></p>
@@ -111,6 +121,12 @@ export function renderAppPage(
             <dl id="join-out"></dl>
           </section>
         </div>
+        <section class="band" id="subscribe" style="margin-top: 1.2rem">
+          <h2>Subscribe + claim</h2>
+          <p>Scheduled transfers are a side rail. Snapshot 402 stays HBAR. Paste a schedule id after Mirror shows <code>executed_timestamp</code>.</p>
+          ${subscribeFormHtml()}
+          ${claimFormHtml()}
+        </section>
       </div>
     </div>
     <script>
@@ -118,6 +134,7 @@ export function renderAppPage(
         pinnedIds,
         hashscanTxPrefix: `https://hashscan.io/${network}/tx/`,
       })}
+      ${sideFormsScript()}
     </script>`;
   return renderShell({
     title: "Desk · Nametoll",

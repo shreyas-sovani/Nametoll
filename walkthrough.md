@@ -47,7 +47,7 @@ Live names you may type (they are not defaults):
 | Spend cap | `150000` tinybars (secret in the TEE) | 1 protocol allows, 2 denies |
 | Asset | `0.0.0` = HBAR | Snapshot 402 never switches to TOLL |
 | Seller / payTo | `0.0.10463755` | Who receives the HBAR |
-| Buyer (server Pay) | `0.0.10463842` | Who `/app` Pay spends |
+| Buyer (server Pay) | `0.0.10463842` | Who `/app` Pay spends in **operator key** mode. **my guest account** spends the session faucet account. |
 | Fee-payer | `0.0.7162784` (Blocky402 `/supported`) | Shows up as the settle tx account |
 | HCS topic | `0.0.10464309` | The public bill book |
 | TEE cache | 60s, per amount + payer + hour-count | First open of a new amount can take ~9s |
@@ -201,6 +201,18 @@ Other statuses:
 
 The registry never pays. It answers “what desks exist under this parent, and is that shop taking money?” The consuming agent (`npm run agent -- nametoll.eth`) does the same list, then picks the cheapest live desk that covers the protocols, then pays. You are looking at that directory with a human face.
 
+Below the list: **Have a schedule?** → `GET /desk/claim?schedule=`. Same claim as `/app#subscribe`. Replay of a billed slot is refused.
+
+---
+
+## Act 1b — Register (`/register`)
+
+Form: **Child label** + **Endpoint** (defaults to this origin) → `POST /desk/register`.
+
+The operator write path issues the child. Price, pay-to, topic, and asset stay this desk's. A body that sends a different `payTo` / `priceRule` is ignored. Set `ENS_PARENT` or the POST returns 400.
+
+After a good issue, list the parent on `/desks` again. The new label should appear once Sepolia + the catalog fallback see `LabelRegistered`.
+
 ---
 
 ## Act 2 — Desk console (`/app`), empty
@@ -225,9 +237,11 @@ Click a HashScan link in the rail anytime. It does not inspect or pay.
 | --- | --- | --- |
 | **Name** | empty, “paste a name” | The only input that picks a desk |
 | **Meter** | `1 protocol · 1 × price` | Which protocol ids go on inspect/pay |
+| **Payer** | `operator key` | Or `my guest account` after **Create guest account** |
 | **Open desk** | enabled | `GET /desk/inspect` — no money |
-| **Pay** | **disabled** | `POST /desk/pay` — spends the server buyer key |
+| **Pay** | **disabled** | `POST /desk/pay` — operator key or guest session |
 | **TEE join()** | enabled | `GET /desk/join` — unsigned calldata, no broadcast |
+| **Create guest account** | enabled | `POST /desk/session` — faucet 0.5 HBAR, cookie only |
 
 Banners under the form (only one shows at a time):
 
@@ -249,6 +263,8 @@ Banners under the form (only one shows at a time):
 7. **07 TEE join()** — filled only after **TEE join()**
 
 Click any station value (not a link) to copy it. Title is “Copy”.
+
+Below the stations: **Subscribe + claim** (`#subscribe`). Plan unsigned slots (`GET /desk/subscribe?slots=`) or claim a schedule id. This is not the 402 rail.
 
 If you arrived from `/app?name=desk.nametoll.eth` or `#name=…`, the box is prefilled. **Open desk is not auto-clicked.** You still press it.
 
@@ -360,8 +376,8 @@ Meter still **1**. Banner still allow. Press **Pay**.
 ### What happens
 
 - Button: **Paying…**, lamp `busy`, Pay disabled for the request
-- `POST /desk/pay` with `{ "name": "<what is in the box>", "protocols": ["aave-v3-ethereum"] }`
-- Cookies included (`credentials: "same-origin"`). If `DESK_PAY_SECRET` is set, the page already received HttpOnly cookie `nametoll_pay` when you loaded `/`, `/landing`, `/app`, `/desks`, or `/docs`. You do not type it.
+- `POST /desk/pay` with `{ "name": "<what is in the box>", "protocols": ["aave-v3-ethereum"], "payer": "operator" }` (or `"guest"`)
+- Cookies included (`credentials: "same-origin"`). If `DESK_PAY_SECRET` is set, the page already received HttpOnly cookie `nametoll_pay` when you loaded `/`, `/landing`, `/app`, `/desks`, `/docs`, or `/register`. You do not type it. Guest pay also sends `nametoll_guest`.
 - Server: rate limit → optional secret → re-inspect → TEE must still allow → `PUBLIC_DESK_URL` pin (if set, the name’s endpoint must be this origin) → Blocky402 settle → merchandise → wait up to ~5s for an HCS row whose `settleTx` matches
 
 First settle after a cold Brain can still feel slow. Give it 15–20s before assuming death.
@@ -556,6 +572,8 @@ Open these in extra tabs. None of them are the console.
 | `GET /desk/subscribe` (no `slots`) | 400 `slots query is required` | |
 | `GET /desk/subscribe?slots=2` | Unsigned schedule plan | Does not create schedules. |
 | `GET /desk/claim?schedule=0.0.10483309` | `already claimed` (slot 1 was claimed live) | Do not expect a new snapshot. |
+| `POST /desk/session` | Guest account id + 0.5 HBAR faucet tx | Cookie `nametoll_guest`. No private key in JSON. |
+| `POST /desk/register` `{ "label": "…" }` | Child that resells this desk | Price/payTo stay this origin. |
 
 `POST /desk/pay` from a random tab without the cookie will 401 if a secret is set.
 

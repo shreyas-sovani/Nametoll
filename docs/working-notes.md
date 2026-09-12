@@ -1,4 +1,4 @@
-# Working notes (B0–B20 live)
+# Working notes (B0–B24 live)
 
 Shipped index (code + explorers). Human remaining: 2–4 min video + stable `PUBLIC_DESK_URL`.
 
@@ -8,6 +8,7 @@ Shipped index (code + explorers). Human remaining: 2–4 min video + stable `PUB
 | B13–B16 | Remainder refund, harness PR #59, live `join()`, Sunday stay (Hedera · ENS · Chainlink) |
 | B17–B19 | `/desks` + `npm run agent`, sibling `agent-02.nametoll.eth`, TEE policy axes |
 | B20 | TOLL `0.0.10483302` + two executed `wait_for_expiry` slots; snapshot 402 still `0.0.0` |
+| B21–B24 | Guest session pay, `/register` (constrained records), claim + subscribe UI |
 
 ## Blocky402 probe (10 Sep 2026)
 
@@ -287,6 +288,15 @@ Hedera extra-points directory and ENS “agents as namespaces,” without touchi
 - **`npm run ens:subname -- --label agent-02`** — sibling under the parent UserRegistry, Permissioned Resolver salt index 1, scoped `authorizeTextRoles` on the three desk keys. `--plan` is unsigned. Live 12 Sep 2026: `agent-02.nametoll.eth`, resolver `0xe41Fab44355C6169af965C7994743625198561Da`, register https://sepolia.etherscan.io/tx/0xd1f6f4faa9f11636fb64673ddfe6d458285e6cbf6ea79631c0d017c528c10454.
 - **TEE policy** — `decidePolicy` in the CRE handler. Secrets: `SPEND_CAP`, optional `BUYER_ALLOWLIST`, optional `RATE_LIMIT`. Distinct reasons. Empty extra secrets keep the existing cap-only flip. HCS bills may include `verdictReason` + `verdictHash`; recompute is still units × price.
 - Pay path (Blocky402 settle, remainder refund, settleTx-matched bill) is unchanged.
+
+## Guest pay + self-serve register (12 Sep 2026)
+
+Spectator → user without handing the operator buyer key.
+
+- **`POST /desk/session`** — in-memory ECDSA buyer, cookie `nametoll_guest`. Seller `AccountCreate` then `TransferTransaction` 0.5 HBAR (`GUEST_FAUCET_TINYBARS`, same rail as `refund.ts`). Rate-limited with pay. Response is account id + HashScan only — no private key.
+- **`/app` payer** — `operator key` (existing `HEDERA_BUYER_*`) or `my guest account`. `POST /desk/pay` `{ payer: "guest" }` signs with the session key and passes that account id to TEE inspect context.
+- **`/register` + `POST /desk/register`** — label + endpoint (default `PUBLIC_DESK_URL`). `constrainedDeskRecords` forces this origin's `payTo`, `priceRule`, topic, asset `0.0.0`. Parent from `ENS_PARENT`. Write path is `issueDeskChild` (same Permissioned Resolver salt index 1 as B18).
+- **Claim / subscribe** — `/app#subscribe` and `/desks` hit the existing `GET /desk/claim` / `GET /desk/subscribe` endpoints. Landing Subscribe band links those forms. Per-desk 402 pricing not shipped.
 
 ## P3 HTS + scheduled subscribe (12 Sep 2026)
 

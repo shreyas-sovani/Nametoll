@@ -5,9 +5,10 @@ import { publicDeskConfig, startDesk } from "./helpers.ts";
 function expectChrome(html: string) {
   expect(html).toMatch(/Nametoll/i);
   expect(html).toMatch(/href="\/landing"/);
-  expect(html).toMatch(/href="\/desks"/);
-  expect(html).toMatch(/href="\/app"/);
-  expect(html).toMatch(/href="\/docs"/);
+      expect(html).toMatch(/href="\/desks"/);
+      expect(html).toMatch(/href="\/register"/);
+      expect(html).toMatch(/href="\/app"/);
+      expect(html).toMatch(/href="\/docs"/);
   expect(html).toMatch(/<title>/);
   expect(html).toMatch(/rel="icon"/);
   expect(html).toMatch(/og:title/);
@@ -32,6 +33,7 @@ describe("product pages", () => {
       expect(homeHtml).toMatch(/\/desk\/snapshot/);
       expect(homeHtml).toMatch(/\/desk\/resolve/);
       expect(homeHtml).toMatch(/Open desk/);
+      expect(homeHtml).toMatch(/href="\/app#subscribe"/);
       expect(homeHtml).not.toMatch(/id="drive-form"/);
       expect(homeHtml.toLowerCase()).not.toMatch(/\.eth/);
       expect(homeHtml.toLowerCase()).not.toMatch(/hackathon/);
@@ -72,6 +74,10 @@ describe("product pages", () => {
       expect(html).toMatch(/id="station-challenge"/);
       expect(html).toMatch(/id="station-snapshot"/);
       expect(html).toMatch(/id="station-bill"/);
+      expect(html).toMatch(/id="payer-mode"/);
+      expect(html).toMatch(/id="guest-create"/);
+      expect(html).toMatch(/id="claim-form"/);
+      expect(html).toMatch(/id="subscribe"/);
       expect(html).toMatch(/\/desk\/inspect/);
       expect(html).toMatch(/\/desk\/pay/);
       expect(html).toMatch(/HashScan/i);
@@ -112,10 +118,38 @@ describe("product pages", () => {
     }
   });
 
+  it("serves a self-serve register form without a baked-in happy-path name", async () => {
+    const desk = await startDesk({}, publicDeskConfig());
+    try {
+      const res = await fetch(`${desk.url}/register`);
+      expect(res.status).toBe(200);
+      const html = await res.text();
+      expectChrome(html);
+      expect(html).toMatch(/id="register-form"/);
+      expect(html).toMatch(/name="label"/);
+      expect(html).toMatch(/name="endpoint"/);
+      expect(html).toMatch(/\/desk\/register/);
+      expect(html.toLowerCase()).not.toMatch(/hackathon/);
+    } finally {
+      await desk.close();
+    }
+  });
+
+  it("exposes claim on the registry", async () => {
+    const desk = await startDesk({}, publicDeskConfig());
+    try {
+      const html = await (await fetch(`${desk.url}/desks`)).text();
+      expect(html).toMatch(/id="claim-form"/);
+      expect(html).toMatch(/\/desk\/claim/);
+    } finally {
+      await desk.close();
+    }
+  });
+
   it("sets the pay cookie on every product page when a secret is configured", async () => {
     const desk = await startDesk({ deskPaySecret: "cookie-secret" }, publicDeskConfig());
     try {
-      for (const path of ["/", "/landing", "/app", "/desks", "/docs"]) {
+      for (const path of ["/", "/landing", "/app", "/desks", "/docs", "/register"]) {
         const res = await fetch(`${desk.url}${path}`);
         const cookie = res.headers.getSetCookie?.()[0] ?? res.headers.get("set-cookie") ?? "";
         expect(cookie).toMatch(/nametoll_pay=/);

@@ -8,11 +8,15 @@ export function deskDriveScript(options: {
         var openBtn = document.getElementById("open-desk");
         var payBtn = document.getElementById("pay-desk");
         var joinBtn = document.getElementById("join-desk");
+        var payerMode = document.getElementById("payer-mode");
+        var guestBtn = document.getElementById("guest-create");
+        var guestStatus = document.getElementById("guest-status");
         var empty = document.getElementById("desk-empty");
         var err = document.getElementById("desk-error");
         var deny = document.getElementById("desk-deny");
         var ok = document.getElementById("desk-ok");
         var lastInspect = null;
+        var guestAccount = "";
         var pinnedProtocols = ${JSON.stringify(options.pinnedIds)};
         var hashscanTxPrefix = ${JSON.stringify(options.hashscanTxPrefix)};
         if (!form || !openBtn || !payBtn || !joinBtn) return;
@@ -25,6 +29,28 @@ export function deskDriveScript(options: {
         function typedName() {
           var value = new FormData(form).get("name");
           return value ? String(value).trim() : "";
+        }
+        function payer() {
+          return payerMode && payerMode.value === "guest" ? "guest" : "operator";
+        }
+        function canPayNow() {
+          if (payer() === "guest") return Boolean(guestAccount);
+          return payBtn.getAttribute("data-can-pay") === "1";
+        }
+        function showGuest(account, href) {
+          guestAccount = account || "";
+          if (!guestStatus) return;
+          if (!guestAccount) {
+            guestStatus.hidden = true;
+            return;
+          }
+          guestStatus.hidden = false;
+          guestStatus.className = "banner ok";
+          if (href) {
+            guestStatus.innerHTML = "Guest account <a href=\\"" + href + "\\" rel=\\"noreferrer\\" target=\\"_blank\\">" + guestAccount + "</a>";
+          } else {
+            guestStatus.textContent = "Guest account " + guestAccount;
+          }
         }
         function setLamp(state) {
           var lamp = document.getElementById("lane-lamp");
@@ -98,7 +124,8 @@ export function deskDriveScript(options: {
             ["payTo", d.payTo],
             ["priceRule", d.priceRule],
             ["hcsTopic", d.hcsTopic],
-            ["asset", d.asset]
+            ["asset", d.asset],
+            ["payer", body.payer]
           ]);
           var v = body.verdict || {};
           fillDl("tee-out", [
@@ -125,9 +152,11 @@ export function deskDriveScript(options: {
             ok.textContent = "TEE allowed. Unpaid GET is HTTP 402. Pay to settle.";
             ok.hidden = false;
             setLamp("allow");
-            payBtn.disabled = payBtn.getAttribute("data-can-pay") !== "1";
+            payBtn.disabled = !canPayNow();
             if (payBtn.disabled) {
-              showError("Desk has no buyer signer. Set buyer keys and restart, or use the buyer CLI.");
+              showError(payer() === "guest"
+                ? "Create a guest account first."
+                : "Desk has no buyer signer. Set buyer keys and restart, or use the buyer CLI.");
             }
           } else {
             hideBanners();
@@ -157,6 +186,7 @@ export function deskDriveScript(options: {
           var bill = body.bill || {};
           var rec = bill.recompute || {};
           fillDl("bill-out", [
+            ["payer", body.payer],
             ["settleTx", paid.settleTx, paid.hashscanUrl || bill.hashscanUrl],
             ["HashScan", paid.hashscanUrl || bill.hashscanUrl, paid.hashscanUrl || bill.hashscanUrl],
             ["HCS topic", body.topicId, body.topicHashscanUrl],
@@ -204,6 +234,7 @@ export function deskDriveScript(options: {
           var query = "/desk/inspect?name=" + encodeURIComponent(name);
           var ids = protocols();
           if (ids.length) query += "&protocols=" + encodeURIComponent(ids.join(","));
+          if (payer() === "guest") query += "&payer=guest";
           fetch(query)
             .then(function (res) { return res.json().then(function (body) { return { res: res, body: body }; }); })
             .then(function (pack) {
@@ -234,7 +265,7 @@ export function deskDriveScript(options: {
             method: "POST",
             credentials: "same-origin",
             headers: { "content-type": "application/json", accept: "application/json" },
-            body: JSON.stringify({ name: name, protocols: protocols() })
+            body: JSON.stringify({ name: name, protocols: protocols(), payer: payer() })
           })
             .then(function (res) { return res.json().then(function (body) { return { res: res, body: body }; }); })
             .then(function (pack) {
@@ -252,7 +283,7 @@ export function deskDriveScript(options: {
             .finally(function () {
               payBtn.textContent = "Pay";
               payBtn.removeAttribute("aria-busy");
-              if (lastInspect && lastInspect.verdict && lastInspect.verdict.allow && payBtn.getAttribute("data-can-pay") === "1") {
+              if (lastInspect && lastInspect.verdict && lastInspect.verdict.allow && canPayNow()) {
                 payBtn.disabled = false;
               }
             });
@@ -288,6 +319,52 @@ export function deskDriveScript(options: {
               joinBtn.removeAttribute("aria-busy");
             });
         });
+        function loadGuest() {
+          fetch("/desk/session", { credentials: "same-origin", headers: { accept: "application/json" } })
+            .then(function (res) { return res.json().then(function (body) { return { res: res, body: body }; }); })
+            .then(function (pack) {
+              if (pack.res.ok && pack.body.accountId) {
+                showGuest(pack.body.accountId, pack.body.hashscanAccountUrl);
+              }
+            })
+            .catch(function () {});
+        }
+        if (guestBtn) {
+          guestBtn.addEventListener("click", function () {
+            guestBtn.disabled = true;
+            guestBtn.textContent = "Creating…";
+            fetch("/desk/session", {
+              method: "POST",
+              credentials: "same-origin",
+              headers: { accept: "application/json" }
+            })
+              .then(function (res) { return res.json().then(function (body) { return { res: res, body: body }; }); })
+              .then(function (pack) {
+                if (!pack.res.ok || !pack.body.accountId) {
+                  showError(pack.body.error || "Guest session refused.");
+                  return;
+                }
+                showGuest(pack.body.accountId, pack.body.hashscanAccountUrl);
+                if (payerMode) payerMode.value = "guest";
+                if (lastInspect && lastInspect.verdict && lastInspect.verdict.allow) {
+                  payBtn.disabled = !canPayNow();
+                }
+              })
+              .catch(function () { showError("Guest session failed."); })
+              .finally(function () {
+                guestBtn.disabled = false;
+                guestBtn.textContent = "Create guest account";
+              });
+          });
+        }
+        if (payerMode) {
+          payerMode.addEventListener("change", function () {
+            if (lastInspect && lastInspect.verdict && lastInspect.verdict.allow) {
+              payBtn.disabled = !canPayNow();
+            }
+          });
+        }
+        loadGuest();
         var seeded = new URLSearchParams(window.location.search).get("name")
           || (window.location.hash.indexOf("name=") >= 0
             ? decodeURIComponent(window.location.hash.split("name=")[1] || "").split("&")[0]

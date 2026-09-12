@@ -2,7 +2,7 @@
 
 **For the build agent.** This is the direction of work. It is not a syntax guide and not a license to invent APIs.
 
-**Status 12 Sep 2026:** B0–**B20** done. Spine B0–B12 plus stretch B13–B20 (remainder, harness PR, `join()`, Sunday stay, discovery, ENSv2 sibling, TEE policy, TOLL + scheduled subscribe). Pay path (settle, remainder refund, settleTx-matched bill) unchanged. Snapshot 402 stays `0.0.0`. Public desk Brain is CRE simulate (`./cre` default) — 1 protocol allows, 2 denies over cap. Latest TEE-gated Aave settle: `0.0.7162784@1789111350.366520040`. Live remainder refund: `0.0.10463755@1789114039.622724528`. Live `join()`: `0x980aaffe6d62561964a42675f7831adbca09cf442c7db0cede9255e2ed5e3086`. Live names: `nametoll.eth` / `desk.nametoll.eth` / `agent-02.nametoll.eth`. Sunday form: **no swap** — Hedera · ENS · Chainlink.
+**Status 12 Sep 2026:** B0–**B24** done. Spine B0–B12 plus stretch B13–B24 (remainder, harness PR, `join()`, Sunday stay, discovery, ENSv2 sibling, TEE policy, TOLL + scheduled subscribe, guest pay, self-serve register, claim/subscribe UI). Pay path (settle, remainder refund, settleTx-matched bill) unchanged. Snapshot 402 stays `0.0.0`. Per-desk descriptor pricing left out (would retarget the 402). Public desk Brain is CRE simulate (`./cre` default) — 1 protocol allows, 2 denies over cap. Latest TEE-gated Aave settle: `0.0.7162784@1789111350.366520040`. Live remainder refund: `0.0.10463755@1789114039.622724528`. Live `join()`: `0x980aaffe6d62561964a42675f7831adbca09cf442c7db0cede9255e2ed5e3086`. Live names: `nametoll.eth` / `desk.nametoll.eth` / `agent-02.nametoll.eth`. Sunday form: **no swap** — Hedera · ENS · Chainlink.
 
 Read in this order, then execute tickets **in ID order**. Do not skip ahead to a later ticket because it looks more interesting.
 
@@ -32,7 +32,7 @@ Do not implement World, ATS, SwapVM, Uniswap, Privy, Arc, Ledger, Bazantic, ERC-
 
 | | |
 |---|---|
-| **Done** | B0–**B20** (spine B0–B12, stretch B13–B20). Directory `/desks` + `npm run agent`. Sibling `agent-02.nametoll.eth`. TEE policy axes. TOLL + scheduled subscribe. |
+| **Done** | B0–**B24** (spine B0–B12, stretch B13–B24). Directory `/desks` + `npm run agent`. Sibling `agent-02.nametoll.eth`. TEE policy axes. TOLL + scheduled subscribe. Guest session pay. `/register`. Claim + subscribe forms. |
 | **Next** | Video + stable public URL. Live sibling `agent-02.nametoll.eth` is on Sepolia. |
 | **Human blockers** | Public desk is ngrok session-scoped. Never commit `.env`. Record the 2–4 min video. |
 | **Not blockers** | Graph Studio query key works. Sepolia owner/operator are funded testnet accounts. |
@@ -288,6 +288,11 @@ Work top to bottom. A later ticket may assume the earlier **Done when**.
 - [x] **B18** Second ENSv2 desk via scripted subname. `npm run ens:subname -- --label agent-02` deploys Permissioned Resolver salt index 1, registers under the parent UserRegistry, scoped EAC on the three desk text keys. Live `agent-02.nametoll.eth` resolver `0xe41Fab44355C6169af965C7994743625198561Da`, register https://sepolia.etherscan.io/tx/0xd1f6f4faa9f11636fb64673ddfe6d458285e6cbf6ea79631c0d017c528c10454. 12 Sep 2026.
 - [x] **B19** TEE policy, not only cap. Enclave secrets: required `SPEND_CAP`, optional `BUYER_ALLOWLIST` / `RATE_LIMIT`. Distinct public reasons. Empty extras stay cap-only. HCS may store `verdictReason` / `verdictHash`. CRE spawn defaults the optional env names to empty so `cre workflow simulate` still boots. Settle/refund math unchanged. 12 Sep 2026.
 - [x] **B20** HTS custom fee + Scheduled Transactions (P3). Probed Blocky402 `/supported`: Hedera `exact`, no advertised assets — snapshot 402 stays `0.0.0`. Live TOLL `0.0.10483302` (fixed `100000` tinybar HBAR fee). Two `wait_for_expiry` slots executed: https://hashscan.io/testnet/tx/0.0.10463842@1789156008.769559934 and https://hashscan.io/testnet/tx/0.0.10463842@1789156009.185023222. `GET /desk/claim` delivered live Aave and `subscribe` bills on topic `0.0.10464309`. ERC-8004 left out. 12 Sep 2026.
+- [x] **B21** Guest pays with own account. `POST /desk/session` creates an in-memory ECDSA buyer, `AccountCreate` + seller `TransferTransaction` faucet 0.5 HBAR (`refund.ts` rail), cookie `nametoll_guest`. `/app` payer toggle operator key / my guest account. `POST /desk/pay` `{ payer: "guest" }` signs with that key and passes the account to TEE/HCS context. Same pay-guard rate limit + optional secret. Never returns the private key. 12 Sep 2026.
+- [x] **B22** Self-serve desk registration. `/register` + `POST /desk/register` run the existing issue-subname write path. Label + endpoint vary; `payTo` / `priceRule` / topic / asset are this origin's (`constrainedDeskRecords`). Parent from `ENS_PARENT`. Honesty: a child cannot advertise a different price. 12 Sep 2026.
+- [x] **B23** Claim UI. `/app` and `/desks` expose `GET /desk/claim?schedule=`. Endpoint existed; the form makes it visible. 12 Sep 2026.
+- [x] **B24** Subscribe surface. `/app#subscribe` plans `GET /desk/subscribe?slots=`. Landing Subscribe band links there and `/docs#subscribe`. 12 Sep 2026.
+- [x] **B25** Per-desk descriptor pricing **skipped**. Gate still charges `config.priceTinybars`. Touching the 402 before deadline is out of scope.
 
 ---
 
@@ -299,9 +304,9 @@ Work top to bottom. A later ticket may assume the earlier **Done when**.
 | Fri | B7–B8 (Directory can overlap B4–B6 if two people) |
 | Fri–Sat | B9–B10 |
 | Sat | B4–B6 if not done; then B11; stretch B13–B16 |
-| Sat–Sun | **B12**; stretch B17–B20 if the spine holds |
+| Sat–Sun | **B12**; stretch B17–B24 if the spine holds |
 
-If CRE dies, keep B0–B8 + B11–B12 and use the PRD third-slot swap. Do not fake a TEE. Stretch B17–B20 is extra-points, not a reason to reopen the spine.
+If CRE dies, keep B0–B8 + B11–B12 and use the PRD third-slot swap. Do not fake a TEE. Stretch B17–B24 is extra-points, not a reason to reopen the spine.
 
 ---
 

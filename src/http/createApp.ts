@@ -26,12 +26,29 @@ import {
 import { createMerchandise, type Merchandise } from "../modules/merchandise/index.ts";
 import type { Buyer } from "../modules/buyer/index.ts";
 import { mountBuyer } from "../modules/buyer/http.ts";
+import { mountGuestSession } from "../modules/buyer/session-http.ts";
+import {
+  createMemoryGuestStore,
+  tryCreateGuestFaucet,
+  type GuestFaucet,
+  type GuestStore,
+} from "../modules/buyer/session.ts";
+import {
+  createPayRateLimiter,
+  DEFAULT_PAY_GLOBAL_MAX,
+  DEFAULT_PAY_RATE_MAX,
+  DEFAULT_PAY_RATE_WINDOW_MS,
+} from "../modules/buyer/pay-guard.ts";
+import { mountRegister } from "../modules/directory/register-http.ts";
+import { issueDeskChild } from "../modules/directory/issue-subname.ts";
+import type { IssueChild } from "../modules/directory/register.ts";
 import { MODULE_NAMES } from "../types.ts";
 import {
   renderAppPage,
   renderDesksPage,
   renderDocsPage,
   renderLandingPage,
+  renderRegisterPage,
 } from "./pages/index.ts";
 import { JOIN_PATH } from "../modules/brain/http.ts";
 import { paySecretCookie } from "../modules/buyer/pay-guard.ts";
@@ -46,6 +63,9 @@ export type AppDeps = {
   listChildren?: (parent: string) => Promise<string[]>;
   probeDesk?: ProbeDesk;
   lookupSchedule?: LookupSchedule;
+  guestFaucet?: GuestFaucet;
+  guestStore?: GuestStore;
+  issueChild?: IssueChild;
 };
 
 function resolveBrain(config: AppConfig, deps: AppDeps): Brain {
@@ -89,6 +109,14 @@ export async function createApp(
   const brain = resolveBrain(config, deps);
   const buyer = deps.buyer;
   const payWindow = createPayWindow();
+  const guestStore = deps.guestStore ?? createMemoryGuestStore();
+  const guestFaucet = deps.guestFaucet ?? tryCreateGuestFaucet(config);
+  const issueChild = deps.issueChild ?? (process.env.ACC_1_PRIV_KEY ? issueDeskChild : undefined);
+  const limiter = createPayRateLimiter({
+    max: config.deskPayRateMax ?? DEFAULT_PAY_RATE_MAX,
+    windowMs: config.deskPayRateWindowMs ?? DEFAULT_PAY_RATE_WINDOW_MS,
+    globalMax: config.deskPayGlobalMax ?? DEFAULT_PAY_GLOBAL_MAX,
+  });
   const refund =
     deps.refund ??
     (config.sellerAccountId && config.sellerPrivateKey
@@ -139,6 +167,9 @@ export async function createApp(
   app.get("/desks", (req, res) => {
     sendPage(req, res, renderDesksPage(config, pageOptions));
   });
+  app.get("/register", (req, res) => {
+    sendPage(req, res, renderRegisterPage(config, pageOptions));
+  });
 
   app.get(OFFER_PATH, (_req, res) => {
     res.json(deskOffer(config));
@@ -150,11 +181,24 @@ export async function createApp(
     ...(deps.probeDesk ? { probeDesk: deps.probeDesk } : {}),
   });
   mountBrain(app, brain);
+  mountGuestSession(app, {
+    config,
+    store: guestStore,
+    limiter,
+    ...(guestFaucet ? { faucet: guestFaucet } : {}),
+  });
+  mountRegister(app, {
+    config,
+    limiter,
+    ...(issueChild ? { issueChild } : {}),
+  });
   mountBuyer(app, {
     directory,
     brain,
     config,
     payWindow,
+    limiter,
+    guestStore,
     ...(buyer ? { buyer } : {}),
     ...(ledger ? { ledger } : {}),
   });

@@ -85,6 +85,13 @@ describe("desk config", () => {
     ).toThrow(/seller private key/i);
   });
 
+  it("loads an optional ENS parent without inventing one", () => {
+    expect(loadConfig({}).ensParent).toBeUndefined();
+    expect(loadConfig({ ENS_PARENT: "parent-fixture.test" }).ensParent).toBe(
+      "parent-fixture.test",
+    );
+  });
+
   it("loads an optional desk pay secret without inventing one", () => {
     expect(loadConfig({}).deskPaySecret).toBeUndefined();
     expect(loadConfig({ DESK_PAY_SECRET: "blotter-lock" }).deskPaySecret).toBe(

@@ -3,6 +3,7 @@ import { CATALOG_PATH } from "../../modules/directory/http.ts";
 import { escapeHtml } from "./escape.ts";
 import type { ProductPageOptions } from "./landing.ts";
 import { deskRegistryScript } from "./registry.ts";
+import { claimFormHtml, sideFormsScript } from "./side-forms.ts";
 import { renderShell } from "./shell.ts";
 
 export function renderDesksPage(
@@ -40,9 +41,14 @@ export function renderDesksPage(
         <p class="banner" id="registry-empty" role="status">Paste a parent name. Children with desk records appear here.</p>
         <p class="banner err" id="registry-error" role="alert" hidden></p>
         <div class="stations" id="desk-registry" hidden></div>
+        <section class="band" id="claim" style="margin-top: 1.2rem">
+          <h2>Have a schedule?</h2>
+          <p>Claim delivers one snapshot after the slot executes. Replay is refused.</p>
+          ${claimFormHtml()}
+        </section>
       </section>
     </div>
-    <script>${deskRegistryScript}</script>`;
+    <script>${deskRegistryScript}${sideFormsScript()}</script>`;
   return renderShell({
     title: "Desks · Nametoll",
     description:
