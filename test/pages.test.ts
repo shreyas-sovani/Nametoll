@@ -129,6 +129,10 @@ describe("product pages", () => {
       const html = await res.text();
       expectChrome(html);
       expect(html).toMatch(/id="register-form"/);
+      expect(html).toMatch(/id="register-desk"/);
+      expect(html).toMatch(/Registering/);
+      expect(html).toMatch(/aria-busy/);
+      expect(html).toMatch(/if \(busy\) return/);
       expect(html).toMatch(/name="label"/);
       expect(html).toMatch(/name="endpoint"/);
       expect(html).toMatch(/name="expiresIn"/);

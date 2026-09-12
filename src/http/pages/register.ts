@@ -42,7 +42,7 @@ export function renderRegisterPage(
           <label class="name-field">Expires in (seconds, optional)
             <input name="expiresIn" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="31536000" />
           </label>
-          <button type="submit">Register desk</button>
+          <button type="submit" id="register-desk">Register desk</button>
         </form>
         <p class="banner" id="register-empty" role="status">Label is yours. Price and pay-to are this desk's.</p>
         <p class="banner err" id="register-error" hidden role="alert"></p>
@@ -62,12 +62,29 @@ export function renderRegisterPage(
 function registerScript(): string {
   return `(function () {
     var form = document.getElementById("register-form");
+    var btn = document.getElementById("register-desk");
     var empty = document.getElementById("register-empty");
     var err = document.getElementById("register-error");
     var ok = document.getElementById("register-ok");
-    if (!form || !empty || !err || !ok) return;
+    var lamp = document.querySelector(".hero-lamp");
+    if (!form || !btn || !empty || !err || !ok) return;
+    var idleLabel = btn.textContent || "Register desk";
+    var busy = false;
+    function setBusy(on) {
+      busy = on;
+      btn.disabled = on;
+      btn.textContent = on ? "Registering…" : idleLabel;
+      if (on) btn.setAttribute("aria-busy", "true");
+      else btn.removeAttribute("aria-busy");
+      form.setAttribute("aria-busy", on ? "true" : "false");
+      Array.prototype.forEach.call(form.querySelectorAll("input"), function (el) {
+        el.disabled = on;
+      });
+      if (lamp) lamp.setAttribute("data-state", on ? "busy" : "unpaid");
+    }
     form.addEventListener("submit", function (event) {
       event.preventDefault();
+      if (busy) return;
       var data = new FormData(form);
       var label = String(data.get("label") || "").trim();
       var endpoint = String(data.get("endpoint") || "").trim();
@@ -75,8 +92,16 @@ function registerScript(): string {
       empty.hidden = true;
       err.hidden = true;
       ok.hidden = true;
+      if (!label) {
+        empty.textContent = "Child label is required.";
+        empty.hidden = false;
+        return;
+      }
       var payload = { label: label, endpoint: endpoint };
       if (expiresIn) payload.expiresIn = Number(expiresIn);
+      setBusy(true);
+      empty.textContent = "Writing the child on Sepolia. Keep this tab open — this can take a minute.";
+      empty.hidden = false;
       fetch("/desk/register", {
         method: "POST",
         credentials: "same-origin",
@@ -85,6 +110,7 @@ function registerScript(): string {
       })
         .then(function (res) { return res.json().then(function (body) { return { res: res, body: body }; }); })
         .then(function (pack) {
+          empty.hidden = true;
           if (!pack.res.ok || !pack.body.child) {
             err.textContent = pack.body.error || "Register refused.";
             err.hidden = false;
@@ -94,9 +120,11 @@ function registerScript(): string {
           ok.hidden = false;
         })
         .catch(function () {
+          empty.hidden = true;
           err.textContent = "Register failed.";
           err.hidden = false;
-        });
+        })
+        .finally(function () { setBusy(false); });
     });
   })();`;
 }
