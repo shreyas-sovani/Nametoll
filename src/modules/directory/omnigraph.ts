@@ -1,5 +1,7 @@
 import { DEFAULT_ENSNODE_URL } from "../../config.ts";
+import { looksLikeTransportFailure } from "./enscli-texts.ts";
 import { DESK_TEXT_KEY_LIST } from "./keys.ts";
+import { listChildNamesFromRegistry } from "./registry-children.ts";
 
 export { DEFAULT_ENSNODE_URL };
 
@@ -151,5 +153,14 @@ export async function listChildNames(
   parent: string,
   ensnodeUrl = DEFAULT_ENSNODE_URL,
 ): Promise<string[]> {
-  return (await fetchOmnigraphDomain(parent, ensnodeUrl)).meta.children;
+  try {
+    return (await fetchOmnigraphDomain(parent, ensnodeUrl)).meta.children;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const fallback = looksLikeTransportFailure(error) || /ENSNode [45]/i.test(message);
+    if (!fallback) {
+      throw error;
+    }
+    return await listChildNamesFromRegistry(parent);
+  }
 }

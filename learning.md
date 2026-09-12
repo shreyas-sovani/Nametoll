@@ -292,7 +292,7 @@ Banners you should expect:
 | `GET /desk/snapshot` with no payment | Should be **402** |
 | `GET /desk/resolve?name=…` | Phone-book lookup, no pay |
 | `GET /desk/inspect?name=…` | Descriptor + TEE + 402 challenge, no settle |
-| `GET /desk/catalog?parent=…` | Children of a parent + live probes |
+| `GET /desk/catalog?parent=…` | Children of a parent + live probes (Omnigraph, or `LabelRegistered` if ENSNode TLS fails) |
 | `POST /desk/pay` | Demo pay (server buyer keys) |
 | `npm run buyer -- <name>` | Real consuming agent: resolve → 402 → sign → data |
 | `npm run agent -- <parent>` | Discover a child, then pay |

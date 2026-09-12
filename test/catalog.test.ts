@@ -7,6 +7,12 @@ import {
   metaFromOmnigraph,
   pickDesk,
 } from "../src/modules/directory/index.ts";
+import { ENSV2_SEPOLIA, zeroAddress } from "../src/modules/directory/ensv2-sepolia.ts";
+import {
+  LOG_WINDOW,
+  listChildNamesFromRegistry,
+  parentUserRegistry,
+} from "../src/modules/directory/registry-children.ts";
 import { startDesk } from "./helpers.ts";
 
 const PARENT = "parent-fixture.test";
@@ -25,6 +31,41 @@ function texts(endpoint: string, priceRule: string): Record<string, string> {
     }),
   };
 }
+
+describe("on-chain LabelRegistered children", () => {
+  it("walks getSubregistry from the ENSv2 root and reads labels from logs", async () => {
+    const seen: string[] = [];
+    const children = await listChildNamesFromRegistry("nametoll.eth", {
+      getBlockNumber: async () => 100_000n,
+      getSubregistry: async (registry, label) => {
+        seen.push(`${registry}:${label}`);
+        expect(registry).toBe(ENSV2_SEPOLIA.registry);
+        expect(label).toBe("nametoll");
+        return "0x0531cdfAa619d1Ce33B37e87AAcD685bEcd976B9";
+      },
+      getLabelRegistered: async (registry, fromBlock, toBlock) => {
+        expect(registry).toBe("0x0531cdfAa619d1Ce33B37e87AAcD685bEcd976B9");
+        if (toBlock === 100_000n) {
+          expect(fromBlock).toBe(100_000n - LOG_WINDOW + 1n);
+          return ["desk", "agent-02"];
+        }
+        return [];
+      },
+    });
+    expect(seen).toEqual([`${ENSV2_SEPOLIA.registry}:nametoll`]);
+    expect(children).toEqual(["agent-02.nametoll.eth", "desk.nametoll.eth"]);
+  });
+
+  it("rejects a parent with no UserRegistry", async () => {
+    await expect(
+      parentUserRegistry("missing.eth", {
+        getBlockNumber: async () => 1n,
+        getSubregistry: async () => zeroAddress,
+        getLabelRegistered: async () => [],
+      }),
+    ).rejects.toThrow(/UserRegistry/);
+  });
+});
 
 describe("omnigraph children", () => {
   it("reads child names already selected by DESK_RECORDS_QUERY", () => {

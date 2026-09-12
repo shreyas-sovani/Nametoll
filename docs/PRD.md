@@ -78,7 +78,7 @@ Deep modules. Stable interfaces. Internals can change without rewriting the demo
 
 | Module | Does | Depends on | Does not |
 |---|---|---|---|
-| **Directory** | Resolve name → desk descriptor. List children of a pasted parent (`/desks`, `GET /desk/catalog`). Operator updates via EAC. | ENSv2 Sepolia, Permissioned Resolver, Omnigraph | Store funds or secrets |
+| **Directory** | Resolve name → desk descriptor. List children of a pasted parent (`/desks`, `GET /desk/catalog`). Operator updates via EAC. | ENSv2 Sepolia, Permissioned Resolver, Omnigraph (registry `LabelRegistered` if ENSNode transport fails) | Store funds or secrets |
 | **Gate** | 402 challenge, verify/settle via Blocky402, refuse if TEE denied or meter unpaid | Gate client, Blocky402 `/supported` | Hold facilitator keys |
 | **Brain** | `handlerInTee`: secret cap + optional allowlist/rate → allow/deny/max tinybars | CRE simulate (deploy is beta) | `ConfidentialHTTPClient`; leak secrets through `usingTheDons()` |
 | **Merchandise** | Live multi-protocol snapshot; report billable units | Studio / Market key, pinned IDs | Be the product if Graph is not on the form |

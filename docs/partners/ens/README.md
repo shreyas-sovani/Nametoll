@@ -43,7 +43,7 @@ Happy path does not ship a name. Type or paste one into `GET /desk/resolve?name=
 
 Operator has `authorizeTextRoles` on those three keys only (`ROLE_SET_TEXT`). No registry transfer role. `--reverse-record` was not used. Resolver was deployed before register.
 
-Hosted ENSNode `https://api.v2-sepolia.ensnode.io` currently serves a `*.up.railway.app` cert. Resolve then uses Sepolia Universal Resolver `0xeEeEEEeE14D718C2B47D9923Deab1335E144EeEe`. Official `pkg.pr.new` ens-cli is 404; `npm run ens:sepolia` broadcasts with the same ABIs/addresses as `vendor/ens-cli`.
+Hosted ENSNode `https://api.v2-sepolia.ensnode.io` currently serves a `*.up.railway.app` cert. Resolve then uses Sepolia Universal Resolver `0xeEeEEEeE14D718C2B47D9923Deab1335E144EeEe`. Catalog `listChildNames` uses the same transport-failure check: Omnigraph first; on `fetch failed` or ENSNode 4xx/5xx, walk `getSubregistry` from `ENSV2_SEPOLIA.registry` and read official `LabelRegistered` logs on the parent UserRegistry ([ENSv2 indexing](https://docs.ens.domains/ensv2/indexing/)). Default window is 3×8000 recent Sepolia blocks (`ETH_RPC_URL` or publicnode). Older labels (e.g. `desk.nametoll.eth`, register block `11677191`) can sit outside that window — paste the child on `/app`. Official `pkg.pr.new` ens-cli is 404; `npm run ens:sepolia` broadcasts with the same ABIs/addresses as `vendor/ens-cli`.
 
 ```bash
 npm run directory -- nametoll.eth

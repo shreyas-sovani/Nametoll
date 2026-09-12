@@ -111,7 +111,7 @@ An agent that is handed only a **parent** namespace:
 npm run agent -- <paste-a-parent-name>
 ```
 
-It lists children from the Omnigraph, picks a live desk by price/protocols, asks the TEE, pays, and prints the receipt. That is discover-then-pay. `GET /desk/catalog?parent=` and `/desks` are the same directory.
+It lists children from the Omnigraph, or from official `LabelRegistered` logs when hosted ENSNode TLS fails, picks a live desk by price/protocols, asks the TEE, pays, and prints the receipt. That is discover-then-pay. `GET /desk/catalog?parent=` and `/desks` are the same directory.
 
 TEE verdicts are **cached per amount + payer + hour-count** for 60s (`GET /health` → `brain.verdictTtlMs`). Unavailable / simulate failures are not cached. Restart the desk for a fresh attested `cre workflow simulate`. The enclave still gates every amount the first time it is seen in that TTL. Policy secrets (cap, optional `BUYER_ALLOWLIST`, optional `RATE_LIMIT`) stay in the TEE; public reasons are `under cap` / `over cap` / `buyer not allowlisted` / `rate limited`. A successful HCS bill may carry `verdictReason` and `verdictHash` of that public verdict. Recompute is still `units * priceTinybarsPerUnit = tinybars`.
 
@@ -246,7 +246,7 @@ Fee-payer is **not** configured here. The Gate reads it from live `GET /supporte
 - **B16** Sunday form swap evaluated. No swap. Form stays Hedera · ENS · Chainlink. Graph composition is merchandise, not a prize SKILL. World Selfie flag was not on.
 - **Judge pass** public desk Brain was `TEE unavailable` (no `CRE_PROJECT_DIR`). Desk now defaults to `./cre` + `cre/.env`. Health reports `brain.source`. `/app` shows live protocol TVL, per-bill recompute, and unsigned `join()`. CI: `.github/workflows/test.yml`. Latest TEE-gated Aave pay: https://hashscan.io/testnet/tx/0.0.7162784@1789111350.366520040. Remainder refund: https://hashscan.io/testnet/tx/0.0.10463755@1789114039.622724528. Live `join()`: https://sepolia.etherscan.io/tx/0x980aaffe6d62561964a42675f7831adbca09cf442c7db0cede9255e2ed5e3086
 - **Demo hardening** Brain caches successful verdicts per amount + payer + hour-count for 60s (unavailable is not cached; simulate killed at 25s; boot warms 1- and 2-unit). `POST /desk/pay` is rate-limited, optionally `DESK_PAY_SECRET`, and pinned to `PUBLIC_DESK_URL`. Pay omits the HCS bill block unless `settleTx` matches. Tagline is metered units.
-- **B17** `/desks` + `GET /desk/catalog?parent=` + `npm run agent -- <parent>`. Hedera extra-points directory: an agent finds a service by namespace and pays for it.
+- **B17** `/desks` + `GET /desk/catalog?parent=` + `npm run agent -- <parent>`. Omnigraph first; `LabelRegistered` fallback when ENSNode TLS/`fetch failed`. Hedera extra-points directory: an agent finds a service by namespace and pays for it.
 - **B18** sibling `agent-02.nametoll.eth` — own Permissioned Resolver + scoped EAC. `npm run ens:subname`.
 - **B19** TEE policy axes (cap / allowlist / rate). Optional CRE secret env vars default empty so cap-only simulate still boots. HCS may store `verdictReason` / `verdictHash`.
 - **B20** TOLL `0.0.10483302` (custom `100000` tinybar HBAR fee) https://hashscan.io/testnet/token/0.0.10483302. Executed slots: https://hashscan.io/testnet/tx/0.0.10463842@1789156008.769559934 and https://hashscan.io/testnet/tx/0.0.10463842@1789156009.185023222. `GET /desk/claim` delivered live Aave and HCS `subscribe` bills. Snapshot 402 stays `0.0.0`. ERC-8004 left out.
