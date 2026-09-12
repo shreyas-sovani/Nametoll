@@ -3,6 +3,7 @@ import {
   createPayRateLimiter,
   payEndpointAllowed,
   secretsMatch,
+  settleEndpoint,
 } from "../src/modules/buyer/pay-guard.ts";
 
 describe("pay rate limiter", () => {
@@ -58,6 +59,24 @@ describe("pay endpoint pin", () => {
         "http://127.0.0.1:8787",
       ),
     ).toBe(false);
+  });
+
+  it("treats a leftover localhost ENS endpoint as this desk when the pin is the live origin", () => {
+    expect(
+      payEndpointAllowed(
+        "http://127.0.0.1:8787",
+        "https://nametoll.run.place",
+      ),
+    ).toBe(true);
+    expect(
+      payEndpointAllowed("http://localhost:8787", "https://nametoll.run.place/"),
+    ).toBe(true);
+    expect(
+      payEndpointAllowed("http://127.0.0.1:8787", "https://nametoll.example"),
+    ).toBe(false);
+    expect(
+      settleEndpoint("http://127.0.0.1:8787", "https://nametoll.run.place"),
+    ).toBe("https://nametoll.run.place");
   });
 });
 

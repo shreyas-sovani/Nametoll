@@ -1,5 +1,8 @@
 import { createHash, timingSafeEqual } from "node:crypto";
-import { LIVE_DESK_ORIGIN } from "../../config.ts";
+import {
+  isEphemeralPublicOrigin,
+  LIVE_DESK_ORIGIN,
+} from "../../config.ts";
 
 export const PAY_SECRET_HEADER = "x-desk-pay-secret";
 export const PAY_SECRET_COOKIE = "nametoll_pay";
@@ -58,13 +61,41 @@ function retryAfterSec(oldest: number, windowMs: number, now: number): number {
   return Math.max(1, Math.ceil((oldest + windowMs - now) / 1000));
 }
 
+export function pinAllowsEphemeralEndpoint(publicDeskUrl?: string): boolean {
+  if (!publicDeskUrl) return true;
+  return (
+    isEphemeralPublicOrigin(publicDeskUrl) ||
+    sameOrigin(publicDeskUrl, LIVE_DESK_ORIGIN)
+  );
+}
+
+/** Names registered on a laptop still say 127.0.0.1. Settle those against this desk. */
+export function settleEndpoint(endpoint: string, publicDeskUrl?: string): string {
+  if (!isEphemeralPublicOrigin(endpoint)) {
+    return endpoint.replace(/\/+$/, "");
+  }
+  if (publicDeskUrl && sameOrigin(publicDeskUrl, LIVE_DESK_ORIGIN)) {
+    return LIVE_DESK_ORIGIN;
+  }
+  if (publicDeskUrl && isEphemeralPublicOrigin(publicDeskUrl)) {
+    return publicDeskUrl.replace(/\/+$/, "");
+  }
+  return endpoint.replace(/\/+$/, "");
+}
+
 export function payEndpointAllowed(
   endpoint: string,
   publicDeskUrl?: string,
 ): boolean {
   if (!publicDeskUrl) return true;
+  if (
+    sameOrigin(endpoint, publicDeskUrl) ||
+    sameOrigin(endpoint, LIVE_DESK_ORIGIN)
+  ) {
+    return true;
+  }
   return (
-    sameOrigin(endpoint, publicDeskUrl) || sameOrigin(endpoint, LIVE_DESK_ORIGIN)
+    isEphemeralPublicOrigin(endpoint) && pinAllowsEphemeralEndpoint(publicDeskUrl)
   );
 }
 

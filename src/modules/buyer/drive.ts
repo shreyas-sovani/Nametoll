@@ -10,7 +10,7 @@ import { waitForMatchingBill } from "../ledger/match-bill.ts";
 import { viewMerchandise, type MerchandiseView } from "../merchandise/view.ts";
 import type { Buyer, PaidResult } from "./index.ts";
 import { fetchSnapshotChallenge, type SnapshotChallenge } from "./challenge.ts";
-import { payEndpointAllowed } from "./pay-guard.ts";
+import { payEndpointAllowed, settleEndpoint } from "./pay-guard.ts";
 
 export type DeskInspect = {
   name: string;
@@ -99,9 +99,8 @@ export async function payNamedDesk(
       error: "Pay is pinned to this desk's public URL.",
     };
   }
-  const paid = await buyer.payFromName(
-    name,
-    directory,
+  const paid = await buyer.payOnce(
+    settleEndpoint(inspect.descriptor.endpoint, config.publicDeskUrl),
     protocols?.length ? { protocols } : {},
   );
   if (paid.status !== 200 || !paid.settleTx) {
