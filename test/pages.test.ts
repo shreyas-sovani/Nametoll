@@ -109,6 +109,7 @@ describe("product pages", () => {
       expect(html).toMatch(/\/desk\/claim/);
       expect(html).toMatch(/\/desk\/hts/);
       expect(html).toMatch(/\/desk\/snapshot/);
+      expect(html).toMatch(/simulate-allowlist-deny/);
       expect(html).toMatch(/tinybars/);
       expect(html).toMatch(/402/);
       expect(html).toMatch(/0\.0\.4603900/);
@@ -128,7 +129,9 @@ describe("product pages", () => {
       expect(html).toMatch(/id="register-form"/);
       expect(html).toMatch(/name="label"/);
       expect(html).toMatch(/name="endpoint"/);
+      expect(html).toMatch(/name="expiresIn"/);
       expect(html).toMatch(/\/desk\/register/);
+      expect(html).toMatch(/expiresIn/);
       expect(html.toLowerCase()).not.toMatch(/hackathon/);
     } finally {
       await desk.close();

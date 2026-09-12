@@ -164,6 +164,8 @@ Desk:
 
 - Allow `100000`: `docs/partners/chainlink/simulate-allow.log` — TEE Execution / AWS Nitro us-west-2, `TEE handler: verdict=allow reason=under cap`
 - Deny `200000`: `docs/partners/chainlink/simulate-deny.log` — same TEE banner, `verdict=deny reason=over cap`
+- Allowlist deny: `simulate-allowlist-deny.log` — `buyer not allowlisted`
+- Rate deny: `simulate-rate-deny.log` — `rate limited`
 - Secret cap from `getSecret("SPEND_CAP")` is `150000` (public as `maxTinybars` only). No secret env lines in the committed logs. Deploy access not enabled; simulation does not need it.
 
 ## Desk console (B11)
@@ -323,6 +325,10 @@ Each executed slot: `scheduled: true`, 1 TOLL buyer `0.0.10463842` → seller `0
 `GET /desk/claim?schedule=` then delivered live Aave (1 unit) and appended HCS `subscribe` bills on topic `0.0.10464309` (`1 * 100000`, `scheduleId` set). Replay of slot 1 is `already claimed`. Unpaid `GET /desk/snapshot` is still HTTP 402 / asset `0.0.0`.
 
 CRE simulate was failing after P2 because `secrets.yaml` lists `BUYER_ALLOWLIST` / `RATE_LIMIT` and the CLI requires those env names. Desk spawn now defaults the two optional vars to empty so cap-only still boots.
+
+Policy-engine evidence (12 Sep 2026): `cre --env <patched> workflow simulate` with dummy `BUYER_ALLOWLIST_VAR=0.0.1` / payer `0.0.9` → `simulate-allowlist-deny.log` (`buyer not allowlisted`). `RATE_LIMIT_VAR=1` / `paysThisHour=2` → `simulate-rate-deny.log` (`rate limited`). Both Nitro `us-west-2`. Cap-only logs unchanged.
+
+Expiring subname (12 Sep 2026): `gone.nametoll.eth` registered with `expiresIn=90` https://sepolia.etherscan.io/tx/0x44bbbd33adc88b3fb103eec45e2941ee4ad9eb14d8a0f446f738c7c2ac20d3ac. After expiry `getState.status` is `AVAILABLE`; catalog resolve marks it unresolved. `/register` optional `expiresIn` (60s–1y). Bazantic / ERC-8004 / A2A not built.
 
 Blocky402 probe the same hour: `hederaExact: true`, `advertisedAssets: []`, `blocky402Hts: unadvertised`. Snapshot 402 unchanged.
 

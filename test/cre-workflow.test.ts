@@ -50,6 +50,33 @@ describe("CRE confidential workflow", () => {
     });
   });
 
+  it("committed policy simulate logs show allowlist and rate denies", () => {
+    const allowlist = readFileSync(
+      resolve(process.cwd(), "docs/partners/chainlink/simulate-allowlist-deny.log"),
+      "utf8",
+    );
+    const rate = readFileSync(
+      resolve(process.cwd(), "docs/partners/chainlink/simulate-rate-deny.log"),
+      "utf8",
+    );
+    for (const log of [allowlist, rate]) {
+      expect(log).toMatch(/TEE Execution|handlerInTee|TeeRuntime/i);
+      expect(log).toMatch(/TEE handler/);
+      expect(log).not.toMatch(/SPEND_CAP_TINYBARS_VAR=/);
+      expect(log).not.toMatch(/BUYER_ALLOWLIST_VAR=/);
+      expect(log).not.toMatch(/RATE_LIMIT_VAR=/);
+      expect(log).not.toMatch(/0x[a-fA-F0-9]{64}/);
+    }
+    expect(parseCreSimulateVerdict(allowlist)).toMatchObject({
+      allow: false,
+      reason: "buyer not allowlisted",
+    });
+    expect(parseCreSimulateVerdict(rate)).toMatchObject({
+      allow: false,
+      reason: "rate limited",
+    });
+  });
+
   it("defaults optional TEE secret env vars so CRE can substitute them", () => {
     const env = creSecretEnv({ SPEND_CAP_TINYBARS_VAR: "150000" });
     expect(env.BUYER_ALLOWLIST_VAR).toBe("");

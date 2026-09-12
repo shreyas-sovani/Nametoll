@@ -34,6 +34,7 @@ import {
 import { DESK_TEXT_KEY_LIST, DESK_TEXT_KEYS } from "./keys.ts";
 import { childName } from "./parent-name.ts";
 import { loadSepoliaAccounts } from "./sepolia-accounts.ts";
+import { parseExpiresIn } from "./expiry.ts";
 import type { ConstrainedDeskRecords, IssuedDesk } from "./register.ts";
 import { ENS_CLI, type WritePlan } from "./write-plan.ts";
 
@@ -225,6 +226,7 @@ export async function runIssueSubname(opts: {
     priceRule,
     hcsTopic,
     asset: HBAR_ASSET,
+    expiresIn: parseExpiresIn(flag("expires-in")),
   });
   console.log(JSON.stringify(issued, null, 2));
 }
@@ -300,7 +302,7 @@ export async function issueDeskChild(input: ConstrainedDeskRecords): Promise<Iss
         zeroAddress,
         resolver,
         V2_DEFAULT_OWNER_ROLE_BITMAP,
-        block.timestamp + YEAR_SECONDS,
+        block.timestamp + (input.expiresIn ?? YEAR_SECONDS),
       ],
     });
     logStep("child", { child, hash: registerTx });
@@ -369,6 +371,7 @@ export async function issueDeskChild(input: ConstrainedDeskRecords): Promise<Iss
     parent,
     child,
     resolver,
+    expiresIn: (input.expiresIn ?? YEAR_SECONDS).toString(),
     ...(registerTx ? { registerTx } : {}),
   };
 }

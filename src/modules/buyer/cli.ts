@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { loadConfig } from "../../config.ts";
 import { createDirectory } from "../directory/index.ts";
+import { ensv2ChildIsLive } from "../directory/expiry.ts";
 import { createBuyer, loadBuyerCredentials } from "./index.ts";
 import { buyerTargetFromArgv } from "./target.ts";
 
@@ -26,7 +27,10 @@ const result =
     ? await buyer.payOnce(target.value, options)
     : await buyer.payFromName(
         target.value,
-        createDirectory({ ensnodeUrl: loadConfig().ensnodeUrl }),
+        createDirectory({
+          ensnodeUrl: loadConfig().ensnodeUrl,
+          isLive: ensv2ChildIsLive,
+        }),
         options,
       );
 

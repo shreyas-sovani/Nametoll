@@ -88,6 +88,22 @@ describe("omnigraph children", () => {
 });
 
 describe("listDesks", () => {
+  it("marks an expired registration unresolved even when texts remain", async () => {
+    const expired = "gone.parent-fixture.test";
+    const directory = createDirectory({
+      fetchTexts: async (name) => {
+        if (name === expired) return texts("https://gone.example", "100000 tinybars per protocol");
+        return {};
+      },
+      isLive: async (name) => name !== expired,
+    });
+    const catalog = await listDesks(PARENT, {
+      directory,
+      listChildren: async () => [expired],
+    });
+    expect(catalog.desks).toEqual([{ name: expired, status: "unresolved" }]);
+  });
+
   it("resolves each child into a live catalog row", async () => {
     const directory = createDirectory({
       fetchTexts: async (name) => {

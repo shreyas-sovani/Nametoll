@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { HBAR_ASSET } from "../src/config.ts";
-import { constrainedDeskRecords } from "../src/modules/directory/register.ts";
+import { constrainedDeskRecords, type ConstrainedDeskRecords } from "../src/modules/directory/register.ts";
 import { testDeskConfig, startDesk } from "./helpers.ts";
 
 describe("constrained desk records", () => {
@@ -43,7 +43,7 @@ describe("constrained desk records", () => {
 
 describe("POST /desk/register", () => {
   it("issues a child with constrained records and ignores a lying price", async () => {
-    const seen: Array<Record<string, string>> = [];
+    const seen: ConstrainedDeskRecords[] = [];
     const desk = await startDesk(
       {
         sellerAccountId: "0.0.10463755",

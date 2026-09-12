@@ -47,7 +47,12 @@ function defaultClients(rpcUrl?: string): RegistryChildrenClients {
         fromBlock,
         toBlock,
       });
+      const now = BigInt(Math.floor(Date.now() / 1000));
       return rows
+        .filter((row) => {
+          const expiry = row.args.expiry;
+          return expiry == null || expiry > now;
+        })
         .map((row) => row.args.label)
         .filter((label): label is string => Boolean(label));
     },

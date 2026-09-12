@@ -73,7 +73,7 @@ export function renderDocsPage(
         </article>
         <article class="doc-card" id="cap">
           <h2>Spend cap</h2>
-          <p>The CRE handler runs in a TEE. Secrets: spend cap, optional buyer allowlist, optional pays-per-hour. Public reasons are <code>under cap</code>, <code>over cap</code>, <code>buyer not allowlisted</code>, and <code>rate limited</code>. A deny or an unavailable enclave blocks settle and merchandise. Successful verdicts are cached per amount, payer, and hour-count for ${escapeHtml(String(ttlSec))}s. Failures are not cached. <code>GET /health</code> reports <code>brain.verdictTtlMs</code>.</p>
+          <p>The CRE handler runs in a TEE. Secrets: spend cap, optional buyer allowlist, optional pays-per-hour. Public reasons are <code>under cap</code>, <code>over cap</code>, <code>buyer not allowlisted</code>, and <code>rate limited</code>. A deny or an unavailable enclave blocks settle and merchandise. Successful verdicts are cached per amount, payer, and hour-count for ${escapeHtml(String(ttlSec))}s. Failures are not cached. <code>GET /health</code> reports <code>brain.verdictTtlMs</code>. Committed <code>cre workflow simulate</code> logs: cap flip <code>simulate-allow.log</code> / <code>simulate-deny.log</code>; policy engine <code>simulate-allowlist-deny.log</code> / <code>simulate-rate-deny.log</code> (Nitro <code>us-west-2</code>).</p>
           <pre>curl -sS "http://127.0.0.1:8787/desk/brain?tinybars=${escapeHtml(config.priceTinybars)}"</pre>
         </article>
         <article class="doc-card" id="meter">
@@ -125,7 +125,7 @@ curl -sS "http://127.0.0.1:8787/desk/claim?schedule=&lt;0.0.x&gt;"</pre>
               <tr><td>POST</td><td><code>/desk/pay</code></td><td>Settle, snapshot, bill (when matched). Body <code>payer: guest|operator</code></td></tr>
               <tr><td>POST</td><td><code>/desk/session</code></td><td>Create an in-memory guest buyer and faucet 0.5 HBAR</td></tr>
               <tr><td>GET</td><td><code>/desk/session</code></td><td>Current guest account, if the session cookie is set</td></tr>
-              <tr><td>POST</td><td><code>/desk/register</code></td><td>Issue a child that resells this desk (price/payTo fixed)</td></tr>
+              <tr><td>POST</td><td><code>/desk/register</code></td><td>Issue a child that resells this desk (price/payTo fixed; optional <code>expiresIn</code>)</td></tr>
               <tr><td>GET</td><td><code>${SNAPSHOT_PATH}</code></td><td>Merchandise; 402 if unpaid</td></tr>
               <tr><td>GET</td><td><code>/desk/brain?tinybars=</code></td><td>Public verdict for an amount</td></tr>
               <tr><td>GET</td><td><code>/desk/join</code></td><td>Unsigned <code>join()</code> from the same TEE — this origin does not broadcast it</td></tr>

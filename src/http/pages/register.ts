@@ -16,7 +16,7 @@ export function renderRegisterPage(
         <div class="rail-card">
           <p class="eyebrow"><span class="lamp hero-lamp" data-state="unpaid" aria-hidden="true"></span>Issue</p>
           <h2>Claim a desk name</h2>
-          <p class="lede" style="margin-bottom: 0">You pick the label and endpoint. Price and pay-to stay this origin's, so the descriptor cannot lie to a judge.</p>
+          <p class="lede" style="margin-bottom: 0">You pick the label, endpoint, and optional expiry. Price and pay-to stay this origin's, so the descriptor cannot lie to a judge. Expired children resolve as unresolved on /desks.</p>
         </div>
         <div class="rail-card">
           <h3>This origin writes</h3>
@@ -38,6 +38,9 @@ export function renderRegisterPage(
           </label>
           <label class="name-field">Endpoint
             <input name="endpoint" autocomplete="off" spellcheck="false" placeholder="${escapeHtml(defaultEndpoint || "https://this-origin")}" value="${escapeHtml(defaultEndpoint)}" />
+          </label>
+          <label class="name-field">Expires in (seconds, optional)
+            <input name="expiresIn" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="31536000" />
           </label>
           <button type="submit">Register desk</button>
         </form>
@@ -68,14 +71,17 @@ function registerScript(): string {
       var data = new FormData(form);
       var label = String(data.get("label") || "").trim();
       var endpoint = String(data.get("endpoint") || "").trim();
+      var expiresIn = String(data.get("expiresIn") || "").trim();
       empty.hidden = true;
       err.hidden = true;
       ok.hidden = true;
+      var payload = { label: label, endpoint: endpoint };
+      if (expiresIn) payload.expiresIn = Number(expiresIn);
       fetch("/desk/register", {
         method: "POST",
         credentials: "same-origin",
         headers: { "content-type": "application/json", accept: "application/json" },
-        body: JSON.stringify({ label: label, endpoint: endpoint })
+        body: JSON.stringify(payload)
       })
         .then(function (res) { return res.json().then(function (body) { return { res: res, body: body }; }); })
         .then(function (pack) {

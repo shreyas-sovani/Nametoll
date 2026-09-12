@@ -50,12 +50,18 @@ export function mountRegister(app: Express, deps: RegisterHttpDeps): void {
       const records = constrainedDeskRecords(deps.config, {
         label: typeof body.label === "string" ? body.label : "",
         ...(typeof body.endpoint === "string" ? { endpoint: body.endpoint } : {}),
+        ...(body.expiresIn !== undefined ? { expiresIn: body.expiresIn } : {}),
       });
       const issued = await deps.issueChild(records);
-      res.json({ ok: true, ...issued, ...records });
+      res.json({
+        ok: true,
+        ...issued,
+        ...records,
+        expiresIn: records.expiresIn.toString(),
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : "register failed";
-      const status = /required|label|configured|Endpoint/i.test(message) ? 400 : 502;
+      const status = /required|label|configured|Endpoint|expir/i.test(message) ? 400 : 502;
       res.status(status).json({ ok: false, error: message });
     }
   });

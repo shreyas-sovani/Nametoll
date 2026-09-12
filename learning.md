@@ -114,7 +114,7 @@ If the Brain says **deny**, or if the Brain is skipped, the Gate refuses. No pay
 
 **User story:** *As a judge, I want a `cre workflow simulate` log, so I can see that the locked room and the secret were really on the pay path.*
 
-Those logs live under `docs/partners/chainlink/` (`simulate-allow.log`, `simulate-deny.log`). Secrets are redacted (blacked out).
+Those logs live under `docs/partners/chainlink/` (`simulate-allow.log`, `simulate-deny.log`, plus policy `simulate-allowlist-deny.log` / `simulate-rate-deny.log`). Secrets are redacted (blacked out).
 
 ### 3. Unpaid GET is HTTP 402
 
@@ -295,7 +295,7 @@ Banners you should expect:
 | `GET /desk/catalog?parent=…` | Children of a parent + live probes (Omnigraph, or `LabelRegistered` if ENSNode TLS fails) |
 | `POST /desk/pay` | Demo pay (operator key or `{ payer: "guest" }`) |
 | `POST /desk/session` | Ephemeral guest buyer + 0.5 HBAR faucet |
-| `POST /desk/register` | Child name that resells this desk (price/payTo fixed) |
+| `POST /desk/register` | Child name that resells this desk (price/payTo fixed; optional `expiresIn`) |
 | `npm run buyer -- <name>` | Real consuming agent: resolve → 402 → sign → data |
 | `npm run agent -- <parent>` | Discover a child, then pay |
 | `GET /desk/ledger` | Recent bills |
@@ -341,7 +341,7 @@ Nametoll is not:
 
 The Graph is the **merchandise** (what you buy). It is not currently a prize-form pick. World is not in this app.
 
-Stretch that **landed** and is still not required for the spine: unused-remainder refund, Hedera harness PR #59, Chainlink liquidation `join()`, Sunday form stay, `/desks` + discover-and-pay agent, second ENSv2 sibling, TEE allowlist/rate, TOLL custom fee + scheduled subscribe, guest session pay, `/register`, claim/subscribe UI. Per-desk 402 pricing and ERC-8004 / A2A stayed out.
+Stretch that **landed** and is still not required for the spine: unused-remainder refund, Hedera harness PR #59, Chainlink liquidation `join()`, Sunday form stay, `/desks` + discover-and-pay agent, second ENSv2 sibling, TEE allowlist/rate + policy simulate logs, TOLL custom fee + scheduled subscribe, guest session pay, `/register` with optional expiry, expired child `gone.nametoll.eth`, claim/subscribe UI. Per-desk 402 pricing, ERC-8004 / A2A, and Bazantic stayed out.
 
 ---
 

@@ -58,6 +58,12 @@ describe("B12 submission pack", () => {
     expect(pack).toMatch(/SPEND_CAP/);
     expect(pack).toMatch(/simulate-allow\.log/);
     expect(pack).toMatch(/simulate-deny\.log/);
+    expect(pack).toMatch(/simulate-allowlist-deny\.log/);
+    expect(pack).toMatch(/simulate-rate-deny\.log/);
+    expect(pack).toMatch(/Discovery \/ directory/);
+    expect(pack).toMatch(/Scheduled Transactions/);
+    expect(pack).toMatch(/HTS \/ custom fees/);
+    expect(pack).toMatch(/gone\.nametoll\.eth/);
     expect(pack).toMatch(/us-west-2|Nitro/i);
     expect(pack).toMatch(/403/);
     expect(pack).toMatch(/No Functions \/ Automation|no Functions/);

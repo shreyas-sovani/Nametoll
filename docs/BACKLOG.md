@@ -2,7 +2,7 @@
 
 **For the build agent.** This is the direction of work. It is not a syntax guide and not a license to invent APIs.
 
-**Status 12 Sep 2026:** B0–**B24** done. Spine B0–B12 plus stretch B13–B24 (remainder, harness PR, `join()`, Sunday stay, discovery, ENSv2 sibling, TEE policy, TOLL + scheduled subscribe, guest pay, self-serve register, claim/subscribe UI). Pay path (settle, remainder refund, settleTx-matched bill) unchanged. Snapshot 402 stays `0.0.0`. Per-desk descriptor pricing left out (would retarget the 402). Public desk Brain is CRE simulate (`./cre` default) — 1 protocol allows, 2 denies over cap. Latest TEE-gated Aave settle: `0.0.7162784@1789111350.366520040`. Live remainder refund: `0.0.10463755@1789114039.622724528`. Live `join()`: `0x980aaffe6d62561964a42675f7831adbca09cf442c7db0cede9255e2ed5e3086`. Live names: `nametoll.eth` / `desk.nametoll.eth` / `agent-02.nametoll.eth`. Sunday form: **no swap** — Hedera · ENS · Chainlink.
+**Status 12 Sep 2026:** B0–**B26** done. Spine B0–B12 plus stretch B13–B26 (remainder, harness PR, `join()`, Sunday stay, discovery, ENSv2 sibling, TEE policy + policy simulate logs, TOLL + scheduled subscribe, guest pay, self-serve register, claim/subscribe UI, expiring subnames, README rubric rewrite). Pay path (settle, remainder refund, settleTx-matched bill) unchanged. Snapshot 402 stays `0.0.0`. Per-desk descriptor pricing left out (would retarget the 402). Public desk Brain is CRE simulate (`./cre` default) — 1 protocol allows, 2 denies over cap. Latest TEE-gated Aave settle: `0.0.7162784@1789111350.366520040`. Live remainder refund: `0.0.10463755@1789114039.622724528`. Live `join()`: `0x980aaffe6d62561964a42675f7831adbca09cf442c7db0cede9255e2ed5e3086`. Live names: `nametoll.eth` / `desk.nametoll.eth` / `agent-02.nametoll.eth` / expired `gone.nametoll.eth`. Sunday form: **no swap** — Hedera · ENS · Chainlink.
 
 Read in this order, then execute tickets **in ID order**. Do not skip ahead to a later ticket because it looks more interesting.
 
@@ -32,7 +32,7 @@ Do not implement World, ATS, SwapVM, Uniswap, Privy, Arc, Ledger, Bazantic, ERC-
 
 | | |
 |---|---|
-| **Done** | B0–**B24** (spine B0–B12, stretch B13–B24). Directory `/desks` + `npm run agent`. Sibling `agent-02.nametoll.eth`. TEE policy axes. TOLL + scheduled subscribe. Guest session pay. `/register`. Claim + subscribe forms. |
+| **Done** | B0–**B26** (spine B0–B12, stretch B13–B26). Directory `/desks` + `npm run agent`. Sibling `agent-02.nametoll.eth`. TEE policy axes + allowlist/rate simulate logs. TOLL + scheduled subscribe. Guest session pay. `/register` with optional expiry. Expired child `gone.nametoll.eth`. README architecture + payment-flow. |
 | **Next** | Video + stable public URL. Live sibling `agent-02.nametoll.eth` is on Sepolia. |
 | **Human blockers** | Public desk is ngrok session-scoped. Never commit `.env`. Record the 2–4 min video. |
 | **Not blockers** | Graph Studio query key works. Sepolia owner/operator are funded testnet accounts. |
@@ -293,6 +293,7 @@ Work top to bottom. A later ticket may assume the earlier **Done when**.
 - [x] **B23** Claim UI. `/app` and `/desks` expose `GET /desk/claim?schedule=`. Endpoint existed; the form makes it visible. 12 Sep 2026.
 - [x] **B24** Subscribe surface. `/app#subscribe` plans `GET /desk/subscribe?slots=`. Landing Subscribe band links there and `/docs#subscribe`. 12 Sep 2026.
 - [x] **B25** Per-desk descriptor pricing **skipped**. Gate still charges `config.priceTinybars`. Touching the 402 before deadline is out of scope.
+- [x] **B26** Prize-pack hardening (G1–G4). README now leads with what/why, architecture table, payment-flow with explorer links, quickstart (`agent`, guest, `/register`, `/desks`), and feature→evidence→partner. `docs/submission.md` claims discovery / scheduled / HTS as separate Hedera rows. CRE policy simulates: `simulate-allowlist-deny.log`, `simulate-rate-deny.log`. `/register` `expiresIn` (60s–1y); live expired `gone.nametoll.eth` https://sepolia.etherscan.io/tx/0x44bbbd33adc88b3fb103eec45e2941ee4ad9eb14d8a0f446f738c7c2ac20d3ac (`AVAILABLE`, unresolved on `/desks`). Session 429 already tested. Bazantic / ERC-8004 / A2A not built. 12 Sep 2026.
 
 ---
 
@@ -304,7 +305,7 @@ Work top to bottom. A later ticket may assume the earlier **Done when**.
 | Fri | B7–B8 (Directory can overlap B4–B6 if two people) |
 | Fri–Sat | B9–B10 |
 | Sat | B4–B6 if not done; then B11; stretch B13–B16 |
-| Sat–Sun | **B12**; stretch B17–B24 if the spine holds |
+| Sat–Sun | **B12**; stretch B17–B26 if the spine holds |
 
 If CRE dies, keep B0–B8 + B11–B12 and use the PRD third-slot swap. Do not fake a TEE. Stretch B17–B24 is extra-points, not a reason to reopen the spine.
 

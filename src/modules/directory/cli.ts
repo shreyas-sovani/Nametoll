@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { loadConfig } from "../../config.ts";
 import { createDirectory } from "./index.ts";
+import { ensv2ChildIsLive } from "./expiry.ts";
 
 if (existsSync(".env")) {
   process.loadEnvFile(".env");
@@ -14,5 +15,6 @@ if (!name) {
 
 const resolved = await createDirectory({
   ensnodeUrl: loadConfig().ensnodeUrl,
+  isLive: ensv2ChildIsLive,
 }).resolve(name);
 console.log(JSON.stringify(resolved, null, 2));

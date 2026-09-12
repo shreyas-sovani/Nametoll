@@ -73,6 +73,8 @@ describe("B16 Sunday form swap", () => {
       "docs/partners/chainlink/simulate-allow.log",
       "docs/partners/chainlink/simulate-deny.log",
       "docs/partners/chainlink/simulate-join.log",
+      "docs/partners/chainlink/simulate-allowlist-deny.log",
+      "docs/partners/chainlink/simulate-rate-deny.log",
     ]) {
       const log = readFileSync(resolve(root, file), "utf8");
       expect(log).toMatch(/TEE Execution|handlerInTee|TeeRuntime/i);

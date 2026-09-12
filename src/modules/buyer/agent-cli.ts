@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import { loadConfig } from "../../config.ts";
 import { createBrainFromConfig } from "../brain/index.ts";
 import { createDirectory, listChildNames } from "../directory/index.ts";
+import { ensv2ChildIsLive } from "../directory/expiry.ts";
 import { createBuyer, loadBuyerCredentials } from "./index.ts";
 import { discoverAndPay } from "./agent.ts";
 
@@ -21,7 +22,10 @@ if (!parent) {
 }
 
 const config = loadConfig();
-const directory = createDirectory({ ensnodeUrl: config.ensnodeUrl });
+const directory = createDirectory({
+  ensnodeUrl: config.ensnodeUrl,
+  isLive: ensv2ChildIsLive,
+});
 const result = await discoverAndPay(
   parent,
   {

@@ -1,11 +1,13 @@
 import { normalize } from "viem/ens";
 import { HBAR_ASSET, type AppConfig } from "../../config.ts";
+import { parseExpiresIn } from "./expiry.ts";
 
 export type DeskRecordDraft = {
   label: string;
   endpoint?: string;
   payTo?: string;
   priceRule?: string;
+  expiresIn?: unknown;
 };
 
 export type ConstrainedDeskRecords = {
@@ -16,6 +18,7 @@ export type ConstrainedDeskRecords = {
   priceRule: string;
   hcsTopic: string;
   asset: typeof HBAR_ASSET;
+  expiresIn: bigint;
 };
 
 export type IssuedDesk = {
@@ -23,6 +26,7 @@ export type IssuedDesk = {
   child: string;
   resolver: string;
   registerTx?: string;
+  expiresIn?: string;
 };
 
 export type IssueChild = (records: ConstrainedDeskRecords) => Promise<IssuedDesk>;
@@ -77,5 +81,6 @@ export function constrainedDeskRecords(
     priceRule: `${config.priceTinybars} tinybars per protocol`,
     hcsTopic: config.hcsTopicId,
     asset: HBAR_ASSET,
+    expiresIn: parseExpiresIn(input.expiresIn),
   };
 }

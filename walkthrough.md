@@ -207,7 +207,7 @@ Below the list: **Have a schedule?** → `GET /desk/claim?schedule=`. Same claim
 
 ## Act 1b — Register (`/register`)
 
-Form: **Child label** + **Endpoint** (defaults to this origin) → `POST /desk/register`.
+Form: **Child label** + **Endpoint** (defaults to this origin) + optional **Expires in (seconds)** → `POST /desk/register`. Bound is 60s–1 year. Empty expiry is one year. After expiry the child is unresolved on `/desks` (live proof: `gone.nametoll.eth`, https://sepolia.etherscan.io/tx/0x44bbbd33adc88b3fb103eec45e2941ee4ad9eb14d8a0f446f738c7c2ac20d3ac).
 
 The operator write path issues the child. Price, pay-to, topic, and asset stay this desk's. A body that sends a different `payTo` / `priceRule` is ignored. Set `ENS_PARENT` or the POST returns 400.
 
@@ -573,7 +573,7 @@ Open these in extra tabs. None of them are the console.
 | `GET /desk/subscribe?slots=2` | Unsigned schedule plan | Does not create schedules. |
 | `GET /desk/claim?schedule=0.0.10483309` | `already claimed` (slot 1 was claimed live) | Do not expect a new snapshot. |
 | `POST /desk/session` | Guest account id + 0.5 HBAR faucet tx | Cookie `nametoll_guest`. No private key in JSON. |
-| `POST /desk/register` `{ "label": "…" }` | Child that resells this desk | Price/payTo stay this origin. |
+| `POST /desk/register` `{ "label": "…", "expiresIn": 90 }` | Child that resells this desk | Price/payTo stay this origin. Optional bounded expiry. |
 
 `POST /desk/pay` from a random tab without the cookie will 401 if a secret is set.
 

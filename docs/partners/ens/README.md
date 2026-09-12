@@ -25,7 +25,7 @@ Desk records (documented keys only):
 | `url` | ENSIP-5 | Fallback origin |
 | `agent-context` | ENSIP-26 | JSON `{ payTo, priceRule, hcsTopic, asset: "0.0.0" }` |
 
-Happy path does not ship a name. Type or paste one into `GET /desk/resolve?name=`, `/desks`, or `npm run directory -- <name>`. `/register` + `POST /desk/register` issue a child via the existing `issueDeskChild` write path. Label and endpoint vary; `payTo`, `priceRule`, topic, and asset `0.0.0` are this origin's (`ENS_PARENT` selects the parent). Do not accept a judge-supplied price.
+Happy path does not ship a name. Type or paste one into `GET /desk/resolve?name=`, `/desks`, or `npm run directory -- <name>`. `/register` + `POST /desk/register` issue a child via the existing `issueDeskChild` write path. Label, endpoint, and optional `expiresIn` (60s–1 year) vary; `payTo`, `priceRule`, topic, and asset `0.0.0` are this origin's (`ENS_PARENT` selects the parent). Do not accept a judge-supplied price. After expiry, `getState` is `AVAILABLE` and `/desks` marks the child unresolved.
 
 ## Live Sepolia (11–12 Sep 2026)
 
@@ -34,6 +34,7 @@ Happy path does not ship a name. Type or paste one into `GET /desk/resolve?name=
 | Parent | `nametoll.eth` |
 | Child | `desk.nametoll.eth` |
 | Sibling | `agent-02.nametoll.eth` — resolver `0xe41Fab44355C6169af965C7994743625198561Da` (salt index 1) |
+| Expired | `gone.nametoll.eth` — 90s expiry, now `AVAILABLE`. Register https://sepolia.etherscan.io/tx/0x44bbbd33adc88b3fb103eec45e2941ee4ad9eb14d8a0f446f738c7c2ac20d3ac |
 | Owner | `0xD2aA21AF4faa840Dea890DB2C6649AACF2C80Ff3` |
 | Operator | `0xFeAf5C921996FC53f4DEf35e181E766e6D74690A` |
 | Permissioned Resolver (parent/child) | `0x558283D5F8E36316B60be7e24F4e58C7133752D2` |

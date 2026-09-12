@@ -5,7 +5,7 @@
 **Form picks (locked):** Hedera · ENS · Chainlink  
 **Not on the form:** World, The Graph, everyone else  
 **Sunday (B16):** no swap. Simulate logs exist, so Chainlink stays. Graph is merchandise without a prize SKILL. World Selfie flag was not on.  
-**Live 12 Sep 2026:** TEE-gated pay, unused-remainder refund, and ChallengeLending `join()` are on explorers (`docs/submission.md`). Directory is `/desks`; agent discovers under a parent (`npm run agent`). Second live name `agent-02.nametoll.eth` has its own Permissioned Resolver. Guest session pay (`POST /desk/session`) and `/register` (constrained child records). Claim + subscribe forms on `/app`. P3: TOLL custom-fee token + scheduled `wait_for_expiry` slots; Blocky402 `/supported` does not advertise HTS, so snapshot 402 stays `0.0.0`. Human remaining: 2–4 min video and a stable `PUBLIC_DESK_URL`.  
+**Live 12 Sep 2026:** TEE-gated pay, unused-remainder refund, and ChallengeLending `join()` are on explorers (`docs/submission.md`). Directory is `/desks`; agent discovers under a parent (`npm run agent`). Second live name `agent-02.nametoll.eth` has its own Permissioned Resolver. Guest session pay (`POST /desk/session`) and `/register` (constrained child records + optional `expiresIn`). Expired child `gone.nametoll.eth` is unresolved on `/desks`. Claim + subscribe forms on `/app`. TEE policy simulate logs for allowlist/rate. P3: TOLL custom-fee token + scheduled `wait_for_expiry` slots; Blocky402 `/supported` does not advertise HTS, so snapshot 402 stays `0.0.0`. Human remaining: 2–4 min video and a stable `PUBLIC_DESK_URL`.  
 
 Nametoll is a **named pay desk**. An agent resolves a live ENSv2 name, a CRE TEE decides whether it may spend, Hedera takes HBAR through Blocky402, and the bill is on HCS. Graph data is the merchandise, not a prize slot.
 
@@ -78,7 +78,7 @@ Deep modules. Stable interfaces. Internals can change without rewriting the demo
 
 | Module | Does | Depends on | Does not |
 |---|---|---|---|
-| **Directory** | Resolve name → desk descriptor. List children of a pasted parent (`/desks`, `GET /desk/catalog`). `/register` issues a child that resells this desk. Operator updates via EAC. | ENSv2 Sepolia, Permissioned Resolver, Omnigraph (registry `LabelRegistered` if ENSNode transport fails) | Store funds or secrets; accept a judge-supplied price |
+| **Directory** | Resolve name → desk descriptor. List children of a pasted parent (`/desks`, `GET /desk/catalog`). `/register` issues a child that resells this desk (optional bounded expiry). Expired names resolve unresolved. Guest session is a Directory/Buyer edge (`POST /desk/session`). Operator updates via EAC. | ENSv2 Sepolia, Permissioned Resolver, Omnigraph (registry `LabelRegistered` if ENSNode transport fails) | Store funds or secrets; accept a judge-supplied price |
 | **Gate** | 402 challenge, verify/settle via Blocky402, refuse if TEE denied or meter unpaid | Gate client, Blocky402 `/supported` | Hold facilitator keys |
 | **Brain** | `handlerInTee`: secret cap + optional allowlist/rate → allow/deny/max tinybars | CRE simulate (deploy is beta) | `ConfidentialHTTPClient`; leak secrets through `usingTheDons()` |
 | **Merchandise** | Live multi-protocol snapshot; report billable units | Studio / Market key, pinned IDs | Be the product if Graph is not on the form |
@@ -123,7 +123,7 @@ Locked: the loop and the three partners. Unlocked: how we implement a step if th
 7. As a judge, I want a `cre workflow simulate` log, so that I can see `handlerInTee` and `getSecret` on the pay path.
 8. As a judge, I want the video to type or paste the name, so that I know it is not hardcoded.
 
-Landed after the spine (not required to keep the loop): unused-remainder refund; `join()` on the same CRE engine; `/desks` + parent-only agent; second ENSv2 sibling; TOLL custom fee + scheduled subscribe; guest session pay; `/register` with constrained price/payTo; claim + subscribe UI. Still not scheduled: per-desk 402 pricing; ENSIP-25/26 as extra record types; ERC-8004 / A2A.
+Landed after the spine (not required to keep the loop): unused-remainder refund; `join()` on the same CRE engine; `/desks` + parent-only agent; second ENSv2 sibling; TOLL custom fee + scheduled subscribe; guest session pay; `/register` with constrained price/payTo and optional expiry; expired child `gone.nametoll.eth`; claim + subscribe UI; TEE policy simulate logs. Still not scheduled: per-desk 402 pricing; ENSIP-25/26 as extra record types; ERC-8004 / A2A; Bazantic.
 
 ---
 

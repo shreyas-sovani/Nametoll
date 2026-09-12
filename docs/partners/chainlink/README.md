@@ -38,14 +38,16 @@ cre workflow simulate nametoll-brain \
 
 From repo root: `npm run cre:simulate` writes redacted logs next to this file.
 
-Committed 11 Sep 2026 (CLI v1.33.0, `--target staging-settings`):
+Committed 11–12 Sep 2026 (CLI v1.33.0, `--target staging-settings`):
 
 | Request | Verdict | Log |
 | --- | --- | --- |
 | 100000 | allow / under cap | `simulate-allow.log` |
 | 200000 | deny / over cap | `simulate-deny.log` |
+| 100000 + payer `0.0.9` vs allowlist `0.0.1` | deny / buyer not allowlisted | `simulate-allowlist-deny.log` |
+| 100000 + `paysThisHour=2` vs `RATE_LIMIT=1` | deny / rate limited | `simulate-rate-deny.log` |
 
-Both logs show `Trigger requested TEE Execution` / AWS Nitro `us-west-2`, not a normal `handler`. Cap `150000` tinybars.
+All four logs show `Trigger requested TEE Execution` / AWS Nitro `us-west-2`, not a normal `handler`. Cap `150000` tinybars. Policy runs pass `--env` so empty `cre/.env` extras do not wipe the dummy allowlist/rate.
 
 ## Desk
 

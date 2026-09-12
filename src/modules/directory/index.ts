@@ -8,6 +8,13 @@ import { fetchTextsFromOmnigraph } from "./omnigraph.ts";
 import { fetchTextsFromResolver } from "./resolver-texts.ts";
 
 export { DESK_TEXT_KEYS, DESK_TEXT_KEY_LIST } from "./keys.ts";
+export {
+  MAX_EXPIRES_IN,
+  MIN_EXPIRES_IN,
+  ensv2ChildIsLive,
+  isLiveRegistration,
+  parseExpiresIn,
+} from "./expiry.ts";
 export { descriptorFromTexts, DeskResolveError } from "./descriptor.ts";
 export {
   DESK_RECORDS_QUERY,
@@ -46,6 +53,7 @@ export type DirectoryOptions = {
   fetchTexts?: FetchDeskTexts;
   fallbackFetchTexts?: FetchDeskTexts;
   ensnodeUrl?: string;
+  isLive?: (name: string) => Promise<boolean>;
 };
 
 const REJECTED_NAME = /[?#%\u0000-\u001f]/;
@@ -86,6 +94,9 @@ export function createDirectory(options: DirectoryOptions = {}): Directory {
       }
       if (!Object.values(texts).some((value) => value.trim())) {
         throw new DeskResolveError(`Unknown name or no desk records: ${trimmed}`);
+      }
+      if (options.isLive && !(await options.isLive(trimmed))) {
+        throw new DeskResolveError(`Expired or unregistered name: ${trimmed}`);
       }
 
       return {

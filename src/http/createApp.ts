@@ -10,6 +10,7 @@ import {
 } from "../modules/brain/index.ts";
 import { mountBrain } from "../modules/brain/http.ts";
 import { createDirectory, type Directory } from "../modules/directory/index.ts";
+import { ensv2ChildIsLive } from "../modules/directory/expiry.ts";
 import { mountDirectory } from "../modules/directory/http.ts";
 import type { ProbeDesk } from "../modules/directory/catalog.ts";
 import { mountGate } from "../modules/gate/index.ts";
@@ -93,7 +94,10 @@ function resolveMerchandise(config: AppConfig, deps: AppDeps): Merchandise {
 
 function resolveDirectory(config: AppConfig, deps: AppDeps): Directory {
   if (deps.directory) return deps.directory;
-  return createDirectory({ ensnodeUrl: config.ensnodeUrl });
+  return createDirectory({
+    ensnodeUrl: config.ensnodeUrl,
+    isLive: ensv2ChildIsLive,
+  });
 }
 
 export async function createApp(
