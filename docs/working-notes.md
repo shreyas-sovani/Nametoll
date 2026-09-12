@@ -1,6 +1,6 @@
 # Working notes (B0–B24 live)
 
-Shipped index (code + explorers). Human remaining: 2–4 min video + stable `PUBLIC_DESK_URL`.
+Shipped index (code + explorers). Public desk is https://nametoll.run.place. Human remaining: 2–4 min video.
 
 | Tickets | What landed |
 | --- | --- |
@@ -17,7 +17,8 @@ Shipped index (code + explorers). Human remaining: 2–4 min video + stable `PUB
 
 ## Public desk (B3)
 
-- Origin: https://nonwaxing-xeromorphic-dagmar.ngrok-free.dev
+- Origin: https://nametoll.run.place
+- Earlier session-scoped tunnel (retired): https://nonwaxing-xeromorphic-dagmar.ngrok-free.dev
 - `GET /health` 200
 - `GET /desk/snapshot` 402, `resource.url` https, `payTo` `0.0.10463755`, `extra.feePayer` `0.0.7162784`
 
@@ -45,7 +46,7 @@ One topic for all bills. Submit key is the seller. HashScan of the HBAR transfer
 - Topic: `0.0.10464309`
 - HashScan topic: https://hashscan.io/testnet/topic/0.0.10464309
 - Mirror: https://testnet.mirrornode.hedera.com/api/v1/topics/0.0.10464309/messages
-- Public ledger: `GET https://nonwaxing-xeromorphic-dagmar.ngrok-free.dev/desk/ledger`
+- Public ledger: `GET https://nametoll.run.place/desk/ledger`
 
 First paid bill (11 Sep 2026):
 
@@ -188,7 +189,7 @@ curl -sS -X POST http://127.0.0.1:8787/desk/pay \
   -d '{"name":"<paste-a-name>","protocols":["aave-v3-ethereum"]}'
 ```
 
-Live inspect (11 Sep 2026, pasted `nametoll.eth`, 1 protocol): descriptor endpoint `https://nonwaxing-xeromorphic-dagmar.ngrok-free.dev`, HCS `0.0.10464309`, unpaid 402 amount `100000` / asset `0.0.0` / payTo `0.0.10463755`. An earlier process without `CRE_BRAIN_URL` / `CRE_PROJECT_DIR` fail-closed (`TEE unavailable`). That is no longer the public desk — see Judge pass below.
+Live inspect (11 Sep 2026, pasted `nametoll.eth`, 1 protocol): descriptor endpoint was then `https://nonwaxing-xeromorphic-dagmar.ngrok-free.dev` (now https://nametoll.run.place), HCS `0.0.10464309`, unpaid 402 amount `100000` / asset `0.0.0` / payTo `0.0.10463755`. An earlier process without `CRE_BRAIN_URL` / `CRE_PROJECT_DIR` fail-closed (`TEE unavailable`). That is no longer the public desk — see Judge pass below.
 
 ## Submission pack (B12)
 
@@ -272,7 +273,7 @@ Replayed on the public origin after restart:
 | Remainder fail-soft | settle `0.0.7162784@1789114039.103448687`, refund `0.0.10463755@1789114039.622724528` |
 | `/app` `POST /desk/pay` 1 protocol | settle `0.0.7162784@1789111350.366520040` — https://hashscan.io/testnet/tx/0.0.7162784@1789111350.366520040 — live Aave TVL, HCS `lending-risk` `1 * 100000` matches |
 
-Ngrok is still session-scoped. Remainder and `join()` now have live explorer evidence (above). Video recording and a stable `PUBLIC_DESK_URL` stay human tasks.
+Public desk is https://nametoll.run.place. Remainder and `join()` have live explorer evidence (above). Video recording stays a human task.
 
 ## Demo hardening (11 Sep 2026)
 

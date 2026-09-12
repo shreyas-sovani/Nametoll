@@ -51,6 +51,11 @@ describe("judge loop gaps", () => {
         root,
       ).creProjectDir,
     ).toBeUndefined();
+    const recovered = withDefaultCreProject(
+      testDeskConfig({ creProjectDir: "/Users/laptop/ethglobal/cre" }),
+      root,
+    );
+    expect(recovered.creProjectDir).toBe(join(root, "cre"));
   });
 
   it("health tells a judge whether Brain and merchandise are actually wired", async () => {

@@ -21,11 +21,9 @@ Everything else is a side rail. If a click is not on that loop, this file says s
 | Origin | When to use it |
 | --- | --- |
 | `http://127.0.0.1:8787` | Local desk. Fast. A remote judge cannot hit it. |
-| `https://nonwaxing-xeromorphic-dagmar.ngrok-free.dev` | Current public tunnel (session-scoped). Dies when the laptop process stops. |
+| `https://nametoll.run.place` | Live public desk. This is the demo target. |
 
-Localhost is not the demo target. If the tunnel is dead, host `npm start` and set `PUBLIC_DESK_URL`.
-
-Ngrok free often shows a browser interstitial (“Visit Site”). Click through once. API clients must send `ngrok-skip-browser-warning: 1`. If you open `/desk/snapshot` in a tab without that header, you may see HTML instead of HTTP 402.
+Localhost is not the demo target. Set `PUBLIC_DESK_URL=https://nametoll.run.place` on the host.
 
 ### What you will paste
 
@@ -182,7 +180,7 @@ Other statuses:
 | --- | --- | --- | --- |
 | `live` | green / allow | Resolved + reachable | Yes |
 | `unresolved` | idle | Child exists in the list but desk texts failed | No |
-| `unreachable` | error | Resolved, but offer/snapshot probe failed (dead ngrok, TLS, timeout) | No |
+| `unreachable` | error | Resolved, but offer/snapshot probe failed (dead origin, TLS, timeout) | No |
 
 `desk.nametoll.eth` may be missing from the list: the on-chain fallback only reads recent `LabelRegistered` windows, and that child registered at block `11677191`. `agent-02.nametoll.eth` is usually in the window. Paste either child on `/app` if you need it on camera. That is a log-window limit, not a failed mint.
 
@@ -440,7 +438,7 @@ Prepaid = 402 amount. Owed = delivered units × price. You asked for 1, Aave del
 | --- | --- | --- |
 | `Pay rate limit. Retry shortly.` | 8/min IP or 24/min global | Wait. Do not hammer. |
 | `Pay requires x-desk-pay-secret` | Cookie missing (wrong origin, blocked cookies) | Load `/app` on the same origin again, or send the header from curl |
-| `Pay is pinned to this desk's public URL.` | Name points at localhost / old ngrok while `PUBLIC_DESK_URL` is set | Operator must `setText` the endpoint, or pay without the pin locally |
+| `Pay is pinned to this desk's public URL.` | Name points at localhost / an old origin while `PUBLIC_DESK_URL` is set | Operator must `setText` the endpoint to https://nametoll.run.place, or pay without the pin locally |
 | `Pay refused.` / 502 | Settle or drive failed | Check `/health`, Blocky402, buyer HBAR |
 | Deny banner after Pay | Meter was 2, or cap/allowlist/rate flipped | Re-open at 1 protocol |
 
@@ -559,7 +557,7 @@ Open these in extra tabs. None of them are the console.
 
 | URL | Expected | If you “press” it |
 | --- | --- | --- |
-| `GET /desk/snapshot` (no payment header) | HTTP **402**, `PAYMENT-REQUIRED`, x402 v2, asset `0.0.0`, amount `200000` (default = both protocols) | Browser may show JSON or ngrok HTML. `curl -sD - -H 'Accept: application/json'` is cleaner. |
+| `GET /desk/snapshot` (no payment header) | HTTP **402**, `PAYMENT-REQUIRED`, x402 v2, asset `0.0.0`, amount `200000` (default = both protocols) | Browser may show JSON. `curl -sD - -H 'Accept: application/json'` is cleaner. |
 | `GET /desk/snapshot?protocols=aave-v3-ethereum` | 402 for `100000` | Still unpaid. |
 | `GET /desk/resolve?name=nametoll.eth` | Descriptor only. No TEE. No 402. | Safe. |
 | `GET /desk/inspect?name=nametoll.eth&protocols=aave-v3-ethereum` | Same payload as **Open desk** | Safe. No settle. |

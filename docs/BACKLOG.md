@@ -33,8 +33,8 @@ Do not implement World, ATS, SwapVM, Uniswap, Privy, Arc, Ledger, Bazantic, ERC-
 | | |
 |---|---|
 | **Done** | B0–**B26** (spine B0–B12, stretch B13–B26). Directory `/desks` + `npm run agent`. Sibling `agent-02.nametoll.eth`. TEE policy axes + allowlist/rate simulate logs. TOLL + scheduled subscribe. Guest session pay. `/register` with optional expiry. Expired child `gone.nametoll.eth`. README architecture + payment-flow. |
-| **Next** | Video + stable public URL. Live sibling `agent-02.nametoll.eth` is on Sepolia. |
-| **Human blockers** | Public desk is ngrok session-scoped. Never commit `.env`. Record the 2–4 min video. |
+| **Next** | Video. Public desk is https://nametoll.run.place. Live sibling `agent-02.nametoll.eth` is on Sepolia. |
+| **Human blockers** | Never commit `.env`. Record the 2–4 min video. |
 | **Not blockers** | Graph Studio query key works. Sepolia owner/operator are funded testnet accounts. |
 
 ---

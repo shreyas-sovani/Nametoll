@@ -309,7 +309,7 @@ A successful CLI pay prints a HashScan URL.
 | --- | --- |
 | **Hedera testnet** | Where HBAR moves and HCS bills land. Test coins. |
 | **Sepolia** | Where the ENS name lives. Different chain, same product. |
-| **ngrok URL** | A temporary public tunnel so a judge not on your laptop can hit the desk. It **dies** when the laptop process stops. Localhost is not the demo target. |
+| **Public desk** | https://nametoll.run.place — the live URL a judge hits. Localhost is not the demo target. |
 
 ### What “done” looks like for a human
 
@@ -355,9 +355,9 @@ Stretch that **landed** and is still not required for the spine: unused-remainde
 
 The loop above is the contract. Implementation details can move:
 
-- Public URL may change (ngrok sessions die).
-- Exact `/app` copy, refund HashScan links, and hosting may still be in flux.
-- Ticket IDs in `docs/BACKLOG.md` (`B0`…`B20`) are the build checklist. Spine B0–B12 and stretch B13–B20 are marked done as of 12 Sep 2026. Human remaining: video + stable public URL.
+- Public desk is https://nametoll.run.place.
+- Exact `/app` copy and refund HashScan links may still be in flux.
+- Ticket IDs in `docs/BACKLOG.md` (`B0`…`B20`) are the build checklist. Spine B0–B12 and stretch B13–B20 are marked done as of 12 Sep 2026. Human remaining: video.
 
 If something on screen disagrees with this file, trust **observable behavior** (402, HashScan, topic math, simulate log) over a sentence in a doc. Then update this file.
 

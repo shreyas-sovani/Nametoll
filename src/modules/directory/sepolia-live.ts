@@ -14,7 +14,7 @@ import {
 } from "viem";
 import { sepolia } from "viem/chains";
 import { namehash } from "viem/ens";
-import { HBAR_ASSET, loadConfig } from "../../config.ts";
+import { HBAR_ASSET, loadConfig, publishedDeskOrigin } from "../../config.ts";
 import { dnsEncodedName } from "./dns-name.ts";
 import {
   ALL_ROLES,
@@ -153,7 +153,7 @@ async function parentStatus(
 }
 
 function deskValues(config: ReturnType<typeof loadConfig>) {
-  const endpoint = config.publicDeskUrl?.trim();
+  const endpoint = publishedDeskOrigin(config.publicDeskUrl);
   if (!endpoint || !/^https?:\/\//i.test(endpoint)) {
     throw new Error("Set PUBLIC_DESK_URL to the public desk origin before writing records.");
   }

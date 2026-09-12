@@ -6,6 +6,7 @@ import {
   askCreHttpVerdict,
   askCreSimulateJoin,
   askCreSimulateVerdict,
+  redactCreLog,
 } from "./simulate.ts";
 import { isUnavailableVerdict, unavailableVerdict } from "./verdict.ts";
 
@@ -17,6 +18,7 @@ export type BrainAskInput = {
 
 export type Brain = {
   source?: BrainSource;
+  lastError?: string;
   decide(input: BrainAskInput): Promise<BrainVerdict>;
   join?(): Promise<JoinCall>;
 };
@@ -71,7 +73,7 @@ export function createBrain(options: BrainOptions = {}): Brain {
   const now = options.now ?? Date.now;
   const ttlMs = options.verdictTtlMs ?? VERDICT_TTL_MS;
 
-  return {
+  const brain: Brain = {
     source,
     async decide(input) {
       const key = [
@@ -89,7 +91,10 @@ export function createBrain(options: BrainOptions = {}): Brain {
             return await askCreSimulateVerdict(simulateOptions(options), input);
           }
           return unavailableVerdict();
-        } catch {
+        } catch (error) {
+          brain.lastError = redactCreLog(
+            error instanceof Error ? error.message : "TEE unavailable",
+          ).slice(0, 400);
           return unavailableVerdict();
         }
       })();
@@ -97,6 +102,8 @@ export function createBrain(options: BrainOptions = {}): Brain {
       const verdict = await pending;
       if (isUnavailableVerdict(verdict)) {
         decideCache.delete(key);
+      } else {
+        delete brain.lastError;
       }
       return verdict;
     },
@@ -116,6 +123,7 @@ export function createBrain(options: BrainOptions = {}): Brain {
       }
     },
   };
+  return brain;
 }
 
 export function createBrainFromConfig(config: AppConfig): Brain {

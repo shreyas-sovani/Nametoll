@@ -1,4 +1,4 @@
-import type { AppConfig } from "../../config.ts";
+import { publishedDeskOrigin, type AppConfig } from "../../config.ts";
 import { REGISTER_PATH } from "../../modules/directory/register-http.ts";
 import { escapeHtml } from "./escape.ts";
 import type { ProductPageOptions } from "./landing.ts";
@@ -9,7 +9,7 @@ export function renderRegisterPage(
   _options: ProductPageOptions = {},
 ): string {
   const parent = config.ensParent?.trim() ?? "";
-  const defaultEndpoint = config.publicDeskUrl?.trim() ?? "";
+  const defaultEndpoint = publishedDeskOrigin(config.publicDeskUrl);
   const body = `
     <div class="desk">
       <aside>

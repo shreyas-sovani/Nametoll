@@ -29,7 +29,7 @@ One app, six modules. Directory now includes the registry, guest session, and se
 
 ## Payment flow (live evidence)
 
-1. **Discover.** Paste `nametoll.eth` on [`/desks`](https://nonwaxing-xeromorphic-dagmar.ngrok-free.dev/desks) or run `npm run agent -- nametoll.eth`. Catalog lists children (`desk.nametoll.eth`, `agent-02.nametoll.eth`). Expired `gone.nametoll.eth` is unresolved. Parent register: https://sepolia.etherscan.io/tx/0x28ab9c164cca6f967413f944a3ef1f81ca3ef86f7e1620fdc5b7a57d8d7a8a96
+1. **Discover.** Paste `nametoll.eth` on [`/desks`](https://nametoll.run.place/desks) or run `npm run agent -- nametoll.eth`. Catalog lists children (`desk.nametoll.eth`, `agent-02.nametoll.eth`). Expired `gone.nametoll.eth` is unresolved. Parent register: https://sepolia.etherscan.io/tx/0x28ab9c164cca6f967413f944a3ef1f81ca3ef86f7e1620fdc5b7a57d8d7a8a96
 2. **Resolve.** Child texts: endpoint, payTo `0.0.10463755`, `100000` tinybars per protocol, HCS `0.0.10464309`, asset `0.0.0`. Permissioned Resolver `0x558283D5F8E36316B60be7e24F4e58C7133752D2`. Operator can edit those three keys only.
 3. **TEE.** Gate asks Brain before settle. Cap `150000` tinybars. 1 protocol allows; 2 denies over cap. Allowlist/rate denials: [`simulate-allowlist-deny.log`](docs/partners/chainlink/simulate-allowlist-deny.log), [`simulate-rate-deny.log`](docs/partners/chainlink/simulate-rate-deny.log). Cap flip: [`simulate-allow.log`](docs/partners/chainlink/simulate-allow.log) / [`simulate-deny.log`](docs/partners/chainlink/simulate-deny.log). All show `handlerInTee` / AWS Nitro `us-west-2`.
 4. **Pay.** Unpaid `GET /desk/snapshot` is HTTP 402, x402 v2 `exact`, tinybars, fee-payer `0.0.7162784`. TEE-gated settle: https://hashscan.io/testnet/tx/0.0.7162784@1789111350.366520040 — buyer `0.0.10463842` → seller `0.0.10463755`, `100000` tinybars. Guest pay uses `POST /desk/session` then `{ "payer": "guest" }`.
@@ -282,21 +282,20 @@ npm run ens:subname -- --parent nametoll.eth --label gone --expires-in 90
 
 Localhost is not the demo target.
 
-**Current public origin:** https://nonwaxing-xeromorphic-dagmar.ngrok-free.dev
+**Current public origin:** https://nametoll.run.place
 
 ```bash
-curl -sS -D - -H 'Accept: application/json' -H 'ngrok-skip-browser-warning: 1' \
-  https://nonwaxing-xeromorphic-dagmar.ngrok-free.dev/desk/snapshot
+curl -sS -D - -H 'Accept: application/json' \
+  https://nametoll.run.place/desk/snapshot
 ```
 
-Expect HTTP 402 and a `PAYMENT-REQUIRED` header (`x402Version: 2`, asset `0.0.0`, tinybars, fee-payer from live Blocky402 `/supported`). Ngrok free may show an interstitial in a browser; API clients should send `ngrok-skip-browser-warning: 1`.
-
-This tunnel dies when the local process stops. For a stable judge URL, host the same `npm start` (see `Dockerfile`) and set `PUBLIC_DESK_URL`.
+Expect HTTP 402 and a `PAYMENT-REQUIRED` header (`x402Version: 2`, asset `0.0.0`, tinybars, fee-payer from live Blocky402 `/supported`). Copy `.env` and `cre/.env` (or put `SPEND_CAP_TINYBARS_VAR` / `CRE_ETH_PRIVATE_KEY` in `.env`). A laptop `CRE_PROJECT_DIR` path is ignored when `./cre` exists. Pay still works if `PUBLIC_DESK_URL` is localhost — the live origin is always allowed.
 
 ## Config
 
 | Name | Role |
 | --- | --- |
+| `PUBLIC_DESK_URL` | Live origin `https://nametoll.run.place`. Pins pay to this host when set. |
 | `X402_NETWORK` | CAIP-2 network, typically `hedera:testnet` |
 | `FACILITATOR_URL` | Blocky402 testnet: `https://api.testnet.blocky402.com` |
 | `HEDERA_SELLER_ACCOUNT_ID` | Desk `payTo` (Hedera account id, not an EVM address) |
@@ -324,7 +323,7 @@ Fee-payer is **not** configured here. The Gate reads it from live `GET /supporte
 - **B0** six modules, config, health, `.env.example`
 - **B1** unpaid 402 is x402 v2 / HBAR tinybars / Blocky402 fee-payer
 - **B2** buyer paid through Blocky402; HashScan in `docs/working-notes.md`
-- **B3** public 402 + paid request at the origin above (ngrok is session-scoped)
+- **B3** public 402 + paid request at https://nametoll.run.place
 - **B4** HCS topic `0.0.10464309`; paid request appends a recomputable bill
 - **B5** live Messari lending snapshot (Aave v3 + Compound III). One query shape, two pinned subgraphs. Schemas fetched via Subgraph MCP + Studio gateway introspection. Fail-soft if one indexer is down. Units = requested protocol count.
 - **B6** 1 protocol = `100000` tinybars, 2 = `200000`. Live pays on HashScan + HCS (stub bills first, then live `lending-risk` bills).
@@ -351,12 +350,12 @@ Fee-payer is **not** configured here. The Gate reads it from live `GET /supporte
 
 **Next**
 
-- Record the 2–4 min video from the timestamp table. Host a stable `PUBLIC_DESK_URL` if the ngrok origin dies. Harness PR is open, not merged. No further spine tickets.
+- Record the 2–4 min video from the timestamp table. Public desk is https://nametoll.run.place. Harness PR is open, not merged. No further spine tickets.
 
 **Blockers (human, not code)**
 
-- Public judge URL: current ngrok origin dies when the local desk stops. Host `npm start` and set `PUBLIC_DESK_URL` for a stable link.
 - Never commit `.env` (Graph key, Hedera keys, Sepolia keys, CRE secrets).
+- Keep `PUBLIC_DESK_URL=https://nametoll.run.place` on the VM so pay stays pinned to the live origin.
 
 **Not blockers**
 

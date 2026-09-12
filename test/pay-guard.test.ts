@@ -38,6 +38,27 @@ describe("pay endpoint pin", () => {
       ),
     ).toBe(true);
   });
+
+  it("still pays the live origin when PUBLIC_DESK_URL is a laptop or ngrok host", () => {
+    expect(
+      payEndpointAllowed(
+        "https://nametoll.run.place/desk",
+        "http://127.0.0.1:8787",
+      ),
+    ).toBe(true);
+    expect(
+      payEndpointAllowed(
+        "https://nametoll.run.place",
+        "https://old.ngrok-free.dev",
+      ),
+    ).toBe(true);
+    expect(
+      payEndpointAllowed(
+        "https://evil.example/desk",
+        "http://127.0.0.1:8787",
+      ),
+    ).toBe(false);
+  });
 });
 
 describe("pay secret", () => {

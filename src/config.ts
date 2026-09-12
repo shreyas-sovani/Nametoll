@@ -7,6 +7,34 @@ export const DEFAULT_PRICE_TINYBARS = "100000";
 export const DEFAULT_MIRROR_NODE_URL = "https://testnet.mirrornode.hedera.com";
 export const DEFAULT_GRAPH_GATEWAY_URL = "https://gateway.thegraph.com/api";
 export const DEFAULT_ENSNODE_URL = "https://api.v2-sepolia.ensnode.io";
+/** Public judge origin. Not a default for PUBLIC_DESK_URL (pay-pin stays opt-in). */
+export const LIVE_DESK_ORIGIN = "https://nametoll.run.place";
+
+export function isEphemeralPublicOrigin(url?: string): boolean {
+  if (!url) return true;
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    return (
+      host === "localhost" ||
+      host === "127.0.0.1" ||
+      host === "[::1]" ||
+      host === "::1" ||
+      host.endsWith(".ngrok-free.dev") ||
+      host.endsWith(".ngrok.io") ||
+      host.endsWith(".ngrok.app")
+    );
+  } catch {
+    return true;
+  }
+}
+
+/** Origin to publish on ENS /docs /register. Loopback and ngrok become the live desk. */
+export function publishedDeskOrigin(configured?: string): string {
+  if (!configured || isEphemeralPublicOrigin(configured)) {
+    return LIVE_DESK_ORIGIN;
+  }
+  return configured.replace(/\/+$/, "");
+}
 
 export type SecretsPaths = {
   buyerKeyPath?: string;

@@ -112,6 +112,8 @@ describe("product pages", () => {
       expect(html).toMatch(/simulate-allowlist-deny/);
       expect(html).toMatch(/tinybars/);
       expect(html).toMatch(/402/);
+      expect(html).toMatch(/nametoll\.run\.place/);
+      expect(html).not.toMatch(/127\.0\.0\.1:8787/);
       expect(html).toMatch(/0\.0\.4603900/);
       expect(html.toLowerCase()).not.toMatch(/hackathon/);
     } finally {

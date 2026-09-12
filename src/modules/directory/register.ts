@@ -1,5 +1,5 @@
 import { normalize } from "viem/ens";
-import { HBAR_ASSET, type AppConfig } from "../../config.ts";
+import { HBAR_ASSET, publishedDeskOrigin, type AppConfig } from "../../config.ts";
 import { parseExpiresIn } from "./expiry.ts";
 
 export type DeskRecordDraft = {
@@ -63,7 +63,9 @@ export function constrainedDeskRecords(
     throw new Error("Parent name is not configured.");
   }
   const label = assertRegisterableLabel(input.label);
-  const endpoint = (input.endpoint ?? config.publicDeskUrl ?? "").trim().replace(/\/+$/, "");
+  const endpoint = (
+    (input.endpoint ?? "").trim() || publishedDeskOrigin(config.publicDeskUrl)
+  ).replace(/\/+$/, "");
   if (!endpoint) {
     throw new Error("Endpoint is required (or set PUBLIC_DESK_URL).");
   }

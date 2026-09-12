@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HBAR_ASSET } from "../src/config.ts";
+import { HBAR_ASSET, LIVE_DESK_ORIGIN } from "../src/config.ts";
 import { constrainedDeskRecords, type ConstrainedDeskRecords } from "../src/modules/directory/register.ts";
 import { testDeskConfig, startDesk } from "./helpers.ts";
 
@@ -27,6 +27,19 @@ describe("constrained desk records", () => {
     expect(records.hcsTopic).toBe("0.0.10464309");
     expect(records.asset).toBe(HBAR_ASSET);
     expect(records.parent).toBe("parent-fixture.test");
+  });
+
+  it("defaults a missing endpoint to the live desk when PUBLIC_DESK_URL is loopback", () => {
+    const records = constrainedDeskRecords(
+      testDeskConfig({
+        sellerAccountId: "0.0.10463755",
+        hcsTopicId: "0.0.10464309",
+        publicDeskUrl: "http://127.0.0.1:8787",
+        ensParent: "parent-fixture.test",
+      }),
+      { label: "guest-01" },
+    );
+    expect(records.endpoint).toBe(LIVE_DESK_ORIGIN);
   });
 
   it("rejects a dotted or empty label", () => {

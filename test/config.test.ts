@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { loadConfig } from "../src/config.ts";
+import {
+  LIVE_DESK_ORIGIN,
+  loadConfig,
+  publishedDeskOrigin,
+} from "../src/config.ts";
 
 describe("desk config", () => {
   it("refuses to boot when a facilitator private key is present", () => {
@@ -97,5 +101,11 @@ describe("desk config", () => {
     expect(loadConfig({ DESK_PAY_SECRET: "blotter-lock" }).deskPaySecret).toBe(
       "blotter-lock",
     );
+  });
+
+  it("publishes the live origin when PUBLIC_DESK_URL is empty or loopback", () => {
+    expect(publishedDeskOrigin(undefined)).toBe(LIVE_DESK_ORIGIN);
+    expect(publishedDeskOrigin("http://127.0.0.1:8787")).toBe(LIVE_DESK_ORIGIN);
+    expect(publishedDeskOrigin("https://desk.example")).toBe("https://desk.example");
   });
 });

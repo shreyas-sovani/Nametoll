@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { loadConfig } from "../../config.ts";
+import { loadConfig, publishedDeskOrigin } from "../../config.ts";
 import { writePlan } from "./write-plan.ts";
 
 if (existsSync(".env")) {
@@ -20,7 +20,7 @@ const plan = writePlan({
   operator: flag("operator") ?? process.env.ENS_OPERATOR_ADDRESS ?? "",
   ...(parent ? { parent } : {}),
   ...(child ? { child } : {}),
-  endpoint: flag("endpoint") ?? config.publicDeskUrl ?? "",
+  endpoint: flag("endpoint") ?? publishedDeskOrigin(config.publicDeskUrl),
   payTo: flag("pay-to") ?? config.sellerAccountId ?? "",
   priceRule: `${config.priceTinybars} tinybars per protocol`,
   hcsTopic: flag("hcs-topic") ?? config.hcsTopicId ?? "",

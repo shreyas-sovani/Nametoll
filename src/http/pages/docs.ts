@@ -1,4 +1,4 @@
-import type { AppConfig } from "../../config.ts";
+import { publishedDeskOrigin, type AppConfig } from "../../config.ts";
 import { SNAPSHOT_PATH } from "../../modules/gate/index.ts";
 import { VERDICT_TTL_MS } from "../../modules/brain/index.ts";
 import { explorerNetwork, hashscanTopicUrl } from "../../modules/ledger/hashscan.ts";
@@ -17,6 +17,7 @@ export function renderDocsPage(
   const topicUrl = topic ? hashscanTopicUrl(topic, network) : "";
   const priceHbar = tinybarsToHbar(config.priceTinybars);
   const ttlSec = Math.round(VERDICT_TTL_MS / 1000);
+  const origin = escapeHtml(publishedDeskOrigin(config.publicDeskUrl));
   const body = `
     <div class="docs">
       <nav class="doc-toc" aria-label="Manual">
@@ -69,12 +70,12 @@ export function renderDocsPage(
           <h2>HTTP 402</h2>
           <p>The resource is <code>${SNAPSHOT_PATH}</code>. Amounts are tinybars. Asset is Hedera <code>0.0.0</code>. Scheme is x402 v2 <code>exact</code>. Facilitator: <code>${escapeHtml(config.facilitatorUrl)}</code>. This process does not hold a facilitator key. Fee-payer comes from live <code>GET /supported</code>.</p>
           <pre>curl -sD - -H 'Accept: application/json' \\
-  http://127.0.0.1:8787${SNAPSHOT_PATH}</pre>
+  ${origin}${SNAPSHOT_PATH}</pre>
         </article>
         <article class="doc-card" id="cap">
           <h2>Spend cap</h2>
           <p>The CRE handler runs in a TEE. Secrets: spend cap, optional buyer allowlist, optional pays-per-hour. Public reasons are <code>under cap</code>, <code>over cap</code>, <code>buyer not allowlisted</code>, and <code>rate limited</code>. A deny or an unavailable enclave blocks settle and merchandise. Successful verdicts are cached per amount, payer, and hour-count for ${escapeHtml(String(ttlSec))}s. Failures are not cached. <code>GET /health</code> reports <code>brain.verdictTtlMs</code>. Committed <code>cre workflow simulate</code> logs: cap flip <code>simulate-allow.log</code> / <code>simulate-deny.log</code>; policy engine <code>simulate-allowlist-deny.log</code> / <code>simulate-rate-deny.log</code> (Nitro <code>us-west-2</code>).</p>
-          <pre>curl -sS "http://127.0.0.1:8787/desk/brain?tinybars=${escapeHtml(config.priceTinybars)}"</pre>
+          <pre>curl -sS "${origin}/desk/brain?tinybars=${escapeHtml(config.priceTinybars)}"</pre>
         </article>
         <article class="doc-card" id="meter">
           <h2>Metering</h2>
@@ -98,19 +99,19 @@ export function renderDocsPage(
           <h2>Ledger</h2>
           <p>${topic && topicUrl ? `Topic <a href="${escapeHtml(topicUrl)}" rel="noreferrer" target="_blank"><code>${escapeHtml(topic)}</code></a>.` : "Configure an HCS topic to publish bills."} Recipe: ${escapeHtml(RECOMPUTE_RECIPE)}</p>
           <p>Pay attaches the bill only when the settle transaction is on the topic. If Mirror Node is still catching up, the HashScan settle link still stands; the bill block is omitted rather than showing someone else’s receipt.</p>
-          <pre>curl -sS http://127.0.0.1:8787/desk/ledger</pre>
+          <pre>curl -sS ${origin}/desk/ledger</pre>
         </article>
         <article class="doc-card" id="subscribe">
           <h2>Subscribe</h2>
           <p>Recurring snapshots use Hedera scheduled transactions, not a second 402. Plan them on <a href="/app#subscribe">the desk</a> or via HTTP. The buyer pre-authorizes N transfers with <code>wait_for_expiry</code>. Each slot expires at most 62 days out. When Mirror Node shows <code>executed_timestamp</code>, claim on <a href="/desks">/desks</a> or <code>GET /desk/claim?schedule=</code> delivers one snapshot. The HBAR snapshot 402 stays asset <code>0.0.0</code>.</p>
           <p>HTS is a desk-credit token with a custom fixed HBAR fee to the seller. Blocky402 <code>/supported</code> does not advertise a non-HBAR asset, so the pay path does not switch tokens. <code>GET /desk/hts</code> publishes the token plan. <code>npm run hts -- create</code> broadcasts it. Put the id in <code>HTS_TOKEN_ID</code>.</p>
-          <pre>curl -sS "http://127.0.0.1:8787/desk/subscribe?slots=2&amp;intervalSec=604800"
-curl -sS http://127.0.0.1:8787/desk/hts
+          <pre>curl -sS "${origin}/desk/subscribe?slots=2&amp;intervalSec=604800"
+curl -sS ${origin}/desk/hts
 npm run subscribe -- --plan --slots 2 --interval-sec 120
 npm run subscribe -- --slots 2 --interval-sec 120
 npm run hts -- probe
 npm run hts -- plan
-curl -sS "http://127.0.0.1:8787/desk/claim?schedule=&lt;0.0.x&gt;"</pre>
+curl -sS "${origin}/desk/claim?schedule=&lt;0.0.x&gt;"</pre>
         </article>
         <article class="doc-card" id="http">
           <h2>HTTP API</h2>
@@ -135,8 +136,8 @@ curl -sS "http://127.0.0.1:8787/desk/claim?schedule=&lt;0.0.x&gt;"</pre>
               <tr><td>GET</td><td><code>/desk/hts</code></td><td>TOLL token plan + Blocky402 asset probe</td></tr>
             </tbody>
           </table>
-          <pre>curl -sS "http://127.0.0.1:8787/desk/inspect?name=&lt;paste-a-name&gt;&amp;protocols=aave-v3-ethereum"
-curl -sS -X POST http://127.0.0.1:8787/desk/pay \\
+          <pre>curl -sS "${origin}/desk/inspect?name=&lt;paste-a-name&gt;&amp;protocols=aave-v3-ethereum"
+curl -sS -X POST ${origin}/desk/pay \\
   -H 'content-type: application/json' \\
   -H "x-desk-pay-secret: \${DESK_PAY_SECRET:-}" \\
   -d '{"name":"&lt;paste-a-name&gt;","protocols":["aave-v3-ethereum"]}'</pre>
@@ -144,9 +145,9 @@ curl -sS -X POST http://127.0.0.1:8787/desk/pay \\
         <article class="doc-card" id="cli">
           <h2>Agent CLI</h2>
           <p>Headless buyer. Pass a name or a desk URL. Protocol ids are optional; omit them to request the full catalog. A protocol id that is not in the catalog is how you exercise unused-remainder refund.</p>
-          <pre>npm run buyer -- http://127.0.0.1:8787
-npm run buyer -- http://127.0.0.1:8787 aave-v3-ethereum
-npm run buyer -- http://127.0.0.1:8787 not-a-real-protocol
+          <pre>npm run buyer -- ${origin}
+npm run buyer -- ${origin} aave-v3-ethereum
+npm run buyer -- ${origin} not-a-real-protocol
 npm run buyer -- &lt;paste-a-name&gt;
 npm run agent -- &lt;paste-a-parent-name&gt;
 npm run directory -- &lt;paste-a-name&gt;

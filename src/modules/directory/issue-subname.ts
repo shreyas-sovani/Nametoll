@@ -13,7 +13,7 @@ import {
   type WalletClient,
 } from "viem";
 import { sepolia } from "viem/chains";
-import { HBAR_ASSET, loadConfig } from "../../config.ts";
+import { HBAR_ASSET, loadConfig, publishedDeskOrigin } from "../../config.ts";
 import { dnsEncodedName } from "./dns-name.ts";
 import {
   ALL_ROLES,
@@ -186,7 +186,7 @@ export async function runIssueSubname(opts: {
   const state = loadState();
   const parent = (opts.parent ?? state.parent ?? "").trim();
   const label = (opts.label ?? "agent-02").trim();
-  const endpoint = config.publicDeskUrl?.trim() ?? "";
+  const endpoint = publishedDeskOrigin(config.publicDeskUrl);
   const payTo = config.sellerAccountId ?? "";
   const hcsTopic = config.hcsTopicId ?? "";
   const priceRule = `${config.priceTinybars} tinybars per protocol`;

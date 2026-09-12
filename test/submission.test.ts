@@ -31,7 +31,7 @@ describe("B12 submission pack", () => {
 
   it("points every Hedera AI checklist row at README or repo evidence", () => {
     expect(pack).toMatch(/Live URL/);
-    expect(pack).toMatch(/nonwaxing-xeromorphic-dagmar\.ngrok-free\.dev|PUBLIC_DESK_URL/);
+    expect(pack).toMatch(/nametoll\.run\.place|PUBLIC_DESK_URL/);
     expect(pack).toMatch(/x402 v2/);
     expect(pack).toMatch(/Blocky402/);
     expect(pack).toMatch(/0\.0\.7162784@1789065380\.080315812|hashscan\.io\/testnet\/tx\//);

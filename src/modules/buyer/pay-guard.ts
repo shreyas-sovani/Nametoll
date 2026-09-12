@@ -1,4 +1,5 @@
 import { createHash, timingSafeEqual } from "node:crypto";
+import { LIVE_DESK_ORIGIN } from "../../config.ts";
 
 export const PAY_SECRET_HEADER = "x-desk-pay-secret";
 export const PAY_SECRET_COOKIE = "nametoll_pay";
@@ -62,7 +63,9 @@ export function payEndpointAllowed(
   publicDeskUrl?: string,
 ): boolean {
   if (!publicDeskUrl) return true;
-  return sameOrigin(endpoint, publicDeskUrl);
+  return (
+    sameOrigin(endpoint, publicDeskUrl) || sameOrigin(endpoint, LIVE_DESK_ORIGIN)
+  );
 }
 
 export function sameOrigin(left: string, right: string): boolean {

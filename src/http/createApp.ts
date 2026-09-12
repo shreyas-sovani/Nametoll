@@ -141,6 +141,7 @@ export async function createApp(
         source,
         configured: source !== "unavailable",
         verdictTtlMs: VERDICT_TTL_MS,
+        ...(brain.lastError ? { lastError: brain.lastError } : {}),
       },
       merchandise: config.graphGatewayKey ? "live" : "stub",
       canPay: Boolean(buyer),
