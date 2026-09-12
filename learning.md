@@ -294,7 +294,7 @@ Banners you should expect:
 | `GET /desk/inspect?name=…` | Descriptor + TEE + 402 challenge, no settle |
 | `GET /desk/catalog?parent=…` | Children of a parent + live probes (Omnigraph, or `LabelRegistered` if ENSNode TLS fails) |
 | `POST /desk/pay` | Demo pay (operator key or `{ payer: "guest" }`) |
-| `POST /desk/session` | Ephemeral guest buyer + 0.5 HBAR faucet |
+| `POST /desk/session` | Ephemeral guest buyer + 0.05 HBAR faucet |
 | `POST /desk/register` | Child name that resells this desk (price/payTo fixed; optional `expiresIn`) |
 | `npm run buyer -- <name>` | Real consuming agent: resolve → 402 → sign → data |
 | `npm run agent -- <parent>` | Discover a child, then pay |

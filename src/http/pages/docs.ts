@@ -1,5 +1,5 @@
 import { publishedDeskOrigin, type AppConfig } from "../../config.ts";
-import { SNAPSHOT_PATH } from "../../modules/gate/index.ts";
+import { RISK_PATH, SNAPSHOT_PATH } from "../../modules/gate/index.ts";
 import { VERDICT_TTL_MS } from "../../modules/brain/index.ts";
 import { explorerNetwork, hashscanTopicUrl } from "../../modules/ledger/hashscan.ts";
 import { RECOMPUTE_RECIPE } from "../../modules/ledger/http.ts";
@@ -16,7 +16,7 @@ export function renderDocsPage(
   const topic = config.hcsTopicId;
   const topicUrl = topic ? hashscanTopicUrl(topic, network) : "";
   const priceHbar = tinybarsToHbar(config.priceTinybars);
-  const ttlSec = Math.round(VERDICT_TTL_MS / 1000);
+  const ttlSec = Math.round((config.verdictTtlMs ?? VERDICT_TTL_MS) / 1000);
   const origin = escapeHtml(publishedDeskOrigin(config.publicDeskUrl));
   const body = `
     <div class="docs">
@@ -64,7 +64,7 @@ export function renderDocsPage(
         <article class="doc-card" id="desk">
           <h2>Open a desk</h2>
           <p>Use <a href="/app">the desk console</a> or HTTP. Type or paste the name. Choose 1 or 2 protocols. <strong>Open desk</strong> calls <code>GET /desk/inspect</code>. If the TEE allows, <strong>Pay</strong> calls <code>POST /desk/pay</code> with the same name and protocol list.</p>
-          <p>Pay can spend the operator buyer key or a guest account from <code>POST /desk/session</code> (ephemeral ECDSA, seller-funded 0.5 HBAR). Both are rate-limited, optionally gated by a shared secret cookie or <code>x-desk-pay-secret</code>, and pinned to <code>PUBLIC_DESK_URL</code> when that is set. Inspect stays open.</p>
+          <p>Pay can spend the operator buyer key or a guest account from <code>POST /desk/session</code> (ephemeral ECDSA, seller-funded 0.05 HBAR). The faucet closes with HTTP 503 if the seller is under 5 HBAR or guest capacity is full. Both are rate-limited, optionally gated by a shared secret cookie or <code>x-desk-pay-secret</code>, and pinned to <code>PUBLIC_DESK_URL</code> when that is set. Inspect stays open.</p>
         </article>
         <article class="doc-card" id="402">
           <h2>HTTP 402</h2>
@@ -74,7 +74,7 @@ export function renderDocsPage(
         </article>
         <article class="doc-card" id="cap">
           <h2>Spend cap</h2>
-          <p>The CRE handler runs in a TEE. Secrets: spend cap, optional buyer allowlist, optional pays-per-hour. Public reasons are <code>under cap</code>, <code>over cap</code>, <code>buyer not allowlisted</code>, and <code>rate limited</code>. A deny or an unavailable enclave blocks settle and merchandise. Successful verdicts are cached per amount, payer, and hour-count for ${escapeHtml(String(ttlSec))}s. Failures are not cached. <code>GET /health</code> reports <code>brain.verdictTtlMs</code>. Committed <code>cre workflow simulate</code> logs: cap flip <code>simulate-allow.log</code> / <code>simulate-deny.log</code>; policy engine <code>simulate-allowlist-deny.log</code> / <code>simulate-rate-deny.log</code> (Nitro <code>us-west-2</code>).</p>
+          <p>The CRE handler runs in a TEE. Secrets: spend cap, optional buyer allowlist, optional pays-per-hour. Public reasons are <code>under cap</code>, <code>over cap</code>, <code>buyer not allowlisted</code>, and <code>rate limited</code>. A deny or an unavailable enclave blocks settle and merchandise. Successful verdicts are cached per amount, payer, and hour-count for ${escapeHtml(String(ttlSec))}s. The process re-warms the 1-unit and 2-unit amounts every half-TTL. One <code>cre workflow simulate</code> runs at a time; a hung child is killed at 60s and the desk fails closed. Failures are not cached. <code>GET /health</code> reports <code>brain.verdictTtlMs</code>. Committed <code>cre workflow simulate</code> logs: cap flip <code>simulate-allow.log</code> / <code>simulate-deny.log</code>; policy engine <code>simulate-allowlist-deny.log</code> / <code>simulate-rate-deny.log</code> (Nitro <code>us-west-2</code>).</p>
           <pre>curl -sS "${origin}/desk/brain?tinybars=${escapeHtml(config.priceTinybars)}"</pre>
         </article>
         <article class="doc-card" id="meter">
@@ -90,6 +90,7 @@ export function renderDocsPage(
             </tbody>
           </table>
           <p>1 protocol = ${escapeHtml(config.priceTinybars)} tinybars. 2 protocols = twice that. If an indexer is down, that protocol fail-softs; you are billed for delivered units.</p>
+          <p><code>GET ${RISK_PATH}?wallet=</code> is a second SKU at 1 unit. The desk computes a health factor from live Messari market ratios (or live Account positions when the indexer has them). The wallet is merchandise, not a TEE input. The bill is <code>sku: risk-score</code>. This sells computation, freshness, and a receipt — not privacy of public positions.</p>
         </article>
         <article class="doc-card" id="remainder">
           <h2>Remainder</h2>
@@ -118,16 +119,17 @@ curl -sS "${origin}/desk/claim?schedule=&lt;0.0.x&gt;"</pre>
           <table>
             <thead><tr><th>Method</th><th>Path</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td>GET</td><td><code>/health</code></td><td>Liveness, modules, brain TTL, whether this origin can pay</td></tr>
+              <tr><td>GET</td><td><code>/health</code></td><td>Liveness, modules, brain TTL, seller runway, whether this origin can pay</td></tr>
               <tr><td>GET</td><td><code>/desk/resolve?name=</code></td><td>Directory descriptor from a live name</td></tr>
               <tr><td>GET</td><td><code>/desk/catalog?parent=</code></td><td>Children of a parent, each resolved and probed</td></tr>
               <tr><td>GET</td><td><code>/desk/offer</code></td><td>This origin's price and protocol ids</td></tr>
               <tr><td>GET</td><td><code>/desk/inspect?name=&amp;protocols=</code></td><td>Descriptor + TEE verdict + unpaid 402</td></tr>
               <tr><td>POST</td><td><code>/desk/pay</code></td><td>Settle, snapshot, bill (when matched). Body <code>payer: guest|operator</code></td></tr>
-              <tr><td>POST</td><td><code>/desk/session</code></td><td>Create an in-memory guest buyer and faucet 0.5 HBAR</td></tr>
+              <tr><td>POST</td><td><code>/desk/session</code></td><td>Create an in-memory guest buyer and faucet 0.05 HBAR (503 if runway is closed)</td></tr>
               <tr><td>GET</td><td><code>/desk/session</code></td><td>Current guest account, if the session cookie is set</td></tr>
               <tr><td>POST</td><td><code>/desk/register</code></td><td>Issue a child that resells this desk (price/payTo fixed; optional <code>expiresIn</code>)</td></tr>
               <tr><td>GET</td><td><code>${SNAPSHOT_PATH}</code></td><td>Merchandise; 402 if unpaid</td></tr>
+              <tr><td>GET</td><td><code>${RISK_PATH}?wallet=</code></td><td>Desk-side risk score; 1 unit; 402 if unpaid</td></tr>
               <tr><td>GET</td><td><code>/desk/brain?tinybars=</code></td><td>Public verdict for an amount</td></tr>
               <tr><td>GET</td><td><code>/desk/join</code></td><td>Unsigned <code>join()</code> from the same TEE — this origin does not broadcast it</td></tr>
               <tr><td>GET</td><td><code>/desk/ledger</code></td><td>Topic, bills, recompute recipe</td></tr>

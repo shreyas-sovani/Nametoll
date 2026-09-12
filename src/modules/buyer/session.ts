@@ -8,9 +8,21 @@ import {
 import type { AppConfig } from "../../config.ts";
 import { explorerNetwork } from "../ledger/hashscan.ts";
 import { createHbarRefundRail } from "../ledger/refund.ts";
+import {
+  assertFaucetRunway,
+  assertGuestCapacity,
+  DEFAULT_GUEST_FAUCET_FLOOR_TINYBARS,
+  DEFAULT_GUEST_FAUCET_TINYBARS,
+  DEFAULT_GUEST_MAX_ACTIVE,
+  readSellerTinybars,
+  type SellerBalanceReader,
+} from "./runway.ts";
 
 export const GUEST_COOKIE = "nametoll_guest";
-export const GUEST_FAUCET_TINYBARS = "50000000";
+/** 0.05 HBAR — 50 one-unit snapshots. Ten times smaller than the old 0.5 HBAR faucet. */
+export const GUEST_FAUCET_TINYBARS = DEFAULT_GUEST_FAUCET_TINYBARS;
+export const GUEST_FAUCET_FLOOR_TINYBARS = DEFAULT_GUEST_FAUCET_FLOOR_TINYBARS;
+export const GUEST_MAX_ACTIVE = DEFAULT_GUEST_MAX_ACTIVE;
 export const GUEST_COOKIE_MAX_AGE = 14_400;
 
 export type GuestRecord = {
@@ -23,6 +35,7 @@ export type GuestRecord = {
 export type GuestStore = {
   get(id: string): GuestRecord | undefined;
   put(record: GuestRecord): void;
+  size(): number;
 };
 
 export type GuestFaucet = {
@@ -43,6 +56,7 @@ export function createMemoryGuestStore(): GuestStore {
     put: (record) => {
       rows.set(record.id, record);
     },
+    size: () => rows.size,
   };
 }
 
@@ -58,15 +72,41 @@ export function guestCookie(id: string, secure: boolean): string {
   return flags.join("; ");
 }
 
-export function createHederaGuestFaucet(config: AppConfig): GuestFaucet {
+export function faucetTinybarsFrom(config: AppConfig): string {
+  return config.guestFaucetTinybars ?? GUEST_FAUCET_TINYBARS;
+}
+
+export function faucetFloorFrom(config: AppConfig): string {
+  return config.guestFaucetFloorTinybars ?? GUEST_FAUCET_FLOOR_TINYBARS;
+}
+
+export function guestMaxActiveFrom(config: AppConfig): number {
+  return config.guestMaxActive ?? GUEST_MAX_ACTIVE;
+}
+
+export function createHederaGuestFaucet(
+  config: AppConfig,
+  options: { sellerTinybars?: SellerBalanceReader } = {},
+): GuestFaucet {
   if (!config.sellerAccountId || !config.sellerPrivateKey) {
     throw new Error(
       "Guest faucet needs HEDERA_SELLER_ACCOUNT_ID and HEDERA_SELLER_PRIVATE_KEY.",
     );
   }
+  const sellerAccountId = config.sellerAccountId;
+  const readBalance =
+    options.sellerTinybars ??
+    ((accountId: string) => readSellerTinybars(config.mirrorNodeUrl, accountId));
+  const faucetAmount = faucetTinybarsFrom(config);
+  const floor = faucetFloorFrom(config);
   return {
     async createAndFund(key) {
-      const seller = AccountId.fromString(config.sellerAccountId!);
+      const sellerTinybars = await readBalance(sellerAccountId);
+      if (sellerTinybars === undefined) {
+        throw new Error("Mirror Node did not return a seller balance.");
+      }
+      assertFaucetRunway(sellerTinybars, floor);
+      const seller = AccountId.fromString(sellerAccountId);
       const sellerKey = PrivateKey.fromStringECDSA(config.sellerPrivateKey!);
       const client =
         config.network === "hedera:mainnet" ? Client.forMainnet() : Client.forTestnet();
@@ -80,7 +120,7 @@ export function createHederaGuestFaucet(config: AppConfig): GuestFaucet {
         }
         const funded = await createHbarRefundRail(config).refund({
           payer: accountId,
-          tinybars: GUEST_FAUCET_TINYBARS,
+          tinybars: faucetAmount,
         });
         return { accountId, faucetTx: funded.refundTx };
       } finally {
@@ -94,11 +134,13 @@ export async function openGuestSession(options: {
   existingId?: string;
   store: GuestStore;
   faucet: GuestFaucet;
+  maxActive?: number;
 }): Promise<GuestRecord> {
   if (options.existingId) {
     const existing = options.store.get(options.existingId);
     if (existing) return existing;
   }
+  assertGuestCapacity(options.store.size(), options.maxActive ?? GUEST_MAX_ACTIVE);
   const key = PrivateKey.generateECDSA();
   const funded = await options.faucet.createAndFund(key);
   const record: GuestRecord = {
@@ -115,7 +157,7 @@ export function guestPublicView(record: GuestRecord, config: AppConfig): GuestPu
   const network = explorerNetwork(config.network);
   return {
     accountId: record.accountId,
-    faucetTinybars: GUEST_FAUCET_TINYBARS,
+    faucetTinybars: faucetTinybarsFrom(config),
     ...(record.faucetTx ? { faucetTx: record.faucetTx } : {}),
     hashscanAccountUrl: `https://hashscan.io/${network}/account/${record.accountId}`,
   };

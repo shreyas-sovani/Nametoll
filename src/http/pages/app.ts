@@ -1,5 +1,5 @@
 import type { AppConfig } from "../../config.ts";
-import { SNAPSHOT_PATH } from "../../modules/gate/index.ts";
+import { RISK_PATH, SNAPSHOT_PATH } from "../../modules/gate/index.ts";
 import { VERDICT_TTL_MS } from "../../modules/brain/index.ts";
 import { explorerNetwork, hashscanTopicUrl } from "../../modules/ledger/hashscan.ts";
 import { PINNED_PROTOCOLS } from "../../modules/merchandise/deployments.ts";
@@ -26,6 +26,7 @@ export function renderAppPage(
   const canPay = options.canPay === true;
   const pinnedIds = PINNED_PROTOCOLS.map((protocol) => protocol.id);
   const priceHbar = tinybarsToHbar(config.priceTinybars);
+  const ttlSec = Math.round((config.verdictTtlMs ?? VERDICT_TTL_MS) / 1000);
   const body = `
     <div class="desk">
       <aside>
@@ -46,8 +47,9 @@ export function renderAppPage(
             <dt>guest</dt><dd><code>POST /desk/session</code></dd>
             <dt>subscribe</dt><dd><code>/desk/subscribe</code> · <code>/desk/claim</code></dd>
             <dt>HTS</dt><dd><code>/desk/hts</code></dd>
-            <dt>TEE cache</dt><dd>per amount, ${Math.round(VERDICT_TTL_MS / 1000)}s TTL; unavailable is not cached</dd>
+            <dt>TEE cache</dt><dd>per amount, ${ttlSec}s TTL; keep-warm every ${ttlSec / 2}s; unavailable is not cached</dd>
             <dt>merchandise</dt><dd>Messari lending · live Aave v3 + Compound III · billed per delivered protocol · unused remainder refunded</dd>
+            <dt>risk</dt><dd><code>${RISK_PATH}?wallet=</code> · 1 unit · desk-side score, not a private view</dd>
             <dt>facilitator</dt><dd>${escapeHtml(config.facilitatorUrl)}</dd>
           </dl>
         </div>
@@ -58,6 +60,7 @@ export function renderAppPage(
               (protocol) =>
                 `<div><strong>${escapeHtml(protocol.label)}</strong><br><code>${escapeHtml(protocol.id)}</code></div>`,
             ).join("")}
+            <div><strong>Risk score</strong><br><code>${RISK_PATH}</code> · 1 × price · computation + freshness + HCS receipt</div>
           </div>
         </div>
       </aside>
@@ -81,8 +84,12 @@ export function renderAppPage(
               <option value="guest">my guest account</option>
             </select>
           </label>
+          <label class="name-field" for="desk-wallet">Wallet
+            <input id="desk-wallet" name="wallet" autocomplete="off" spellcheck="false" placeholder="0x… optional risk SKU" />
+          </label>
           <button type="submit" id="open-desk">Open desk</button>
           <button type="button" class="pay" id="pay-desk" disabled data-can-pay="${canPay ? "1" : "0"}">Pay</button>
+          <button type="button" class="ghost" id="score-desk" disabled data-can-pay="${canPay ? "1" : "0"}">Score wallet</button>
           <button type="button" class="ghost" id="join-desk">TEE join()</button>
           <button type="button" class="ghost" id="guest-create">Create guest account</button>
         </form>
@@ -119,6 +126,10 @@ export function renderAppPage(
           <section class="station" id="station-join">
             <h3>07 TEE join()</h3>
             <dl id="join-out"></dl>
+          </section>
+          <section class="station" id="station-risk">
+            <h3>08 Risk score</h3>
+            <dl id="risk-out"></dl>
           </section>
         </div>
         <section class="band" id="subscribe" style="margin-top: 1.2rem">

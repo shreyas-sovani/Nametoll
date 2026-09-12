@@ -7,6 +7,7 @@ export function deskDriveScript(options: {
         var form = document.getElementById("drive-form");
         var openBtn = document.getElementById("open-desk");
         var payBtn = document.getElementById("pay-desk");
+        var scoreBtn = document.getElementById("score-desk");
         var joinBtn = document.getElementById("join-desk");
         var payerMode = document.getElementById("payer-mode");
         var guestBtn = document.getElementById("guest-create");
@@ -20,6 +21,14 @@ export function deskDriveScript(options: {
         var pinnedProtocols = ${JSON.stringify(options.pinnedIds)};
         var hashscanTxPrefix = ${JSON.stringify(options.hashscanTxPrefix)};
         if (!form || !openBtn || !payBtn || !joinBtn) return;
+        function typedWallet() {
+          var field = document.getElementById("desk-wallet");
+          return field && "value" in field ? String(field.value).trim() : "";
+        }
+        function setPayButtons(disabled) {
+          payBtn.disabled = disabled;
+          if (scoreBtn) scoreBtn.disabled = disabled;
+        }
 
         function protocols() {
           var units = document.getElementById("desk-units");
@@ -95,6 +104,7 @@ export function deskDriveScript(options: {
           fillDl("bill-out", []);
           fillDl("remainder-out", []);
           fillDl("join-out", []);
+          fillDl("risk-out", []);
         }
         function hideBanners() {
           empty.hidden = true;
@@ -152,7 +162,7 @@ export function deskDriveScript(options: {
             ok.textContent = "TEE allowed. Unpaid GET is HTTP 402. Pay to settle.";
             ok.hidden = false;
             setLamp("allow");
-            payBtn.disabled = !canPayNow();
+            setPayButtons(!canPayNow());
             if (payBtn.disabled) {
               showError(payer() === "guest"
                 ? "Create a guest account first."
@@ -163,7 +173,7 @@ export function deskDriveScript(options: {
             deny.textContent = "TEE denied: " + (v.reason || "over cap") + ". No settle, no snapshot.";
             deny.hidden = false;
             setLamp("deny");
-            payBtn.disabled = true;
+            setPayButtons(true);
           }
         }
         function showPaid(body) {
@@ -212,7 +222,24 @@ export function deskDriveScript(options: {
             : "Settled. Open HashScan and recompute the HCS topic.";
           ok.hidden = false;
           setLamp("settled");
-          payBtn.disabled = false;
+          setPayButtons(false);
+        }
+        function showRisk(body) {
+          showPaid(body);
+          var paid = body.paid || {};
+          var score = paid.body || {};
+          fillDl("risk-out", [
+            ["sku", score.sku],
+            ["wallet", score.wallet],
+            ["source", score.source],
+            ["score", score.score != null ? String(score.score) : ""],
+            ["health factor", score.healthFactor],
+            ["distance to liq %", score.distanceToLiquidationPct],
+            ["worst market", score.worstMarket ? (score.worstMarket.name || score.worstMarket.id) : ""],
+            ["collateral USD", score.factors && score.factors.collateralUsd],
+            ["borrow USD", score.factors && score.factors.borrowUsd],
+            ["methodology", score.methodology]
+          ]);
         }
         form.addEventListener("submit", function (event) {
           event.preventDefault();
@@ -220,7 +247,7 @@ export function deskDriveScript(options: {
           hideBanners();
           resetStations();
           lastInspect = null;
-          payBtn.disabled = true;
+          setPayButtons(true);
           if (!name) {
             empty.hidden = false;
             empty.textContent = "Paste a name.";
@@ -257,7 +284,7 @@ export function deskDriveScript(options: {
             showError("Paste a name.");
             return;
           }
-          payBtn.disabled = true;
+          setPayButtons(true);
           payBtn.textContent = "Paying…";
           payBtn.setAttribute("aria-busy", "true");
           setLamp("busy");
@@ -284,10 +311,54 @@ export function deskDriveScript(options: {
               payBtn.textContent = "Pay";
               payBtn.removeAttribute("aria-busy");
               if (lastInspect && lastInspect.verdict && lastInspect.verdict.allow && canPayNow()) {
-                payBtn.disabled = false;
+                setPayButtons(false);
               }
             });
         });
+        if (scoreBtn) {
+          scoreBtn.addEventListener("click", function () {
+            var name = typedName();
+            var wallet = typedWallet();
+            if (!name) {
+              showError("Paste a name.");
+              return;
+            }
+            if (!/^0x[0-9a-fA-F]{40}$/.test(wallet)) {
+              showError("Paste a 0x wallet to score.");
+              return;
+            }
+            setPayButtons(true);
+            scoreBtn.textContent = "Scoring…";
+            scoreBtn.setAttribute("aria-busy", "true");
+            setLamp("busy");
+            fetch("/desk/pay", {
+              method: "POST",
+              credentials: "same-origin",
+              headers: { "content-type": "application/json", accept: "application/json" },
+              body: JSON.stringify({ name: name, sku: "risk-score", wallet: wallet, payer: payer() })
+            })
+              .then(function (res) { return res.json().then(function (body) { return { res: res, body: body }; }); })
+              .then(function (pack) {
+                if (pack.body.verdict && pack.body.verdict.allow === false) {
+                  showInspect(pack.body);
+                  return;
+                }
+                if (!pack.res.ok || !pack.body.paid) {
+                  showError(pack.body.error || "Risk score refused.");
+                  return;
+                }
+                showRisk(pack.body);
+              })
+              .catch(function () { showError("Risk score failed."); })
+              .finally(function () {
+                scoreBtn.textContent = "Score wallet";
+                scoreBtn.removeAttribute("aria-busy");
+                if (lastInspect && lastInspect.verdict && lastInspect.verdict.allow && canPayNow()) {
+                  setPayButtons(false);
+                }
+              });
+          });
+        }
         joinBtn.addEventListener("click", function () {
           joinBtn.disabled = true;
           joinBtn.textContent = "Asking TEE…";
@@ -347,7 +418,7 @@ export function deskDriveScript(options: {
                 showGuest(pack.body.accountId, pack.body.hashscanAccountUrl);
                 if (payerMode) payerMode.value = "guest";
                 if (lastInspect && lastInspect.verdict && lastInspect.verdict.allow) {
-                  payBtn.disabled = !canPayNow();
+                  setPayButtons(!canPayNow());
                 }
               })
               .catch(function () { showError("Guest session failed."); })
@@ -360,7 +431,7 @@ export function deskDriveScript(options: {
         if (payerMode) {
           payerMode.addEventListener("change", function () {
             if (lastInspect && lastInspect.verdict && lastInspect.verdict.allow) {
-              payBtn.disabled = !canPayNow();
+              setPayButtons(!canPayNow());
             }
           });
         }

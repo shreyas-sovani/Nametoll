@@ -128,11 +128,13 @@ export async function askCreSimulate(
     options.target,
   ];
 
-  return runTimedCommand(
-    bin,
-    args,
-    options.projectDir,
-    options.timeoutMs ?? CRE_SIMULATE_TIMEOUT_MS,
+  return enqueueSimulate(() =>
+    runTimedCommand(
+      bin,
+      args,
+      options.projectDir,
+      options.timeoutMs ?? CRE_SIMULATE_TIMEOUT_MS,
+    ),
   );
 }
 
@@ -166,7 +168,19 @@ function creSpawnEnv(): NodeJS.ProcessEnv {
   return creSecretEnv();
 }
 
-export const CRE_SIMULATE_TIMEOUT_MS = 25_000;
+export const CRE_SIMULATE_TIMEOUT_MS = 60_000;
+
+let simulateTail: Promise<void> = Promise.resolve();
+
+/** One `cre workflow simulate` at a time. Queued callers run after and can hit the Brain cache. */
+export function enqueueSimulate<T>(fn: () => Promise<T>): Promise<T> {
+  const run = simulateTail.then(fn, fn);
+  simulateTail = run.then(
+    () => undefined,
+    () => undefined,
+  );
+  return run;
+}
 
 export function runTimedCommand(
   bin: string,

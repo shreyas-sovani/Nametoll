@@ -32,8 +32,8 @@ Do not implement World, ATS, SwapVM, Uniswap, Privy, Arc, Ledger, Bazantic, ERC-
 
 | | |
 |---|---|
-| **Done** | B0–**B26** (spine B0–B12, stretch B13–B26). Directory `/desks` + `npm run agent`. Sibling `agent-02.nametoll.eth`. TEE policy axes + allowlist/rate simulate logs. TOLL + scheduled subscribe. Guest session pay. `/register` with optional expiry. Expired child `gone.nametoll.eth`. README architecture + payment-flow. |
-| **Next** | Video. Public desk is https://nametoll.run.place. Live sibling `agent-02.nametoll.eth` is on Sepolia. |
+| **Done** | B0–**B29** (spine + stretch + judging-day hardening). TEE keep-warm / serialize / 60s kill. Guest faucet runway. Risk-score SKU. |
+| **Next** | Video. Public desk is https://nametoll.run.place. Set `VERDICT_TTL_MS=1800000` on the live host before recording. |
 | **Human blockers** | Never commit `.env`. Record the 2–4 min video. |
 | **Not blockers** | Graph Studio query key works. Sepolia owner/operator are funded testnet accounts. |
 
@@ -294,6 +294,9 @@ Work top to bottom. A later ticket may assume the earlier **Done when**.
 - [x] **B24** Subscribe surface. `/app#subscribe` plans `GET /desk/subscribe?slots=`. Landing Subscribe band links there and `/docs#subscribe`. 12 Sep 2026.
 - [x] **B25** Per-desk descriptor pricing **skipped**. Gate still charges `config.priceTinybars`. Touching the 402 before deadline is out of scope.
 - [x] **B26** Prize-pack hardening (G1–G4). README now leads with what/why, architecture table, payment-flow with explorer links, quickstart (`agent`, guest, `/register`, `/desks`), and feature→evidence→partner. `docs/submission.md` claims discovery / scheduled / HTS as separate Hedera rows. CRE policy simulates: `simulate-allowlist-deny.log`, `simulate-rate-deny.log`. `/register` `expiresIn` (60s–1y); live expired `gone.nametoll.eth` https://sepolia.etherscan.io/tx/0x44bbbd33adc88b3fb103eec45e2941ee4ad9eb14d8a0f446f738c7c2ac20d3ac (`AVAILABLE`, unresolved on `/desks`). Session 429 already tested. Bazantic / ERC-8004 / A2A not built. 12 Sep 2026.
+- [x] **B27** TEE keep-warm + serialize + timeout. `VERDICT_TTL_MS` (default 60s). Re-warm 1- and 2-unit amounts every TTL/2. One `cre workflow simulate` at a time. Hung child killed at 60s → existing 403. 13 Sep 2026.
+- [x] **B28** Faucet runway. Guest faucet `5000000` tinybars (0.05 HBAR). Mirror balance under 5 HBAR or 16 active guests → HTTP 503. `/health.runway` surfaces seller tinybars. 13 Sep 2026.
+- [x] **B29** Risk-score SKU. `GET /desk/risk?wallet=` behind the same 402 at 1 unit. Desk-side HF from pinned Messari markets / Account positions, else deterministic demo book. Wallet does not touch Brain cache. HCS `sku: risk-score`. `/app` station 08. 13 Sep 2026.
 
 ---
 

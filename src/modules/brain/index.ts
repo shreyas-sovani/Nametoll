@@ -19,6 +19,7 @@ export type BrainAskInput = {
 export type Brain = {
   source?: BrainSource;
   lastError?: string;
+  verdictTtlMs?: number;
   decide(input: BrainAskInput): Promise<BrainVerdict>;
   join?(): Promise<JoinCall>;
 };
@@ -75,6 +76,7 @@ export function createBrain(options: BrainOptions = {}): Brain {
 
   const brain: Brain = {
     source,
+    verdictTtlMs: ttlMs,
     async decide(input) {
       const key = [
         input.requestedTinybars,
@@ -135,6 +137,7 @@ export function createBrainFromConfig(config: AppConfig): Brain {
     ...(config.creWorkflowName ? { workflowName: config.creWorkflowName } : {}),
     target: config.creTarget,
     source: brainSource(config),
+    ...(config.verdictTtlMs !== undefined ? { verdictTtlMs: config.verdictTtlMs } : {}),
   });
 }
 
@@ -152,6 +155,20 @@ export async function warmBrain(
       brain.decide({ requestedTinybars }).catch(() => undefined),
     ),
   );
+}
+
+export function startBrainKeepWarm(
+  brain: Brain,
+  amounts: readonly string[],
+  options: { intervalMs?: number } = {},
+): { stop(): void } {
+  const ttl = brain.verdictTtlMs ?? VERDICT_TTL_MS;
+  const intervalMs = options.intervalMs ?? Math.max(1_000, Math.floor(ttl / 2));
+  const timer = setInterval(() => {
+    void warmBrain(brain, amounts);
+  }, intervalMs);
+  timer.unref();
+  return { stop: () => clearInterval(timer) };
 }
 
 export {

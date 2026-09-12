@@ -98,7 +98,7 @@ export function renderLandingPage(
     </section>
     <section class="band reveal">
       <h2>What the desk sells</h2>
-      <p>Live lending-risk snapshots. Units are delivered protocols, not bytes. Unused prepaid remainder is refunded.</p>
+      <p>Live lending-risk snapshots. Units are delivered protocols, not bytes. Unused prepaid remainder is refunded. A 1-unit risk-score SKU computes a health factor from those same markets — paste a wallet on the desk. Public positions are not private.</p>
       <div class="catalog">
         ${PINNED_PROTOCOLS.map(
           (protocol) =>

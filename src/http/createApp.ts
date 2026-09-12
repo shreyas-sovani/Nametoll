@@ -3,6 +3,7 @@ import type { AppConfig } from "../config.ts";
 import {
   createBrainFromConfig,
   createPayWindow,
+  startBrainKeepWarm,
   type Brain,
   warmBrain,
   warmTinybars,
@@ -30,10 +31,18 @@ import { mountBuyer } from "../modules/buyer/http.ts";
 import { mountGuestSession } from "../modules/buyer/session-http.ts";
 import {
   createMemoryGuestStore,
+  faucetFloorFrom,
+  faucetTinybarsFrom,
+  guestMaxActiveFrom,
   tryCreateGuestFaucet,
   type GuestFaucet,
   type GuestStore,
 } from "../modules/buyer/session.ts";
+import {
+  deskRunway,
+  readSellerTinybars,
+  type SellerBalanceReader,
+} from "../modules/buyer/runway.ts";
 import {
   createPayRateLimiter,
   DEFAULT_PAY_GLOBAL_MAX,
@@ -67,6 +76,7 @@ export type AppDeps = {
   guestFaucet?: GuestFaucet;
   guestStore?: GuestStore;
   issueChild?: IssueChild;
+  readSellerTinybars?: SellerBalanceReader;
 };
 
 function resolveBrain(config: AppConfig, deps: AppDeps): Brain {
@@ -127,12 +137,34 @@ export async function createApp(
       ? createHbarRefundRail(config)
       : undefined);
 
-  void warmBrain(brain, warmTinybars(config.priceTinybars));
+  const warmAmounts = warmTinybars(config.priceTinybars);
+  void warmBrain(brain, warmAmounts);
+  startBrainKeepWarm(brain, warmAmounts, {
+    intervalMs: Math.max(
+      1_000,
+      Math.floor((brain.verdictTtlMs ?? config.verdictTtlMs ?? VERDICT_TTL_MS) / 2),
+    ),
+  });
+
+  const readBalance =
+    deps.readSellerTinybars ??
+    ((accountId: string) => readSellerTinybars(config.mirrorNodeUrl, accountId));
+  let runwayCache: { at: number; sellerTinybars?: string } | undefined;
 
   app.use(express.json());
 
-  app.get("/health", (_req, res) => {
+  app.get("/health", async (_req, res) => {
     const source = brain.source ?? "unavailable";
+    let sellerTinybars = runwayCache && Date.now() - runwayCache.at < 15_000
+      ? runwayCache.sellerTinybars
+      : undefined;
+    if (config.sellerAccountId && (!runwayCache || Date.now() - runwayCache.at >= 15_000)) {
+      sellerTinybars = await readBalance(config.sellerAccountId).catch(() => undefined);
+      runwayCache = {
+        at: Date.now(),
+        ...(sellerTinybars !== undefined ? { sellerTinybars } : {}),
+      };
+    }
     res.json({
       ok: true,
       service: "nametoll",
@@ -140,12 +172,20 @@ export async function createApp(
       brain: {
         source,
         configured: source !== "unavailable",
-        verdictTtlMs: VERDICT_TTL_MS,
+        verdictTtlMs: brain.verdictTtlMs ?? config.verdictTtlMs ?? VERDICT_TTL_MS,
         ...(brain.lastError ? { lastError: brain.lastError } : {}),
       },
       merchandise: config.graphGatewayKey ? "live" : "stub",
       canPay: Boolean(buyer),
       join: JOIN_PATH,
+      runway: deskRunway({
+        faucetTinybars: faucetTinybarsFrom(config),
+        faucetFloorTinybars: faucetFloorFrom(config),
+        guestMaxActive: guestMaxActiveFrom(config),
+        activeGuests: guestStore.size(),
+        ...(config.sellerAccountId ? { sellerAccountId: config.sellerAccountId } : {}),
+        ...(sellerTinybars !== undefined ? { sellerTinybars } : {}),
+      }),
     });
   });
 

@@ -277,7 +277,7 @@ Public desk is https://nametoll.run.place. Remainder and `join()` have live expl
 
 ## Demo hardening (11 Sep 2026)
 
-- **Brain cache:** only successful TEE verdicts are memoized, per tinybar amount, 60s TTL (`GET /health` → `brain.verdictTtlMs`). `TEE unavailable` and thrown simulate errors are not stored. `cre workflow simulate` is killed after 25s. Boot warms 1-unit and 2-unit amounts so the first inspect is not a cold 9s simulate.
+- **Brain cache:** only successful TEE verdicts are memoized, per amount + payer + hour-count (`GET /health` → `brain.verdictTtlMs`, default 60s). `TEE unavailable` and thrown simulate errors are not stored. `cre workflow simulate` is serialized and killed after 60s. Boot warms 1-unit and 2-unit amounts; keep-warm re-decides them every TTL/2 so the cache does not expire while the process lives.
 - **Pay relay:** `POST /desk/pay` is rate-limited (8/min per IP, 24/min global). `DESK_PAY_SECRET` (optional) requires `x-desk-pay-secret` or the HttpOnly cookie set on `GET /`. When `PUBLIC_DESK_URL` is set, pay refuses names whose descriptor endpoint is a different origin. `GET /desk/inspect` stays open.
 - **Bill attribution:** pay waits up to 5s for an HCS row whose `settleTx` matches. No `bills.at(-1)` fallback — topic HashScan is enough if Mirror lag has not indexed yet.
 - **Copy:** loop tagline is metered units (protocol count), not bytes. `/app` meter uses pinned Messari ids. Remainder HashScan follows `config.network`.
@@ -296,7 +296,8 @@ Hedera extra-points directory and ENS “agents as namespaces,” without touchi
 
 Spectator → user without handing the operator buyer key.
 
-- **`POST /desk/session`** — in-memory ECDSA buyer, cookie `nametoll_guest`. Seller `AccountCreate` then `TransferTransaction` 0.5 HBAR (`GUEST_FAUCET_TINYBARS`, same rail as `refund.ts`). Rate-limited with pay. Response is account id + HashScan only — no private key.
+- **`POST /desk/session`** — in-memory ECDSA buyer, cookie `nametoll_guest`. Seller `AccountCreate` then `TransferTransaction` 0.05 HBAR (`GUEST_FAUCET_TINYBARS` = `5000000`). Mirror-node balance under 5 HBAR, or 16 live guests, returns HTTP 503 `faucet closed for this session — use operator pay`. `/health.runway` shows seller tinybars. Response is account id + HashScan only — no private key.
+- **`GET /desk/risk?wallet=`** — 1-unit 402 SKU. Desk-side health factor from pinned Messari markets (live Account positions when present, else a deterministic demo book from TVL ratios). Wallet is not sent to Brain. HCS `sku: risk-score`.
 - **`/app` payer** — `operator key` (existing `HEDERA_BUYER_*`) or `my guest account`. `POST /desk/pay` `{ payer: "guest" }` signs with the session key and passes that account id to TEE inspect context.
 - **`/register` + `POST /desk/register`** — label + endpoint (default `PUBLIC_DESK_URL`). `constrainedDeskRecords` forces this origin's `payTo`, `priceRule`, topic, asset `0.0.0`. Parent from `ENS_PARENT`. Write path is `issueDeskChild` (same Permissioned Resolver salt index 1 as B18).
 - **Claim / subscribe** — `/app#subscribe` and `/desks` hit the existing `GET /desk/claim` / `GET /desk/subscribe` endpoints. Landing Subscribe band links those forms. Per-desk 402 pricing not shipped.

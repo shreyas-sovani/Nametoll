@@ -67,6 +67,10 @@ export type AppConfig = {
   billMatchTimeoutMs?: number;
   htsTokenId?: string;
   ensParent?: string;
+  verdictTtlMs?: number;
+  guestFaucetTinybars?: string;
+  guestFaucetFloorTinybars?: string;
+  guestMaxActive?: number;
 };
 
 function readEnv(env: NodeJS.ProcessEnv, name: string): string | undefined {
@@ -112,6 +116,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   const deskPayGlobalMax = readEnv(env, "DESK_PAY_GLOBAL_MAX");
   const htsTokenId = readEnv(env, "HTS_TOKEN_ID");
   const ensParent = readEnv(env, "ENS_PARENT");
+  const verdictTtlMs = readEnv(env, "VERDICT_TTL_MS");
+  const guestFaucetTinybars = readEnv(env, "GUEST_FAUCET_TINYBARS");
+  const guestFaucetFloorTinybars = readEnv(env, "GUEST_FAUCET_FLOOR_TINYBARS");
+  const guestMaxActive = readEnv(env, "GUEST_MAX_ACTIVE");
 
   return {
     port: Number.parseInt(readEnv(env, "PORT") ?? "8787", 10),
@@ -143,5 +151,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     ...(deskPayGlobalMax ? { deskPayGlobalMax: Number.parseInt(deskPayGlobalMax, 10) } : {}),
     ...(htsTokenId ? { htsTokenId } : {}),
     ...(ensParent ? { ensParent } : {}),
+    ...(verdictTtlMs ? { verdictTtlMs: Number.parseInt(verdictTtlMs, 10) } : {}),
+    ...(guestFaucetTinybars ? { guestFaucetTinybars } : {}),
+    ...(guestFaucetFloorTinybars ? { guestFaucetFloorTinybars } : {}),
+    ...(guestMaxActive ? { guestMaxActive: Number.parseInt(guestMaxActive, 10) } : {}),
   };
 }

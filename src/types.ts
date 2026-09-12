@@ -37,6 +37,7 @@ export type Bill = {
   verdictReason?: string;
   verdictHash?: string;
   scheduleId?: string;
+  sku?: string;
 };
 
 export const MODULE_NAMES = [

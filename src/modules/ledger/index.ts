@@ -68,6 +68,7 @@ export function encodeBillPayload(draft: BillDraft): string {
     ...(draft.verdictReason !== undefined ? { verdictReason: draft.verdictReason } : {}),
     ...(draft.verdictHash !== undefined ? { verdictHash: draft.verdictHash } : {}),
     ...(draft.scheduleId !== undefined ? { scheduleId: draft.scheduleId } : {}),
+    ...(draft.sku !== undefined ? { sku: draft.sku } : {}),
   });
 }
 
@@ -112,5 +113,6 @@ export function billFromMirrorMessage(
       : {}),
     ...(typeof record.verdictHash === "string" ? { verdictHash: record.verdictHash } : {}),
     ...(typeof record.scheduleId === "string" ? { scheduleId: record.scheduleId } : {}),
+    ...(typeof record.sku === "string" ? { sku: record.sku } : {}),
   };
 }

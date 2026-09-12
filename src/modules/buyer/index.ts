@@ -32,6 +32,8 @@ export type NamedPaidResult = PaidResult & {
 
 export type PayOnceOptions = {
   protocols?: string[];
+  path?: string;
+  query?: Record<string, string>;
 };
 
 export type Buyer = {
@@ -87,9 +89,14 @@ export function createBuyer(credentials: BuyerCredentials): Buyer {
 
   return {
     async payOnce(deskUrl: string, options: PayOnceOptions = {}): Promise<PaidResult> {
-      const url = new URL(SNAPSHOT_PATH, `${deskUrl.replace(/\/+$/, "")}/`);
+      const url = new URL(options.path ?? SNAPSHOT_PATH, `${deskUrl.replace(/\/+$/, "")}/`);
       if (options.protocols?.length) {
         url.searchParams.set("protocols", options.protocols.join(","));
+      }
+      if (options.query) {
+        for (const [key, value] of Object.entries(options.query)) {
+          url.searchParams.set(key, value);
+        }
       }
       const response = await paidFetch(url, {
         headers: {

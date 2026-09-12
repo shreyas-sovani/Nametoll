@@ -59,6 +59,7 @@ export async function startDesk(
   const app = await createApp({ ...resolved, ...overrides }, {
     ...deps,
     brain: deps.brain ?? allowBrain,
+    readSellerTinybars: deps.readSellerTinybars ?? (async () => undefined),
   });
   const server = await new Promise<Server>((resolve, reject) => {
     const started = app.listen(0, "127.0.0.1", () => resolve(started));

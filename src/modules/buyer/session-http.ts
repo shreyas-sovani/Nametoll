@@ -14,11 +14,13 @@ import {
 import {
   GUEST_COOKIE,
   guestCookie,
+  guestMaxActiveFrom,
   guestPublicView,
   openGuestSession,
   type GuestFaucet,
   type GuestStore,
 } from "./session.ts";
+import { FaucetClosedError } from "./runway.ts";
 
 export const SESSION_PATH = "/desk/session";
 
@@ -64,13 +66,15 @@ export function mountGuestSession(app: Express, deps: GuestHttpDeps): void {
       const record = await openGuestSession({
         store: deps.store,
         faucet: deps.faucet,
+        maxActive: guestMaxActiveFrom(deps.config),
         ...(existingId ? { existingId } : {}),
       });
       res.append("Set-Cookie", guestCookie(record.id, req.secure));
       res.json({ ok: true, ...guestPublicView(record, deps.config) });
     } catch (error) {
       const message = error instanceof Error ? error.message : "session failed";
-      res.status(502).json({ ok: false, error: message });
+      const status = error instanceof FaucetClosedError ? error.status : 502;
+      res.status(status).json({ ok: false, error: message });
     }
   });
 

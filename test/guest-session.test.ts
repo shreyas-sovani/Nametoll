@@ -6,7 +6,14 @@ import { createBuyer } from "../src/modules/buyer/index.ts";
 import {
   GUEST_COOKIE,
   GUEST_FAUCET_TINYBARS,
+  createMemoryGuestStore,
+  openGuestSession,
 } from "../src/modules/buyer/session.ts";
+import {
+  assertFaucetRunway,
+  FAUCET_CLOSED_MESSAGE,
+  FaucetClosedError,
+} from "../src/modules/buyer/runway.ts";
 import { createDirectory, DESK_TEXT_KEYS } from "../src/modules/directory/index.ts";
 import { startDesk, startFakeFacilitator } from "./helpers.ts";
 
@@ -47,7 +54,7 @@ function cookieHeader(res: Response, name: string): string | undefined {
 }
 
 describe("guest session", () => {
-  it("faucets 0.5 HBAR, sets a session cookie, and never returns the private key", async () => {
+  it("faucets a bounded HBAR amount, sets a session cookie, and never returns the private key", async () => {
     let funded = 0;
     const desk = await startDesk(
       {},
@@ -68,6 +75,7 @@ describe("guest session", () => {
       expect(body.ok).toBe(true);
       expect(body.accountId).toBe(GUEST_ACCOUNT);
       expect(body.faucetTinybars).toBe(GUEST_FAUCET_TINYBARS);
+      expect(GUEST_FAUCET_TINYBARS).toBe("5000000");
       expect(body.faucetTx).toBe("0.0.9@1.2");
       expect(JSON.stringify(body)).not.toMatch(/privateKey|0x[0-9a-fA-F]{32,}/);
       expect(cookieHeader(res, GUEST_COOKIE)).toBeTruthy();
@@ -164,5 +172,46 @@ describe("guest session", () => {
       await desk.close();
       await facilitator.close();
     }
+  });
+
+  it("closes the faucet when the seller is under the floor", () => {
+    expect(() => assertFaucetRunway("100000000", "500000000")).toThrow(FaucetClosedError);
+    expect(() => assertFaucetRunway("100000000", "500000000")).toThrow(FAUCET_CLOSED_MESSAGE);
+    expect(() => assertFaucetRunway("500000000", "500000000")).not.toThrow();
+  });
+
+  it("returns 503 when the seller is under the floor", async () => {
+    const desk = await startDesk(
+      {},
+      undefined,
+      {
+        guestFaucet: {
+          async createAndFund() {
+            throw new FaucetClosedError();
+          },
+        },
+      },
+    );
+    try {
+      const res = await fetch(`${desk.url}/desk/session`, { method: "POST" });
+      expect(res.status).toBe(503);
+      const body = (await res.json()) as { error?: string };
+      expect(body.error).toBe(FAUCET_CLOSED_MESSAGE);
+    } finally {
+      await desk.close();
+    }
+  });
+
+  it("refuses a new guest when the in-memory store is at capacity", async () => {
+    const store = createMemoryGuestStore();
+    const faucet = {
+      async createAndFund() {
+        return { accountId: GUEST_ACCOUNT, faucetTx: "0.0.9@1.2" };
+      },
+    };
+    await openGuestSession({ store, faucet, maxActive: 1 });
+    await expect(openGuestSession({ store, faucet, maxActive: 1 })).rejects.toThrow(
+      /at capacity/i,
+    );
   });
 });

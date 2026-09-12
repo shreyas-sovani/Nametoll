@@ -1,5 +1,13 @@
 import { PINNED_PROTOCOLS, pinnedProtocol } from "./deployments.ts";
 import { requestedUnits } from "../gate/meter.ts";
+import {
+  accountPositionsQuery,
+  marketsFromSnapshot,
+  parseWallet,
+  positionsFromAccountData,
+  scoreRisk,
+  type RiskScore,
+} from "./risk.ts";
 
 /** Fields taken from Messari schema-lending.graphql v3.1.0 (docs/partners/graph/). */
 export const LENDING_RISK_QUERY = `{
@@ -76,6 +84,7 @@ export type MerchandiseSnapshot = {
 
 export type Merchandise = {
   snapshot(protocolIds?: string[]): Promise<MerchandiseSnapshot>;
+  risk?(wallet: string): Promise<RiskScore>;
 };
 
 export type MerchandiseOptions = {
@@ -157,7 +166,7 @@ export function createMerchandise(options: MerchandiseOptions = {}): Merchandise
       ? createGatewayFetcher(gatewayUrl, options.gatewayKey)
       : undefined);
 
-  return {
+  const merchandise: Merchandise = {
     async snapshot(protocolIds) {
       if (!fetchGraph) {
         return {
@@ -216,7 +225,41 @@ export function createMerchandise(options: MerchandiseOptions = {}): Merchandise
         protocols,
       };
     },
+    async risk(wallet) {
+      const parsed = parseWallet(wallet);
+      if (!parsed) {
+        throw new Error("wallet query must be a 0x address.");
+      }
+      const snapshot = await merchandise.snapshot();
+      if (!fetchGraph || snapshot.stub) {
+        return scoreRisk({
+          wallet: parsed,
+          markets: [],
+          stub: true,
+        });
+      }
+      const markets = marketsFromSnapshot(snapshot);
+      const positions = (
+        await Promise.all(
+          snapshot.protocols
+            .filter((protocol) => protocol.ok && protocol.subgraphId)
+            .map(async (protocol) => {
+              try {
+                const data = await fetchGraph(
+                  protocol.subgraphId!,
+                  accountPositionsQuery(parsed),
+                );
+                return positionsFromAccountData(data, protocol.label || protocol.id);
+              } catch {
+                return [];
+              }
+            }),
+        )
+      ).flat();
+      return scoreRisk({ wallet: parsed, markets, positions });
+    },
   };
+  return merchandise;
 }
 
 function parseLendingData(

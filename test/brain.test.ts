@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { createBrain, warmBrain } from "../src/modules/brain/index.ts";
+import { createBrain, startBrainKeepWarm, warmBrain } from "../src/modules/brain/index.ts";
 import { decidePolicy, decideSpend, unavailableVerdict } from "../src/modules/brain/verdict.ts";
-import { parseCreSimulateVerdict, runTimedCommand } from "../src/modules/brain/simulate.ts";
+import {
+  CRE_SIMULATE_TIMEOUT_MS,
+  enqueueSimulate,
+  parseCreSimulateVerdict,
+  runTimedCommand,
+} from "../src/modules/brain/simulate.ts";
 
 describe("brain verdict", () => {
   it("allows when requested tinybars are at or under the secret spend cap", () => {
@@ -202,6 +207,47 @@ describe("brain module", () => {
     expect((await brain.decide({ requestedTinybars: "100000" })).allow).toBe(true);
     expect((await brain.decide({ requestedTinybars: "200000" })).allow).toBe(false);
     expect(calls).toEqual(["100000", "200000"]);
+  });
+
+  it("kills a hung cre child after 60s by default", () => {
+    expect(CRE_SIMULATE_TIMEOUT_MS).toBe(60_000);
+  });
+
+  it("runs CRE simulates one at a time so a queued ask can hit a warm cache", async () => {
+    const order: string[] = [];
+    const slow = async (label: string) => {
+      order.push(`start:${label}`);
+      await new Promise((resolve) => setTimeout(resolve, 40));
+      order.push(`end:${label}`);
+      return label;
+    };
+    const first = enqueueSimulate(() => slow("a"));
+    const second = enqueueSimulate(() => slow("b"));
+    await Promise.all([first, second]);
+    expect(order).toEqual(["start:a", "end:a", "start:b", "end:b"]);
+  });
+
+  it("re-warms pinned amounts on the keep-warm interval", async () => {
+    let calls = 0;
+    const brain = createBrain({
+      verdictTtlMs: 50,
+      ask: async () => {
+        calls += 1;
+        return decideSpend("100000", "150000");
+      },
+    });
+    await warmBrain(brain, ["100000"]);
+    expect(calls).toBe(1);
+    const keep = startBrainKeepWarm(brain, ["100000"], { intervalMs: 25 });
+    try {
+      const deadline = Date.now() + 400;
+      while (calls <= 1 && Date.now() < deadline) {
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+      expect(calls).toBeGreaterThan(1);
+    } finally {
+      keep.stop();
+    }
   });
 
   it("kills a hung cre child after the simulate timeout", async () => {

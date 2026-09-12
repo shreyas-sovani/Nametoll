@@ -86,6 +86,8 @@ export function mountBuyer(app: Express, deps: BuyerHttpDeps): void {
     }
     const protocols =
       protocolIdsFromQuery(body.protocols) ?? protocolIdsFromQuery(req.query.protocols);
+    const sku = typeof body.sku === "string" ? body.sku : undefined;
+    const wallet = typeof body.wallet === "string" ? body.wallet : undefined;
     const payerMode = typeof body.payer === "string" ? body.payer : "";
     const resolved = resolvePayer(deps, req, payerMode);
     if (!resolved.ok) {
@@ -102,6 +104,8 @@ export function mountBuyer(app: Express, deps: BuyerHttpDeps): void {
         deps.ledger,
         protocols,
         resolved.context,
+        sku,
+        wallet,
       );
       if (!paid.ok) {
         res.status(paid.status).json({

@@ -44,4 +44,33 @@ describe("desk health", () => {
       await desk.close();
     }
   });
+
+  it("reports a configured TEE TTL and seller runway", async () => {
+    const desk = await startDesk(
+      { verdictTtlMs: 1_800_000, sellerAccountId: "0.0.10463755" },
+      undefined,
+      {
+        brain: {
+          source: "injected",
+          verdictTtlMs: 1_800_000,
+          async decide({ requestedTinybars }) {
+            return { allow: true, maxTinybars: requestedTinybars, reason: "under cap" };
+          },
+        },
+        readSellerTinybars: async () => "800000000",
+      },
+    );
+    try {
+      const body = (await (await fetch(`${desk.url}/health`)).json()) as {
+        brain?: { verdictTtlMs?: number };
+        runway?: { sellerTinybars?: string; faucetOpen?: boolean; faucetTinybars?: string };
+      };
+      expect(body.brain?.verdictTtlMs).toBe(1_800_000);
+      expect(body.runway?.sellerTinybars).toBe("800000000");
+      expect(body.runway?.faucetOpen).toBe(true);
+      expect(body.runway?.faucetTinybars).toBe("5000000");
+    } finally {
+      await desk.close();
+    }
+  });
 });

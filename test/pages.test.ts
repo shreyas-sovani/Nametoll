@@ -74,6 +74,10 @@ describe("product pages", () => {
       expect(html).toMatch(/id="station-challenge"/);
       expect(html).toMatch(/id="station-snapshot"/);
       expect(html).toMatch(/id="station-bill"/);
+      expect(html).toMatch(/id="station-risk"/);
+      expect(html).toMatch(/id="desk-wallet"/);
+      expect(html).toMatch(/id="score-desk"/);
+      expect(html).toMatch(/\/desk\/risk/);
       expect(html).toMatch(/id="payer-mode"/);
       expect(html).toMatch(/id="guest-create"/);
       expect(html).toMatch(/id="claim-form"/);
@@ -109,6 +113,7 @@ describe("product pages", () => {
       expect(html).toMatch(/\/desk\/claim/);
       expect(html).toMatch(/\/desk\/hts/);
       expect(html).toMatch(/\/desk\/snapshot/);
+      expect(html).toMatch(/\/desk\/risk/);
       expect(html).toMatch(/simulate-allowlist-deny/);
       expect(html).toMatch(/tinybars/);
       expect(html).toMatch(/402/);

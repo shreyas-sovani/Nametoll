@@ -3,6 +3,7 @@ import type { BrainVerdict, DeskDescriptor } from "../../types.ts";
 import type { Brain } from "../brain/index.ts";
 import type { Directory } from "../directory/index.ts";
 import { meterTinybars, requestedUnits } from "../gate/meter.ts";
+import { PINNED_PROTOCOLS } from "../merchandise/deployments.ts";
 import { explorerNetwork, hashscanTopicUrl } from "../ledger/hashscan.ts";
 import { auditBill, previewRecompute, type BillAudit } from "../ledger/audit.ts";
 import type { Ledger } from "../ledger/index.ts";
@@ -11,6 +12,7 @@ import { viewMerchandise, type MerchandiseView } from "../merchandise/view.ts";
 import type { Buyer, PaidResult } from "./index.ts";
 import { fetchSnapshotChallenge, type SnapshotChallenge } from "./challenge.ts";
 import { payEndpointAllowed, settleEndpoint } from "./pay-guard.ts";
+import { parseWallet, RISK_PATH, RISK_SKU } from "../merchandise/risk.ts";
 
 export type DeskInspect = {
   name: string;
@@ -76,16 +78,34 @@ export async function payNamedDesk(
   ledger?: Ledger,
   protocols?: string[],
   context: DriveContext = {},
+  sku?: string,
+  wallet?: string,
 ): Promise<
   | { ok: true; result: DeskPayResult }
   | { ok: false; status: number; inspect: DeskInspect; error?: string }
 > {
+  const payingRisk = sku === RISK_SKU;
+  const riskWallet = payingRisk ? parseWallet(wallet) : undefined;
+  if (payingRisk && !riskWallet) {
+    const inspect = await inspectNamedDesk(
+      name,
+      directory,
+      brain,
+      config,
+      [PINNED_PROTOCOLS[0]?.id ?? "aave-v3-ethereum"],
+      context,
+    );
+    return { ok: false, status: 400, inspect, error: "wallet query must be a 0x address." };
+  }
+  const inspectProtocols = payingRisk
+    ? [protocols?.[0] ?? PINNED_PROTOCOLS[0]?.id ?? "aave-v3-ethereum"]
+    : protocols;
   const inspect = await inspectNamedDesk(
     name,
     directory,
     brain,
     config,
-    protocols,
+    inspectProtocols,
     context,
   );
   if (!inspect.verdict.allow) {
@@ -101,7 +121,11 @@ export async function payNamedDesk(
   }
   const paid = await buyer.payOnce(
     settleEndpoint(inspect.descriptor.endpoint, config.publicDeskUrl),
-    protocols?.length ? { protocols } : {},
+    payingRisk && riskWallet
+      ? { path: RISK_PATH, query: { wallet: riskWallet } }
+      : protocols?.length
+        ? { protocols }
+        : {},
   );
   if (paid.status !== 200 || !paid.settleTx) {
     return { ok: false, status: paid.status || 502, inspect };

@@ -1,6 +1,7 @@
 import { HBAR_ASSET, type AppConfig } from "../../config.ts";
 import { MAX_SCHEDULE_SECONDS } from "../ledger/subscribe.ts";
 import { PINNED_PROTOCOLS } from "./deployments.ts";
+import { RISK_PATH, RISK_SKU } from "./risk.ts";
 
 export const OFFER_PATH = "/desk/offer";
 
@@ -14,6 +15,12 @@ export type DeskOffer = {
     maxExpirySeconds: number;
   };
   htsTokenId?: string;
+  skus: Array<{
+    id: string;
+    path: string;
+    units: string;
+    note?: string;
+  }>;
 };
 
 export function deskOffer(config: AppConfig): DeskOffer {
@@ -26,6 +33,19 @@ export function deskOffer(config: AppConfig): DeskOffer {
       waitForExpiry: true,
       maxExpirySeconds: MAX_SCHEDULE_SECONDS,
     },
+    skus: [
+      {
+        id: "lending-risk",
+        path: "/desk/snapshot",
+        units: "per requested protocol",
+      },
+      {
+        id: RISK_SKU,
+        path: RISK_PATH,
+        units: "1",
+        note: "Desk-side health factor. Wallet parameterizes merchandise, not the TEE. Public positions are not private.",
+      },
+    ],
     ...(config.htsTokenId ? { htsTokenId: config.htsTokenId } : {}),
   };
 }
