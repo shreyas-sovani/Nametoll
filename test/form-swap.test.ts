@@ -79,7 +79,7 @@ describe("B16 Sunday form swap", () => {
       const log = readFileSync(resolve(root, file), "utf8");
       expect(log).toMatch(/TEE Execution|handlerInTee|TeeRuntime/i);
     }
-    expect(readme).toMatch(/simulate-allow\.log/);
+    expect(pack).toMatch(/simulate-allow\.log/);
     expect(backlog).toMatch(/\[x\] \*\*B16\*\*/);
     expect(backlog).not.toMatch(/\[ \] \*\*B16\*\*/);
   });
