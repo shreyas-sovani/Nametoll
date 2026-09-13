@@ -2,7 +2,7 @@
 
 Filter: **most winnable** among partners that publish official MCP / Agent Skills / `llms.txt`, so a coding agent can build against real APIs.
 
-ETHOnline still lets you pick **only 3 partners** on the form. This repo does **not** lock a trio. The working set is these five. Prize analysis lives in `docs/analysis.md` (revised 10 Sep 2026; the old Hedera+ENS+Chainlink lock is superseded).
+The working set is these five. Official MCP / skills / `llms.txt` only.
 
 | Rank | Partner | Why it is here | Agent surface (official only) |
 | --- | --- | --- | --- |

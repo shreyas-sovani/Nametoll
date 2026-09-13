@@ -4,9 +4,9 @@ Focus on the **top 5 integrable partners**: Hedera, ENS, Chainlink, World, The G
 
 ETHOnline’s form still allows only **3** partner prizes. Do not lock which 3. Build against official MCP / skills / `llms.txt` for the five. Pick any 3 of them on submit.
 
-Read `docs/partners/README.md` and `docs/analysis.md` before writing partner code. Analysis was revised 10 Sep 2026 to drop the old Hedera+ENS+Chainlink lock.
+Read `docs/partners/README.md` before writing partner code.
 
-Product (Nametoll): `docs/PRD.md` then `docs/BACKLOG.md`. Implement tickets in ID order. Pull APIs from `.agents/skills/` / `vendor/` and live MCP IDs in `docs/partners/README.md`. Do not invent symbols.
+Pull APIs from `.agents/skills/` / `vendor/` and live MCP IDs in `docs/partners/README.md`. Do not invent symbols.
 
 ## The five
 

@@ -2,8 +2,8 @@ import { encodeFunctionData, parseAbi } from 'viem'
 
 /**
  * Official Automated Liquidation Protection Challenge (Sepolia).
- * Address from the live challenge README / frontend, which ETHOnline
- * prizes.txt links as the Challenge Repo. Do not invent a contract.
+ * Address from the live challenge README / frontend.
+ * Do not invent a contract.
  * Live 11 Sep 2026: challengeOpen = true, numUsers = 6 after Nametoll join().
  * The ETHOnline scrape `0x59d5B29F…` is an older ChallengeLending; numUsers reverts.
  *
